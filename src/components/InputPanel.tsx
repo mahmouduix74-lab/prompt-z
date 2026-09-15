@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { AppLang, UI_STRINGS } from '../utils/i18n';
-import { Sparkles, Trash2, ArrowUpLeft, ArrowUpRight, Loader2, Wand2, Undo2, PenLine } from 'lucide-react';
+import { Sparkles, Trash2, ArrowUpLeft, ArrowUpRight, Loader2, Wand2, Undo2, PenLine, Info } from 'lucide-react';
+import { Character } from './Character';
 
 interface InputPanelProps {
   rawText: string;
@@ -114,6 +116,8 @@ export const InputPanel: React.FC<InputPanelProps> = ({
   isLoading,
   lang,
 }) => {
+  const [promptMode, setPromptMode] = useState<'generate' | 'improve'>('generate');
+  const [showTips, setShowTips] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const t = UI_STRINGS[lang];
   const isBusy = isLoading || isEnhancing;
@@ -131,7 +135,11 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
       if (!isBusy && rawText.trim()) {
-        onSubmit();
+        if (promptMode === 'improve') {
+          onEnhancePrompt();
+        } else {
+          onSubmit();
+        }
       }
     }
   };
@@ -142,13 +150,96 @@ export const InputPanel: React.FC<InputPanelProps> = ({
 
   return (
     <div className="relative flex flex-col h-full rounded-2xl bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 focus-within:border-purple-500/70 focus-within:ring-1 focus-within:ring-purple-500/30 shadow-xs transition-all overflow-hidden">
-      {/* Header toolbar directly attached above text area - Perfectly aligned with Structured Prompt Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 min-h-[46px] border-b border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/40 backdrop-blur-md rounded-t-2xl">
+      {/* Header toolbar with Mode Switcher (Generate vs Improve Prompt) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 min-h-[48px] border-b border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/40 backdrop-blur-md rounded-t-2xl">
         <div className="flex items-center gap-2 text-xs">
           <PenLine className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
           <label htmlFor="raw-prompt" className="font-semibold text-zinc-900 dark:text-zinc-100 cursor-pointer">
-            {lang === 'ar' ? 'فكرة أو متطلبات البرومبت' : 'Raw Prompt / Idea'}
+            {promptMode === 'improve'
+              ? (lang === 'ar' ? 'البرومبت المراد تحسينه' : 'Prompt to Improve')
+              : (lang === 'ar' ? 'فكرة أو متطلبات البرومبت' : 'Raw Prompt / Idea')}
           </label>
+
+          {/* Quick Tips Help Popover Icon */}
+          <div className="relative inline-flex items-center">
+            <button
+              type="button"
+              onMouseEnter={() => setShowTips(true)}
+              onMouseLeave={() => setShowTips(false)}
+              onClick={() => setShowTips((prev) => !prev)}
+              onFocus={() => setShowTips(true)}
+              onBlur={() => setShowTips(false)}
+              className="p-1 rounded-full text-zinc-400 hover:text-purple-600 dark:text-zinc-500 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer focus:outline-hidden"
+              title={lang === 'ar' ? 'نصائح لكتابة برومبت فعال' : 'Tips for effective prompts'}
+              aria-label="Prompting Tips Help"
+            >
+              <Info className="w-3.5 h-3.5" />
+            </button>
+
+            <AnimatePresence>
+              {showTips && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 4, scale: 0.96 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
+                  dir={lang === 'ar' ? 'rtl' : 'ltr'}
+                  className={`absolute top-full mt-2.5 z-50 w-64 sm:w-72 p-3.5 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/90 dark:border-zinc-800/90 shadow-xl text-xs text-zinc-700 dark:text-zinc-300 pointer-events-none select-none ${
+                    lang === 'ar' ? 'start-0 text-right font-arabic' : 'start-0 text-left'
+                  }`}
+                >
+                  {/* Tooltip Arrow pointing up to Info icon */}
+                  <div
+                    className={`absolute -top-1.5 w-3 h-3 rotate-45 bg-white/95 dark:bg-zinc-900/95 border-t border-s border-zinc-200/90 dark:border-zinc-800/90 ${
+                      lang === 'ar' ? 'start-3' : 'start-3'
+                    }`}
+                  />
+
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-1.5 font-bold text-zinc-900 dark:text-zinc-100 mb-2.5 border-b border-zinc-100 dark:border-zinc-800/80 pb-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                      <span>{lang === 'ar' ? 'نصائح لبرومبت فعال' : 'Tips for Effective Prompts'}</span>
+                    </div>
+                    <ul className="space-y-2 text-[11px] leading-relaxed">
+                      <li className="flex items-start gap-2">
+                        <span className="text-purple-600 dark:text-purple-400 font-bold shrink-0 mt-0.5">•</span>
+                        <div>
+                          <strong className="font-semibold text-zinc-900 dark:text-zinc-200">
+                            {lang === 'ar' ? 'كن محددًا:' : 'Be specific:'}
+                          </strong>{' '}
+                          {lang === 'ar'
+                            ? 'اصف الهدف الأساسي والوظائف المطلوبة بدقة.'
+                            : 'State your core goal and details clearly.'}
+                        </div>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-purple-600 dark:text-purple-400 font-bold shrink-0 mt-0.5">•</span>
+                        <div>
+                          <strong className="font-semibold text-zinc-900 dark:text-zinc-200">
+                            {lang === 'ar' ? 'حدّد السياق:' : 'Define context:'}
+                          </strong>{' '}
+                          {lang === 'ar'
+                            ? 'اذكر الجمهور المستهدف أو التقنيات المستخدمة.'
+                            : 'Specify target audience or stack constraints.'}
+                        </div>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-purple-600 dark:text-purple-400 font-bold shrink-0 mt-0.5">•</span>
+                        <div>
+                          <strong className="font-semibold text-zinc-900 dark:text-zinc-200">
+                            {lang === 'ar' ? 'حدّد شكل المخرجات:' : 'Include output format:'}
+                          </strong>{' '}
+                          {lang === 'ar'
+                            ? 'اذكر التنسيق المطلوب (خطوات، كود، جداول).'
+                            : 'Mention structure (e.g., bullets, code, table).'}
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           {canUndoEnhance && onUndoEnhance && (
             <button
               type="button"
@@ -163,35 +254,67 @@ export const InputPanel: React.FC<InputPanelProps> = ({
           )}
         </div>
 
-        {/* Prompt Enhancement Button: Elegant Secondary Styling with Sparkles Icon */}
-        <button
-          type="button"
-          onClick={onEnhancePrompt}
-          disabled={isBusy || !rawText.trim()}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-100/90 hover:bg-purple-50/80 dark:bg-zinc-800/80 dark:hover:bg-purple-950/40 text-zinc-700 hover:text-purple-700 dark:text-zinc-300 dark:hover:text-purple-300 border border-zinc-200/80 hover:border-purple-300/80 dark:border-zinc-700/80 dark:hover:border-purple-500/40 shadow-2xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-          title={t.enhancePromptTooltip}
-        >
-          {isEnhancing ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600 dark:text-purple-400" />
-              <span>{t.enhancingPrompt}</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-              <span>{t.enhancePrompt}</span>
-            </>
-          )}
-        </button>
+        {/* Mode Selector Segmented Pill Control (Secondary/Subtle Style) */}
+        <div className="flex items-center gap-0.5 p-0.5 bg-zinc-100/80 dark:bg-zinc-900/60 rounded-lg border border-zinc-200/60 dark:border-zinc-800/60">
+          <button
+            type="button"
+            onClick={() => setPromptMode('generate')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-medium transition-all cursor-pointer ${
+              promptMode === 'generate'
+                ? 'bg-white dark:bg-zinc-800 text-purple-700 dark:text-purple-300 shadow-2xs border border-zinc-200/80 dark:border-zinc-700/60 font-semibold'
+                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+            }`}
+            title={lang === 'ar' ? 'توليد برومبت شامل واحترافي من الصفر' : 'Generate complete prompt from scratch'}
+          >
+            <Wand2 className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+            <span>{lang === 'ar' ? 'توليد برومبت' : 'Generate'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setPromptMode('improve')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-medium transition-all cursor-pointer ${
+              promptMode === 'improve'
+                ? 'bg-white dark:bg-zinc-800 text-purple-700 dark:text-purple-300 shadow-2xs border border-zinc-200/80 dark:border-zinc-700/60 font-semibold'
+                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+            }`}
+            title={lang === 'ar' ? 'تحسين وتنقيح برومبت مكتوب سابقاً' : 'Improve & refine existing prompt'}
+          >
+            <Sparkles className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+            <span>{lang === 'ar' ? 'تحسين برومبت' : 'Improve'}</span>
+          </button>
+        </div>
       </div>
 
-      {/* Textarea with one-line typewriter animated placeholder */}
+      {/* Textarea with one-line typewriter animated placeholder & centered empty character watermark */}
       <div className="relative flex-1 flex flex-col p-1">
         {!rawText && (
-          <AnimatedPromptPlaceholder
-            lines={placeholderLines}
-            onClick={() => textareaRef.current?.focus()}
-          />
+          <>
+            <AnimatedPromptPlaceholder
+              lines={
+                promptMode === 'improve'
+                  ? (lang === 'ar'
+                      ? ['ألصق هنا البرومبت الذي ترغب في تحسينه وتطوير صياغته...']
+                      : ['Paste your existing prompt here to improve & refine it...'])
+                  : placeholderLines
+              }
+              onClick={() => textareaRef.current?.focus()}
+            />
+
+            <AnimatePresence>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0 pt-10 flex items-center justify-center pointer-events-none select-none z-10"
+              >
+                {/* Reduced Opacity Watermark Character */}
+                <div className="w-28 h-28 sm:w-32 sm:h-32 opacity-25 dark:opacity-20 transition-opacity">
+                  <Character name="organize" instance="textarea-organize-character" flip={lang === 'ar'} />
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </>
         )}
 
         <textarea
@@ -206,53 +329,66 @@ export const InputPanel: React.FC<InputPanelProps> = ({
         />
       </div>
 
-      {/* Input Footer: Counts, Clear & Solid Purple Generate Button with Magic Wand Icon */}
-      <div className="flex items-center justify-between gap-2 px-4 py-2.5 min-h-[46px] border-t border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/50 backdrop-blur-md rounded-b-2xl text-xs">
+      {/* Input Footer: Counts, Clear & Enlarged Solid Purple Generate/Improve Button */}
+      <div className="flex items-center justify-between gap-2 px-4 py-3 min-h-[52px] border-t border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/50 backdrop-blur-md rounded-b-2xl text-xs">
         <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 font-mono text-[11px]">
           <span>{charCount} {t.charCount}</span>
           <span className="text-zinc-300 dark:text-zinc-700">•</span>
           <span>{wordCount} {t.wordCount}</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {rawText.length > 0 && (
-            <button
+            <motion.button
               type="button"
               onClick={onClear}
               disabled={isBusy}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer disabled:opacity-50"
               title={t.clear}
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>{t.clear}</span>
-            </button>
+            </motion.button>
           )}
 
-          {/* Primary Filled Button: Pure Solid Purple (Non-linear) with Magic Wand Icon */}
-          <button
+          {/* Primary Action Button: Enlarged size and rounded-2xl border radius */}
+          <motion.button
             type="button"
-            onClick={onSubmit}
+            onClick={promptMode === 'improve' ? onEnhancePrompt : onSubmit}
             disabled={isBusy || !rawText.trim()}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-600 dark:hover:bg-purple-500 text-white text-xs font-semibold shadow-[0_4px_14px_rgba(124,58,237,0.35)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.45)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            whileHover={isBusy || !rawText.trim() ? {} : { scale: 1.03 }}
+            whileTap={isBusy || !rawText.trim() ? {} : { scale: 0.96 }}
+            className="flex items-center gap-2.5 px-6 py-2.5 sm:px-8 sm:py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-600 dark:hover:bg-purple-500 text-white text-xs sm:text-sm font-bold shadow-[0_6px_20px_rgba(124,58,237,0.38)] hover:shadow-[0_8px_25px_rgba(124,58,237,0.5)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             title="Shortcut: Ctrl/Cmd + Enter"
           >
-            {isLoading ? (
+            {isBusy ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>{t.generating}</span>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>
+                  {promptMode === 'improve'
+                    ? (lang === 'ar' ? 'جاري التحسين...' : 'Improving...')
+                    : t.generating}
+                </span>
+              </>
+            ) : promptMode === 'improve' ? (
+              <>
+                <Sparkles className="w-4 h-4 text-white" />
+                <span>{lang === 'ar' ? 'تحسين البرومبت الآن' : 'Improve Prompt Now'}</span>
               </>
             ) : (
               <>
-                <Wand2 className="w-3.5 h-3.5 text-white" />
-                <span>{t.generate}</span>
+                <Wand2 className="w-4 h-4 text-white" />
+                <span>{lang === 'ar' ? 'توليد البرومبت' : 'Generate Prompt'}</span>
                 {lang === 'ar' ? (
-                  <ArrowUpLeft className="w-3.5 h-3.5 opacity-75" />
+                  <ArrowUpLeft className="w-4 h-4 opacity-80" />
                 ) : (
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-75" />
+                  <ArrowUpRight className="w-4 h-4 opacity-80" />
                 )}
               </>
             )}
-          </button>
+          </motion.button>
         </div>
       </div>
     </div>

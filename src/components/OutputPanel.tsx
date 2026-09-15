@@ -13,6 +13,7 @@ import {
   Bookmark,
   CheckCircle2,
   FastForward,
+  History,
 } from 'lucide-react';
 import { Character } from './Character';
 
@@ -24,6 +25,8 @@ interface OutputPanelProps {
   lang: AppLang;
   onSaveToLibrary?: () => void;
   isSaved?: boolean;
+  onOpenLibrary?: () => void;
+  savedCount?: number;
 }
 
 type ViewMode = 'formatted' | 'raw' | 'sections';
@@ -36,6 +39,8 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
   lang,
   onSaveToLibrary,
   isSaved = false,
+  onOpenLibrary,
+  savedCount = 0,
 }) => {
   const [copied, setCopied] = useState(false);
   const [showCopyToast, setShowCopyToast] = useState(false);
@@ -361,6 +366,29 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
               <Download className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{t.downloadMd}</span>
             </button>
+
+            {/* History / Library Icon Button */}
+            {onOpenLibrary && (
+              <motion.button
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.95 }}
+                type="button"
+                onClick={onOpenLibrary}
+                className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 cursor-pointer shadow-2xs transition-all border border-zinc-200/60 dark:border-zinc-800/60"
+                title={t.library || (isAr ? 'السجل والمكتبة' : 'History & Saved')}
+                aria-label={t.library || (isAr ? 'السجل والمكتبة' : 'History & Saved')}
+              >
+                <History className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <span className="hidden sm:inline">
+                  {isAr ? 'السجل' : 'History'}
+                </span>
+                {savedCount > 0 && (
+                  <span className="min-w-[15px] h-3.5 px-1 rounded-full text-[9px] font-mono font-bold bg-[#7C3AED] text-white flex items-center justify-center shadow-2xs">
+                    {savedCount}
+                  </span>
+                )}
+              </motion.button>
+            )}
           </div>
         </div>
       </div>
@@ -386,7 +414,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
               className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-white/92 dark:bg-zinc-950/92 backdrop-blur-md z-20 text-zinc-700 dark:text-zinc-200"
             >
               <div className="w-[120px] h-[120px]">
-                <Character name="create" instance="output-loading" />
+                <Character name="create" instance="output-loading" flip={isAr} />
               </div>
               <p className="mt-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200">
                 {isAr ? 'جاري التفكير وصياغة البرومبت...' : 'Thinking & Crafting Prompt...'}

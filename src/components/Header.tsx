@@ -1,5 +1,6 @@
 import React from 'react';
-import { History, Sun, Moon, Languages, Settings } from 'lucide-react';
+import { motion } from 'motion/react';
+import { History, Sun, Moon, Languages } from 'lucide-react';
 import { Theme, AppLang, UI_STRINGS } from '../utils/i18n';
 import { Logo } from './Logo';
 
@@ -26,70 +27,56 @@ export const Header: React.FC<HeaderProps> = ({
   lang,
   onToggleLang,
   onOpenLibrary,
-  onOpenSettings,
   onScrollToBuilder,
 }) => {
   const t = UI_STRINGS[lang];
   const isAr = lang === 'ar';
 
   return (
-    <header className="sticky top-0 z-40 bg-transparent text-zinc-900 dark:text-white transition-colors duration-200">
+    <motion.header
+      initial={{ opacity: 0, y: -12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="sticky top-0 z-40 bg-transparent text-zinc-900 dark:text-white transition-colors duration-200"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-6 pb-2.5 sm:pt-7 sm:pb-3 flex items-center justify-between gap-4">
         {/* Logo & Name: PromptZ */}
-        <button
+        <motion.button
           type="button"
           onClick={onScrollToBuilder}
-          className="group cursor-pointer focus:outline-hidden transition-transform duration-150 active:scale-95"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.96 }}
+          className="group cursor-pointer focus:outline-hidden transition-transform duration-150"
           title="PromptZ"
         >
           <Logo size="sm" lang={lang} />
-        </button>
+        </motion.button>
 
-        {/* Right Controls: Settings, History, Language, Theme Appearance */}
+        {/* Right Controls: Language, Theme Appearance */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Settings Icon: view and edit system instruction */}
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            className={iconButtonClassName}
-            title={t.settings}
-            aria-label={t.settings}
-          >
-            <Settings className="w-4 h-4" />
-          </button>
-
-          {/* History Icon */}
-          <button
-            type="button"
-            onClick={onOpenLibrary}
-            className={iconButtonClassName}
-            title={t.library || 'History'}
-            aria-label={t.library || 'History'}
-          >
-            <History className="w-4 h-4" />
-            {savedCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[15px] h-3.5 px-1 rounded-full text-[9px] font-mono font-bold bg-[#7C3AED] text-white flex items-center justify-center shadow-xs">
-                {savedCount}
-              </span>
-            )}
-          </button>
 
           {/* Language Toggle */}
-          <button
+          <motion.button
             type="button"
             onClick={onToggleLang}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-zinc-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-all duration-150 cursor-pointer text-xs font-bold font-mono focus:outline-hidden"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-zinc-700 dark:text-zinc-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-all duration-150 cursor-pointer text-xs font-bold focus:outline-hidden"
             title={isAr ? 'Switch to English' : 'التحويل للعربية'}
             aria-label="Language"
           >
-            <Languages className="w-3.5 h-3.5" />
-            <span className="uppercase text-[11px]">{isAr ? 'AR' : 'EN'}</span>
-          </button>
+            <Languages className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <span className={isAr ? 'font-arabic font-bold text-sm leading-none' : 'font-mono uppercase text-[11px] font-bold leading-none'}>
+              {isAr ? 'ع' : 'EN'}
+            </span>
+          </motion.button>
 
           {/* Theme Toggle (Light / Dark) */}
-          <button
+          <motion.button
             type="button"
             onClick={onToggleTheme}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
             className={iconButtonClassName}
             title={theme === 'dark' ? t.themeLight || 'Light Mode' : t.themeDark || 'Dark Mode'}
             aria-label="Appearance"
@@ -99,9 +86,9 @@ export const Header: React.FC<HeaderProps> = ({
             ) : (
               <Moon className="w-4 h-4 text-zinc-700" />
             )}
-          </button>
+          </motion.button>
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 };

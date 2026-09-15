@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { DepthType, GeminiModelInfo, OutputLanguage } from '../types';
 import { DEPTHS, OUTPUT_LANGUAGES } from '../constants';
 import { AppLang, UI_STRINGS } from '../utils/i18n';
-import { Gauge, Cpu, RefreshCw, Languages, ChevronDown } from 'lucide-react';
+import { Gauge, Languages, ChevronDown } from 'lucide-react';
 
 interface ControlsBarProps {
   depth: DepthType;
@@ -36,7 +36,7 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
   const activeDepthObj = DEPTHS.find((d) => d.id === depth) || DEPTHS[1];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 rounded-2xl bg-white/70 dark:bg-zinc-900/50 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs transition-colors">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 rounded-2xl bg-white/70 dark:bg-zinc-900/50 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs transition-colors">
       {/* 1. Detail Depth Tabs */}
       <div className="flex flex-col space-y-1.5">
         <div className="flex items-center gap-2 h-5 text-xs">
@@ -53,11 +53,13 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
           {DEPTHS.map((d) => {
             const isSelected = depth === d.id;
             return (
-              <button
+              <motion.button
                 key={d.id}
                 type="button"
                 disabled={disabled}
                 onClick={() => onChangeDepth(d.id)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 aria-pressed={isSelected}
                 className={`relative h-full flex items-center justify-center rounded-lg text-xs font-medium text-center transition-colors cursor-pointer truncate disabled:opacity-50 ${
                   isSelected
@@ -82,60 +84,13 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
                   />
                 )}
                 <span className="relative z-10">{lang === 'ar' ? d.labelAr : d.labelEn}</span>
-              </button>
+              </motion.button>
             );
           })}
         </div>
       </div>
 
-      {/* 2. Model Picker - Perfectly aligned and consistent with Detail Depth */}
-      <div className="flex flex-col space-y-1.5">
-        <div className="flex items-center justify-between h-5 text-xs">
-          <label htmlFor="model-picker" className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300 font-medium">
-            <Cpu className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-            <span>{t.modelLabel}</span>
-          </label>
-          <button
-            type="button"
-            onClick={onRefreshModels}
-            disabled={disabled || isLoadingModels}
-            className="text-[10px] text-zinc-500 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-50 px-1.5 py-0.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
-            title={t.refresh}
-          >
-            <RefreshCw className={`w-2.5 h-2.5 ${isLoadingModels ? 'animate-spin' : ''}`} />
-            <span>{isLoadingModels ? t.refreshing : t.refresh}</span>
-          </button>
-        </div>
-
-        <div className="relative h-10">
-          <select
-            id="model-picker"
-            value={selectedModel}
-            onChange={(e) => onChangeModel(e.target.value)}
-            disabled={disabled || models.length === 0}
-            className="w-full h-full appearance-none bg-zinc-100/90 dark:bg-zinc-950/80 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-800/80 rounded-xl px-3 pe-8 text-xs font-medium focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/30 cursor-pointer disabled:opacity-50 transition-colors truncate shadow-xs"
-          >
-            {models.length === 0 ? (
-              <option value="">{t.modelLabel}...</option>
-            ) : (
-              models.map((m) => (
-                <option
-                  key={m.id}
-                  value={m.id}
-                  className="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 py-1"
-                >
-                  {m.displayName || m.id}
-                </option>
-              ))
-            )}
-          </select>
-          <div className="absolute inset-y-0 end-0 flex items-center pe-2.5 pointer-events-none text-zinc-400 dark:text-zinc-500">
-            <ChevronDown className="w-3.5 h-3.5" />
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Output Language - Seamlessly aligned with Detail Depth & AI Model */}
+      {/* 2. Output Language */}
       <div className="flex flex-col space-y-1.5">
         <div className="flex items-center justify-between h-5 text-xs">
           <label

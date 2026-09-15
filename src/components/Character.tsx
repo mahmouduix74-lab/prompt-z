@@ -48,14 +48,23 @@ interface CharacterProps {
   className?: string;
   /** When true, renders only the Character body, omitting accessories like lightbulb & rays */
   bodyOnly?: boolean;
+  /** When true, flips the character horizontally so it faces left instead of right */
+  flip?: boolean;
 }
 
-export const Character: React.FC<CharacterProps> = ({ name, instance = name, className = '', bodyOnly = false }) => {
+export const Character: React.FC<CharacterProps> = ({
+  name,
+  instance = name,
+  className = '',
+  bodyOnly = false,
+  flip = false,
+}) => {
   const html = useMemo(() => prepareCharacterMarkup(SOURCES[name], instance, name, bodyOnly), [name, instance, bodyOnly]);
 
   return (
     <div
       className={`pz-character pz-character--${name} ${className}`}
+      style={flip ? { transform: 'scaleX(-1)' } : undefined}
       aria-hidden="true"
       dangerouslySetInnerHTML={{ __html: html }}
     />

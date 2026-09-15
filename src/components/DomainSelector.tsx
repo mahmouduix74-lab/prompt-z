@@ -48,11 +48,13 @@ export const DomainSelector: React.FC<DomainSelectorProps> = ({
         {DOMAINS.map((domain) => {
           const isSelected = selectedDomain === domain.id;
           return (
-            <button
+            <motion.button
               key={domain.id}
               type="button"
               disabled={disabled}
               onClick={() => onSelectDomain(domain.id)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
               className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                 isSelected
                   ? 'text-white font-semibold'
@@ -70,7 +72,7 @@ export const DomainSelector: React.FC<DomainSelectorProps> = ({
                 {domainIcons[domain.id]}
               </span>
               <span className="relative z-10">{lang === 'ar' ? domain.labelAr : domain.labelEn}</span>
-            </button>
+            </motion.button>
           );
         })}
       </div>

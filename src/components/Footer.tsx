@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { AppLang } from '../utils/i18n';
 import { PromptZIcon } from './Logo';
 
@@ -16,7 +17,13 @@ export const Footer: React.FC<FooterProps> = ({
   const isAr = lang === 'ar';
 
   return (
-    <footer className="border-t border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md py-6 px-4 sm:px-6">
+    <motion.footer
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-20px' }}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+      className="border-t border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md py-6 px-4 sm:px-6"
+    >
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Brand: PromptZ Vector Logo & Name */}
         <div className="flex items-center gap-2">
@@ -50,6 +57,6 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
         </div>
       </div>
-    </footer>
+    </motion.footer>
   );
 };

@@ -6,6 +6,8 @@ interface ThinkingCharacterProps {
   size?: number; // size in px, default 96
   label?: string;
   sublabel?: string;
+  lang?: 'en' | 'ar';
+  flip?: boolean;
 }
 
 export const ThinkingCharacter: React.FC<ThinkingCharacterProps> = ({
@@ -13,7 +15,11 @@ export const ThinkingCharacter: React.FC<ThinkingCharacterProps> = ({
   size = 110,
   label,
   sublabel,
+  lang,
+  flip = false,
 }) => {
+  const isFlipped = flip || lang === 'ar';
+
   return (
     <div className={`flex flex-col items-center justify-center select-none ${className}`}>
       {/* Animated Reading & Thinking Character */}
@@ -28,7 +34,11 @@ export const ThinkingCharacter: React.FC<ThinkingCharacterProps> = ({
           ease: 'easeInOut',
         }}
         className="relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{
+          width: size,
+          height: size,
+          transform: isFlipped ? 'scaleX(-1)' : undefined,
+        }}
       >
         {/* Soft Ambient Glow under character */}
         <div className="absolute inset-0 bg-purple-500/15 dark:bg-purple-500/25 blur-xl rounded-full" />

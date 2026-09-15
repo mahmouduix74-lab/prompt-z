@@ -28,7 +28,7 @@ export const Mascot: React.FC<MascotProps> = ({ lang }) => {
         aria-hidden="true"
       >
         <div className="pz-peeking-mascot__inner w-full h-full">
-          <Character name="create" instance="peeking-mascot" />
+          <Character name="explore" instance="peeking-mascot" flip={isAr} />
         </div>
       </div>
     </div>

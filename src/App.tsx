@@ -540,6 +540,8 @@ export default function App() {
                   lang={lang}
                   onSaveToLibrary={handleManualSaveToLibrary}
                   isSaved={isCurrentOutputSaved}
+                  onOpenLibrary={() => setIsLibraryOpen(true)}
+                  savedCount={savedItems.length}
                 />
               </div>
             </div>

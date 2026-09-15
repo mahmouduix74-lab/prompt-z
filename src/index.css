@@ -48,11 +48,11 @@ a:active,
   }
 }
 
-/* Arabic typography: IBM Plex Sans Arabic */
+/* Arabic typography: Alexandria & Cairo with fallback */
 :lang(ar),
 [dir="rtl"],
 .font-arabic {
-  font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: 'Alexandria', 'Cairo', 'Tajawal', 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 /* English Titles: Clash Display */
