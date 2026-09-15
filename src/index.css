@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Default body font is SF Pro with native Apple and system fallbacks */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'SF Pro', system-ui, sans-serif;
+  letter-spacing: -0.011em;
+}
+
+/* Arabic typography: IBM Plex Sans Arabic */
+:lang(ar),
+[dir="rtl"],
+.font-arabic {
+  font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+/* English Titles: Clash Display */
+.font-title,
+:lang(en) h1,
+:lang(en) h2,
+:lang(en) h3,
+:lang(en) .heading-title {
+  font-family: 'Clash Display', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+}
+
+/* Code font: JetBrains Mono */
+.font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+}
+
+/* Refined, high-end glassmorphism styles */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 
+    0 20px 45px -12px rgba(124, 58, 237, 0.08),
+    0 8px 24px -4px rgba(0, 0, 0, 0.03),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.dark .glass-panel {
+  background: rgba(14, 14, 18, 0.6);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 24px 50px -12px rgba(0, 0, 0, 0.45),
+    0 10px 24px -4px rgba(124, 58, 237, 0.12),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #71717a40;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #71717a80;
+}

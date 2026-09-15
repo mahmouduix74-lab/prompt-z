@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <!-- Purple Document / Sheet being read -->
+  <g transform="rotate(7 165 110)">
+    <rect x="110" y="40" width="105" height="135" rx="16" fill="#EDE5FD"/>
+    <!-- Document Lines -->
+    <rect x="135" y="70" width="55" height="8" rx="4" fill="#9F77F8"/>
+    <rect x="132" y="94" width="52" height="8" rx="4" fill="#9F77F8"/>
+    <rect x="130" y="118" width="46" height="8" rx="4" fill="#9F77F8"/>
+  </g>
+
+  <!-- Mascot Head / Body Outline -->
+  <path
+    d="M 32 210 C 35 170 38 150 42 128 C 48 94 68 68 102 72 C 122 75 132 88 135 112"
+    stroke="#1E1928"
+    stroke-width="7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Eyes looking intently at the document -->
+  <ellipse cx="85" cy="110" rx="4.2" ry="9" fill="#1E1928"/>
+  <ellipse cx="102" cy="108" rx="4.2" ry="9" fill="#1E1928"/>
+
+  <!-- Left Arm holding the document -->
+  <path
+    d="M 80 178 C 110 155 145 136 158 152 C 165 162 158 185 118 206"
+    stroke="#1E1928"
+    stroke-width="7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Right Arm holding the document on the right side -->
+  <path
+    d="M 216 122 C 228 135 234 165 204 186 C 188 197 184 200 184 200"
+    stroke="#1E1928"
+    stroke-width="7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
