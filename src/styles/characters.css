@@ -1,0 +1,248 @@
+/* ==========================================================================
+   PromptZ characters — animation layer
+   --------------------------------------------------------------------------
+   The SVG artwork is inlined unchanged (see Character.tsx); only CSS moves its
+   named parts. Every keyframe starts at the untouched drawing, so a paused
+   character shows exactly the original artwork.
+
+   Only elements WITHOUT a transform attribute are animated: a CSS transform on
+   an element that already has one (the outer group, the eye groups) would
+   replace it and move the drawing.
+
+   All motion pauses with the character toggle (WCAG 2.2.2), via
+   .pz-characters-paused on the app root.
+   ========================================================================== */
+
+.pz-character {
+  width: 100%;
+  height: 100%;
+}
+
+.pz-character svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ---------- Shared: whole-drawing bob and eye blink ---------- */
+.pz-tile .pz-character svg {
+  animation: pz-bob 3.2s ease-in-out infinite;
+  animation-delay: var(--pz-delay, 0s);
+}
+
+.pz-character [id$="-Eye-left"],
+.pz-character [id$="-Eye-right"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pz-blink 4.6s ease-in-out infinite;
+  animation-delay: var(--pz-delay, 0s);
+}
+
+/* ---------- Create: floating bulb, glowing glass, pulsing rays, waving arm ---------- */
+.pz-character--create [id$="-Light-bulb"] {
+  animation: pz-float 2.4s ease-in-out infinite;
+  animation-delay: var(--pz-delay, 0s);
+}
+
+.pz-character--create [id$="-Bulb-glass"] {
+  animation: pz-bulb-glow 2.4s ease-in-out infinite;
+  animation-delay: var(--pz-delay, 0s);
+}
+
+.pz-character--create [id$="-Idea-rays"] {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: pz-rays 2.4s ease-in-out infinite;
+  animation-delay: var(--pz-delay, 0s);
+}
+
+.pz-character--create [id$="-Raised-arm"] {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: pz-wave 2.4s ease-in-out infinite;
+  animation-delay: var(--pz-delay, 0s);
+}
+
+/* ---------- Customize: the loose puzzle piece looks for its place ---------- */
+.pz-character--customize [id$="-Puzzle-upper"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pz-piece 3s ease-in-out infinite;
+  animation-delay: var(--pz-delay, 0s);
+}
+
+/* ---------- Explore: glass and hand sweep together, rays flicker ---------- */
+.pz-character--explore [id$="-Magnifying-glass"],
+.pz-character--explore [id$="-Curved-arm"] {
+  animation: pz-search 2.8s ease-in-out infinite;
+  animation-delay: var(--pz-delay, 0s);
+}
+
+.pz-character--explore [id$="-Discovery-ray-upper"],
+.pz-character--explore [id$="-Discovery-ray-lower"] {
+  animation: pz-ray-blink 1.4s ease-in-out infinite;
+  animation-delay: var(--pz-delay, 0s);
+}
+
+/* ---------- Organize: paper and hands lift together, lines rewrite ---------- */
+.pz-character--organize [id$="-Document"],
+.pz-character--organize [id$="-Holding-hand-right"],
+.pz-character--organize [id$="-Holding-arm-left"] {
+  animation: pz-lift 2.6s ease-in-out infinite;
+  animation-delay: var(--pz-delay, 0s);
+}
+
+.pz-character--organize [id$="-Text-line-one"],
+.pz-character--organize [id$="-Text-line-two"],
+.pz-character--organize [id$="-Text-line-three"] {
+  stroke-dasharray: 60;
+  animation: pz-write 3.9s ease-in-out infinite;
+}
+
+.pz-character--organize [id$="-Text-line-one"] {
+  animation-delay: var(--pz-delay, 0s);
+}
+
+.pz-character--organize [id$="-Text-line-two"] {
+  animation-delay: calc(var(--pz-delay, 0s) + 0.25s);
+}
+
+.pz-character--organize [id$="-Text-line-three"] {
+  animation-delay: calc(var(--pz-delay, 0s) + 0.5s);
+}
+
+/* ---------- Main character: fixed, hops, travels with scrolling ---------- */
+.pz-mascot {
+  position: fixed;
+  bottom: 12px;
+  left: 0;
+  z-index: 30; /* below the header (40) and modals/drawers (50) */
+  width: 88px;
+  height: 88px;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.pz-mascot__facing {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.25s ease;
+}
+
+.pz-mascot__body {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+  animation: pz-hop 0.9s cubic-bezier(0.3, 0, 0.3, 1) infinite;
+}
+
+@media (max-width: 809px) {
+  .pz-mascot {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+.pz-motion-toggle {
+  position: fixed;
+  bottom: 16px;
+  left: 16px; /* physical left: the hero's own toggle sits on the right */
+  z-index: 31;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgb(0 0 0 / 0.12);
+  border-radius: 9999px;
+  background: #fff;
+  color: #27232e;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.12);
+  cursor: pointer;
+}
+
+.pz-motion-toggle:hover {
+  border-color: #7638f5;
+}
+
+.pz-motion-toggle:focus-visible {
+  outline: 2px solid #7638f5;
+  outline-offset: 2px;
+}
+
+.pz-motion-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------- Paused (toggle, or reduced motion by default) ---------- */
+.pz-characters-paused .pz-character,
+.pz-characters-paused .pz-character *,
+.pz-characters-paused .pz-mascot__body {
+  animation-play-state: paused;
+}
+
+/* ---------- Keyframes (0% is always the original drawing) ---------- */
+@keyframes pz-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4%); }
+}
+
+@keyframes pz-blink {
+  0%, 90%, 96%, 100% { transform: scaleY(1); }
+  93% { transform: scaleY(0.1); }
+}
+
+@keyframes pz-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pz-bulb-glow {
+  0%, 100% { fill: #e9ddfb; }
+  50% { fill: #d6c2fa; }
+}
+
+@keyframes pz-rays {
+  0%, 100% { opacity: 1; transform: translateY(0) scale(1); }
+  50% { opacity: 0.4; transform: translateY(-6px) scale(1.15); }
+}
+
+@keyframes pz-wave {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-7deg); }
+}
+
+@keyframes pz-piece {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-3px, 7px) rotate(-7deg); }
+}
+
+@keyframes pz-search {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(4px, -3px); }
+}
+
+@keyframes pz-ray-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+@keyframes pz-lift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes pz-write {
+  0%, 30% { stroke-dashoffset: 0; }
+  45% { stroke-dashoffset: 60; }
+  75%, 100% { stroke-dashoffset: 0; }
+}
+
+@keyframes pz-hop {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  12% { transform: translateY(0) scale(1.08, 0.92); }
+  45% { transform: translateY(-22px) scale(0.96, 1.04); }
+  80% { transform: translateY(0) scale(1.04, 0.96); }
+}

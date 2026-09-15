@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   FastForward,
 } from 'lucide-react';
-import { ThinkingCharacter } from './ThinkingCharacter';
+import { Character } from './Character';
 
 interface OutputPanelProps {
   output: string;
@@ -385,15 +385,17 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
               transition={{ duration: 0.28, ease: 'easeOut' }}
               className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-white/92 dark:bg-zinc-950/92 backdrop-blur-md z-20 text-zinc-700 dark:text-zinc-200"
             >
-              <ThinkingCharacter
-                size={120}
-                label={isAr ? 'جاري التفكير وصياغة البرومبت...' : 'Thinking & Crafting Prompt...'}
-                sublabel={
-                  isAr
-                    ? 'تطبيق معايير هندسة البرومبت، تصنيف الأقسام، وبناء السياق'
-                    : 'Applying prompt engineering logic and structuring sections'
-                }
-              />
+              <div className="w-[120px] h-[120px]">
+                <Character name="create" instance="output-loading" />
+              </div>
+              <p className="mt-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                {isAr ? 'جاري التفكير وصياغة البرومبت...' : 'Thinking & Crafting Prompt...'}
+              </p>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                {isAr
+                  ? 'تطبيق معايير هندسة البرومبت، تصنيف الأقسام، وبناء السياق'
+                  : 'Applying prompt engineering logic and structuring sections'}
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
