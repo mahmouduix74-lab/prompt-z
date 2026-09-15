@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { DomainType } from '../types';
 import { DOMAINS } from '../constants';
 import { AppLang, UI_STRINGS } from '../utils/i18n';
@@ -52,16 +53,23 @@ export const DomainSelector: React.FC<DomainSelectorProps> = ({
               type="button"
               disabled={disabled}
               onClick={() => onSelectDomain(domain.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                 isSelected
-                  ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-xs font-semibold border border-purple-500/40'
+                  ? 'text-white font-semibold'
                   : 'bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md hover:bg-white/90 dark:hover:bg-zinc-800/90 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 border border-white/80 dark:border-zinc-800/80 shadow-2xs'
               }`}
             >
-              <span className={isSelected ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}>
+              {isSelected && (
+                <motion.div
+                  layoutId="selected-domain-indicator"
+                  className="absolute inset-0 bg-purple-600 rounded-xl shadow-xs border border-purple-500/40 -z-10"
+                  transition={{ type: 'spring', bounce: 0.18, duration: 0.35 }}
+                />
+              )}
+              <span className={`relative z-10 ${isSelected ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}`}>
                 {domainIcons[domain.id]}
               </span>
-              <span>{lang === 'ar' ? domain.labelAr : domain.labelEn}</span>
+              <span className="relative z-10">{lang === 'ar' ? domain.labelAr : domain.labelEn}</span>
             </button>
           );
         })}

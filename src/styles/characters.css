@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PromptZ characters — animation layer
+   PromptZ characters — animation and theme-adaptation layer
    --------------------------------------------------------------------------
    The SVG artwork is inlined unchanged (see Character.tsx); only CSS moves its
    named parts. Every keyframe starts at the untouched drawing, so a paused
@@ -25,12 +25,58 @@
   overflow: visible;
 }
 
-/* ---------- Shared: whole-drawing bob and eye blink ---------- */
-.pz-tile .pz-character svg {
-  animation: pz-bob 3.2s ease-in-out infinite;
-  animation-delay: var(--pz-delay, 0s);
+/* ==========================================================================
+   Theme-aware line art & filled body (Light & Dark Mode)
+   - "filled mixed with purple":
+     * In Light mode: Soft lavender/purple tint (#F3EEFF or linear gradient feel) with clean #7638F5 / #8B5CF6 undertones
+     * In Dark mode: Deep glowing purple/indigo fill (#261A3E or #2D1B4E)
+     * Outlines: Crisp charcoal #27232E in light mode, bright off-white #EDEDF2 in dark mode
+     * Eyes: Charcoal in light mode, off-white in dark mode
+     * Light-bulb & rays: Brand purple #7638F5 & #E9DDFB
+   ========================================================================== */
+
+/* Light mode: delicate luminous purple-tinted body fill */
+.pz-character-body-fill {
+  fill: #F1EAFF;
+  stroke: none;
+  transition: fill 0.2s ease;
 }
 
+.pz-character [id$="-Head"],
+.pz-character [id$="-Back"],
+.pz-character [id$="-Lower-arm"],
+.pz-character [id$="-Raised-arm"] {
+  fill: none;
+  stroke: #27232E;
+}
+
+/* Dark mode: rich dark amethyst/purple body fill */
+.dark .pz-character-body-fill {
+  fill: #271A42;
+}
+
+.dark .pz-character [id$="-Head"],
+.dark .pz-character [id$="-Back"],
+.dark .pz-character [id$="-Head-and-back"],
+.dark .pz-character [id$="-Lower-arm"],
+.dark .pz-character [id$="-Raised-arm"],
+.dark .pz-character [id$="-Upper-arm"],
+.dark .pz-character [id$="-Lower-right"],
+.dark .pz-character [id$="-Curved-arm"],
+.dark .pz-character [id$="-Holding-hand-right"],
+.dark .pz-character [id$="-Holding-arm-left"],
+.dark .pz-character [id$="-Bulb-base-top"],
+.dark .pz-character [id$="-Bulb-base-bottom"],
+.dark .pz-character [id$="-Bulb-tip"] {
+  stroke: #EDEDF2;
+}
+
+.dark .pz-character [id$="-Eye-left"],
+.dark .pz-character [id$="-Eye-right"] {
+  fill: #EDEDF2;
+}
+
+/* ---------- Shared: eye blink ---------- */
 .pz-character [id$="-Eye-left"],
 .pz-character [id$="-Eye-right"] {
   transform-box: fill-box;
@@ -112,75 +158,79 @@
   animation-delay: calc(var(--pz-delay, 0s) + 0.5s);
 }
 
-/* ---------- Main character: fixed, hops, travels with scrolling ---------- */
-.pz-mascot {
-  position: fixed;
-  bottom: 12px;
-  left: 0;
-  z-index: 30; /* below the header (40) and modals/drawers (50) */
-  width: 88px;
-  height: 88px;
+/* ==========================================================================
+   Peeking Mascot on Prompt Console Frame
+   Fixed to top edge of main prompt console frame at top-right corner.
+   Resting state: only head/top portion visible above border, clipped below.
+   Loop: rises up, pauses, sinks down out of view, repeats.
+   ========================================================================== */
+
+.pz-peeking-mascot {
+  overflow: hidden;
   pointer-events: none;
-  will-change: transform;
 }
 
-.pz-mascot__facing {
+.pz-peeking-mascot__inner {
   width: 100%;
   height: 100%;
-  transition: transform 0.25s ease;
+  transform: translateY(52%);
+  animation: pz-peekaboo 5.5s cubic-bezier(0.34, 1.25, 0.64, 1) infinite;
 }
 
-.pz-mascot__body {
-  width: 100%;
-  height: 100%;
-  transform-origin: 50% 100%;
-  animation: pz-hop 0.9s cubic-bezier(0.3, 0, 0.3, 1) infinite;
-}
-
-@media (max-width: 809px) {
-  .pz-mascot {
-    width: 64px;
-    height: 64px;
+@keyframes pz-peekaboo {
+  /* 0% - 22%: Resting state with head and bulb peeking above border */
+  0%, 22% {
+    transform: translateY(52%);
+  }
+  /* 32% - 56%: Rises up, revealing upper body, raised arm & glowing bulb */
+  32%, 56% {
+    transform: translateY(6%);
+  }
+  /* 66% - 78%: Sinks down out of view */
+  66%, 78% {
+    transform: translateY(105%);
+  }
+  /* 88% - 100%: Pops back up to resting peek */
+  88%, 100% {
+    transform: translateY(52%);
   }
 }
 
-.pz-motion-toggle {
-  position: fixed;
-  bottom: 16px;
-  left: 16px; /* physical left: the hero's own toggle sits on the right */
-  z-index: 31;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid rgb(0 0 0 / 0.12);
-  border-radius: 9999px;
-  background: #fff;
-  color: #27232e;
-  box-shadow: 0 4px 14px rgb(0 0 0 / 0.12);
-  cursor: pointer;
+/* ==========================================================================
+   Floating scattered characters
+   Subtle floating animation for decorative characters near controls
+   ========================================================================== */
+
+.pz-floating-character {
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  animation: pz-float-gentle 3.6s ease-in-out infinite;
 }
 
-.pz-motion-toggle:hover {
-  border-color: #7638f5;
+.pz-floating-character--delay-1 {
+  animation-delay: 0.6s;
 }
 
-.pz-motion-toggle:focus-visible {
-  outline: 2px solid #7638f5;
-  outline-offset: 2px;
+.pz-floating-character--delay-2 {
+  animation-delay: 1.2s;
 }
 
-.pz-motion-toggle svg {
-  width: 14px;
-  height: 14px;
+@keyframes pz-float-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 /* ---------- Paused (toggle, or reduced motion by default) ---------- */
 .pz-characters-paused .pz-character,
 .pz-characters-paused .pz-character *,
-.pz-characters-paused .pz-mascot__body {
-  animation-play-state: paused;
+.pz-characters-paused .pz-peeking-mascot__inner,
+.pz-characters-paused .pz-floating-character {
+  animation-play-state: paused !important;
 }
 
 /* ---------- Keyframes (0% is always the original drawing) ---------- */
@@ -238,11 +288,4 @@
   0%, 30% { stroke-dashoffset: 0; }
   45% { stroke-dashoffset: 60; }
   75%, 100% { stroke-dashoffset: 0; }
-}
-
-@keyframes pz-hop {
-  0%, 100% { transform: translateY(0) scale(1, 1); }
-  12% { transform: translateY(0) scale(1.08, 0.92); }
-  45% { transform: translateY(-22px) scale(0.96, 1.04); }
-  80% { transform: translateY(0) scale(1.04, 0.96); }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { motion } from 'motion/react';
 import {
   DomainType,
   DepthType,
@@ -28,8 +29,8 @@ import { LibraryDrawer } from './components/LibraryDrawer';
 import { ErrorBanner } from './components/ErrorBanner';
 import { SettingsModal } from './components/SettingsModal';
 import { Clock } from 'lucide-react';
-import { CharactersSection } from './components/CharactersSection';
 import { Mascot } from './components/Mascot';
+import { CustomCursor } from './components/CustomCursor';
 
 const STORAGE_KEYS = {
   MODELS: 'gemini_available_models',
@@ -449,9 +450,6 @@ export default function App() {
         onScrollToBuilder={scrollToBuilder}
         onOpenLibrary={() => setIsLibraryOpen(true)}
       >
-        {/* The four PromptZ characters, animated */}
-        <CharactersSection lang={lang} />
-
         <main
           ref={builderRef}
           id="prompt-builder"
@@ -478,8 +476,18 @@ export default function App() {
             onRetry={handleGenerate}
           />
 
-          {/* Clean, Refined Frame for Prompt Workspace Console */}
-          <div className="relative rounded-3xl p-4 sm:p-6 bg-white/80 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm transition-all overflow-hidden flex flex-col gap-4">
+          {/* Clean, Refined Frame for Prompt Workspace Console with Peeking Mascot */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="relative"
+          >
+            {/* The "Create" Peeking Mascot on top border of prompt console frame (left for en, right for ar) */}
+            <Mascot lang={lang} />
+
+            <div className="relative rounded-3xl p-4 sm:p-6 bg-white/80 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm transition-all overflow-hidden flex flex-col gap-4">
             {/* 1. Domain Selector */}
             <DomainSelector
               selectedDomain={domain}
@@ -536,7 +544,8 @@ export default function App() {
               </div>
             </div>
           </div>
-        </main>
+        </motion.div>
+      </main>
       </HeroSection>
 
       {/* Bottom Footer */}
@@ -570,12 +579,8 @@ export default function App() {
         lang={lang}
       />
 
-      {/* Main character: hops and travels across the page while scrolling */}
-      <Mascot
-        paused={charactersPaused}
-        onTogglePaused={() => setCharactersPaused((prev) => !prev)}
-        lang={lang}
-      />
+      {/* Custom Cursor & Companion Character Layer */}
+      <CustomCursor />
     </div>
   );
 }

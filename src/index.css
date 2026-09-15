@@ -6,6 +6,46 @@
   /* Default body font is SF Pro with native Apple and system fallbacks */
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'SF Pro', system-ui, sans-serif;
   letter-spacing: -0.011em;
+  scroll-behavior: smooth;
+}
+
+/* Smooth crossfade on theme changes */
+html,
+body {
+  transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+}
+
+/* Smooth interactive button/control state polish */
+button:not(:disabled),
+a,
+[role="button"] {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              color 0.2s ease,
+              opacity 0.2s ease;
+}
+
+button:not(:disabled):active,
+a:active,
+[role="button"]:active {
+  transform: scale(0.975);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    scroll-behavior: auto;
+  }
+  html,
+  body,
+  button,
+  a,
+  [role="button"] {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    transform: none !important;
+  }
 }
 
 /* Arabic typography: IBM Plex Sans Arabic */
@@ -66,4 +106,24 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #71717a80;
+}
+
+/* ==========================================================================
+   Custom Cursor Rules
+   Hide default cursor on non-touch (fine pointer) devices across all elements
+   ========================================================================== */
+@media (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor body,
+  html.has-custom-cursor a,
+  html.has-custom-cursor button,
+  html.has-custom-cursor input,
+  html.has-custom-cursor textarea,
+  html.has-custom-cursor select,
+  html.has-custom-cursor label,
+  html.has-custom-cursor [role="button"],
+  html.has-custom-cursor [tabindex],
+  html.has-custom-cursor * {
+    cursor: none !important;
+  }
 }

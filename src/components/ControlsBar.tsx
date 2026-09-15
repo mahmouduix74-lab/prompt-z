@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { DepthType, GeminiModelInfo, OutputLanguage } from '../types';
 import { DEPTHS, OUTPUT_LANGUAGES } from '../constants';
 import { AppLang, UI_STRINGS } from '../utils/i18n';
@@ -58,9 +59,9 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
                 disabled={disabled}
                 onClick={() => onChangeDepth(d.id)}
                 aria-pressed={isSelected}
-                className={`h-full flex items-center justify-center rounded-lg text-xs font-medium text-center transition-all cursor-pointer truncate disabled:opacity-50 ${
+                className={`relative h-full flex items-center justify-center rounded-lg text-xs font-medium text-center transition-colors cursor-pointer truncate disabled:opacity-50 ${
                   isSelected
-                    ? 'bg-white dark:bg-zinc-800 text-purple-700 dark:text-purple-300 font-bold shadow-xs ring-1 ring-black/5 dark:ring-white/10'
+                    ? 'text-purple-700 dark:text-purple-300 font-bold'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-white/50 dark:hover:bg-zinc-900/50'
                 }`}
                 title={
@@ -73,7 +74,14 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
                     : d.labelEn
                 }
               >
-                {lang === 'ar' ? d.labelAr : d.labelEn}
+                {isSelected && (
+                  <motion.div
+                    layoutId="depth-tab-indicator"
+                    className="absolute inset-0 bg-white dark:bg-zinc-800 rounded-lg shadow-xs ring-1 ring-black/5 dark:ring-white/10 -z-10"
+                    transition={{ type: 'spring', bounce: 0.15, duration: 0.3 }}
+                  />
+                )}
+                <span className="relative z-10">{lang === 'ar' ? d.labelAr : d.labelEn}</span>
               </button>
             );
           })}

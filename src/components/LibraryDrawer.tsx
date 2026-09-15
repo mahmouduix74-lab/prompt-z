@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { SavedPromptItem } from '../types';
 import { DOMAINS, DEPTHS } from '../constants';
 import { copyToClipboard } from '../utils/clipboard';
@@ -73,18 +74,34 @@ export const LibraryDrawer: React.FC<LibraryDrawerProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
-      {/* Drawer Overlay backdrop */}
-      <div className="absolute inset-0" onClick={onClose} />
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className={`fixed inset-0 z-50 flex ${
+            lang === 'ar' ? 'justify-start' : 'justify-end'
+          } bg-black/40 backdrop-blur-xs`}
+        >
+          {/* Drawer Overlay backdrop */}
+          <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Drawer Content */}
-      <div
-        className="relative w-full max-w-lg bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 h-full flex flex-col shadow-2xl z-10 animate-in slide-in-from-right duration-200"
-        onClick={(e) => e.stopPropagation()}
-      >
+          {/* Drawer Content */}
+          <motion.div
+            initial={{ x: lang === 'ar' ? '-100%' : '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: lang === 'ar' ? '-100%' : '100%' }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+            className={`relative w-full max-w-lg bg-white dark:bg-zinc-900 ${
+              lang === 'ar'
+                ? 'border-r border-zinc-200 dark:border-zinc-800'
+                : 'border-l border-zinc-200 dark:border-zinc-800'
+            } h-full flex flex-col shadow-2xl z-10`}
+            onClick={(e) => e.stopPropagation()}
+          >
         {/* Drawer Header */}
         <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
           <div className="flex items-center gap-2">
@@ -253,7 +270,9 @@ export const LibraryDrawer: React.FC<LibraryDrawerProps> = ({
             })
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
   );
 };
