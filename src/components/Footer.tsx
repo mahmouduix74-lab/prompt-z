@@ -40,22 +40,6 @@ export const Footer: React.FC<FooterProps> = ({
               : '• Precision AI Prompt Engineering Studio'}
           </span>
         </div>
-
-        {/* Status & Quick Links */}
-        <div className="flex items-center gap-4 text-xs text-zinc-600 dark:text-zinc-400">
-          <button
-            type="button"
-            onClick={onOpenLibrary}
-            className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors cursor-pointer"
-          >
-            {isAr ? `المكتبة (${savedCount})` : `Library (${savedCount})`}
-          </button>
-          <span>•</span>
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-mono text-[11px] text-zinc-500">Gemini Active</span>
-          </div>
-        </div>
       </div>
     </motion.footer>
   );

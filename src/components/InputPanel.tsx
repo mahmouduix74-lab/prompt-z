@@ -116,7 +116,6 @@ export const InputPanel: React.FC<InputPanelProps> = ({
   isLoading,
   lang,
 }) => {
-  const [promptMode, setPromptMode] = useState<'generate' | 'improve'>('generate');
   const [showTips, setShowTips] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const t = UI_STRINGS[lang];
@@ -135,11 +134,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
       if (!isBusy && rawText.trim()) {
-        if (promptMode === 'improve') {
-          onEnhancePrompt();
-        } else {
-          onSubmit();
-        }
+        onSubmit();
       }
     }
   };
@@ -150,14 +145,12 @@ export const InputPanel: React.FC<InputPanelProps> = ({
 
   return (
     <div className="relative flex flex-col h-full rounded-2xl bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 focus-within:border-purple-500/70 focus-within:ring-1 focus-within:ring-purple-500/30 shadow-xs transition-all overflow-hidden">
-      {/* Header toolbar with Mode Switcher (Generate vs Improve Prompt) */}
+      {/* Header toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 min-h-[48px] border-b border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/40 backdrop-blur-md rounded-t-2xl">
         <div className="flex items-center gap-2 text-xs">
           <PenLine className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
           <label htmlFor="raw-prompt" className="font-semibold text-zinc-900 dark:text-zinc-100 cursor-pointer">
-            {promptMode === 'improve'
-              ? (lang === 'ar' ? 'البرومبت المراد تحسينه' : 'Prompt to Improve')
-              : (lang === 'ar' ? 'فكرة أو متطلبات البرومبت' : 'Raw Prompt / Idea')}
+            {lang === 'ar' ? 'فكرة أو متطلبات البرومبت' : 'Raw Prompt / Idea'}
           </label>
 
           {/* Quick Tips Help Popover Icon */}
@@ -254,35 +247,28 @@ export const InputPanel: React.FC<InputPanelProps> = ({
           )}
         </div>
 
-        {/* Mode Selector Segmented Pill Control (Secondary/Subtle Style) */}
-        <div className="flex items-center gap-0.5 p-0.5 bg-zinc-100/80 dark:bg-zinc-900/60 rounded-lg border border-zinc-200/60 dark:border-zinc-800/60">
-          <button
-            type="button"
-            onClick={() => setPromptMode('generate')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-medium transition-all cursor-pointer ${
-              promptMode === 'generate'
-                ? 'bg-white dark:bg-zinc-800 text-purple-700 dark:text-purple-300 shadow-2xs border border-zinc-200/80 dark:border-zinc-700/60 font-semibold'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-            }`}
-            title={lang === 'ar' ? 'توليد برومبت شامل واحترافي من الصفر' : 'Generate complete prompt from scratch'}
-          >
-            <Wand2 className="w-3 h-3 text-purple-600 dark:text-purple-400" />
-            <span>{lang === 'ar' ? 'توليد برومبت' : 'Generate'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setPromptMode('improve')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-medium transition-all cursor-pointer ${
-              promptMode === 'improve'
-                ? 'bg-white dark:bg-zinc-800 text-purple-700 dark:text-purple-300 shadow-2xs border border-zinc-200/80 dark:border-zinc-700/60 font-semibold'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-            }`}
-            title={lang === 'ar' ? 'تحسين وتنقيح برومبت مكتوب سابقاً' : 'Improve & refine existing prompt'}
-          >
-            <Sparkles className="w-3 h-3 text-purple-600 dark:text-purple-400" />
-            <span>{lang === 'ar' ? 'تحسين برومبت' : 'Improve'}</span>
-          </button>
-        </div>
+        {/* Prompt Enhancement Button in Toolbar */}
+        <motion.button
+          type="button"
+          onClick={onEnhancePrompt}
+          disabled={isBusy || !rawText.trim()}
+          whileHover={isBusy || !rawText.trim() ? {} : { scale: 1.03 }}
+          whileTap={isBusy || !rawText.trim() ? {} : { scale: 0.97 }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-100/90 hover:bg-purple-50/80 dark:bg-zinc-800/80 dark:hover:bg-purple-950/40 text-zinc-700 hover:text-purple-700 dark:text-zinc-300 dark:hover:text-purple-300 border border-zinc-200/80 hover:border-purple-300/80 dark:border-zinc-700/80 dark:hover:border-purple-500/40 shadow-2xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          title={t.enhancePromptTooltip}
+        >
+          {isEnhancing ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600 dark:text-purple-400" />
+              <span>{t.enhancingPrompt}</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <span>{t.enhancePrompt}</span>
+            </>
+          )}
+        </motion.button>
       </div>
 
       {/* Textarea with one-line typewriter animated placeholder & centered empty character watermark */}
@@ -290,13 +276,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
         {!rawText && (
           <>
             <AnimatedPromptPlaceholder
-              lines={
-                promptMode === 'improve'
-                  ? (lang === 'ar'
-                      ? ['ألصق هنا البرومبت الذي ترغب في تحسينه وتطوير صياغته...']
-                      : ['Paste your existing prompt here to improve & refine it...'])
-                  : placeholderLines
-              }
+              lines={placeholderLines}
               onClick={() => textareaRef.current?.focus()}
             />
 
@@ -329,7 +309,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
         />
       </div>
 
-      {/* Input Footer: Counts, Clear & Enlarged Solid Purple Generate/Improve Button */}
+      {/* Input Footer: Counts, Clear & Solid Purple Generate Button */}
       <div className="flex items-center justify-between gap-2 px-4 py-3 min-h-[52px] border-t border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/50 backdrop-blur-md rounded-b-2xl text-xs">
         <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 font-mono text-[11px]">
           <span>{charCount} {t.charCount}</span>
@@ -353,34 +333,25 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             </motion.button>
           )}
 
-          {/* Primary Action Button: Enlarged size and rounded-2xl border radius */}
+          {/* Primary Action Button: Solid Purple Generate Button */}
           <motion.button
             type="button"
-            onClick={promptMode === 'improve' ? onEnhancePrompt : onSubmit}
+            onClick={onSubmit}
             disabled={isBusy || !rawText.trim()}
             whileHover={isBusy || !rawText.trim() ? {} : { scale: 1.03 }}
             whileTap={isBusy || !rawText.trim() ? {} : { scale: 0.96 }}
             className="flex items-center gap-2.5 px-6 py-2.5 sm:px-8 sm:py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-600 dark:hover:bg-purple-500 text-white text-xs sm:text-sm font-bold shadow-[0_6px_20px_rgba(124,58,237,0.38)] hover:shadow-[0_8px_25px_rgba(124,58,237,0.5)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             title="Shortcut: Ctrl/Cmd + Enter"
           >
-            {isBusy ? (
+            {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>
-                  {promptMode === 'improve'
-                    ? (lang === 'ar' ? 'جاري التحسين...' : 'Improving...')
-                    : t.generating}
-                </span>
-              </>
-            ) : promptMode === 'improve' ? (
-              <>
-                <Sparkles className="w-4 h-4 text-white" />
-                <span>{lang === 'ar' ? 'تحسين البرومبت الآن' : 'Improve Prompt Now'}</span>
+                <span>{t.generating}</span>
               </>
             ) : (
               <>
                 <Wand2 className="w-4 h-4 text-white" />
-                <span>{lang === 'ar' ? 'توليد البرومبت' : 'Generate Prompt'}</span>
+                <span>{t.generate}</span>
                 {lang === 'ar' ? (
                   <ArrowUpLeft className="w-4 h-4 opacity-80" />
                 ) : (
