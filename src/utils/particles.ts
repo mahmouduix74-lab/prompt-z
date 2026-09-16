@@ -9,7 +9,7 @@
  * has passed the centre on both axes.
  */
 const PARTICLES = {
-  count: 130,
+  count: 60,
   radius: 0.9, // CSS px
   color: '#fff',
   opacity: 1,
@@ -109,7 +109,7 @@ export function createParticleField(canvas: HTMLCanvasElement, isDark: boolean =
   function resize() {
     const rect = canvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
-    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
 

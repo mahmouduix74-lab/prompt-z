@@ -151,10 +151,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   }, [theme]);
 
   useEffect(() => {
-    const field = fieldRef.current;
-    if (!field) return;
-    if (isPlaying) field.play();
-    else field.pause();
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        const isVisible = entry.isIntersecting;
+        const field = fieldRef.current;
+        if (field) {
+          if (isVisible && isPlaying) {
+            field.play();
+          } else {
+            field.pause();
+          }
+        }
+      },
+      { threshold: 0.05 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
   }, [isPlaying]);
 
   return (

@@ -51,6 +51,10 @@ export const CustomCursor: React.FC = () => {
   }, []);
 
   // Set up mouse tracking and animation loop
+  // Ref guards to avoid redundant React state updates on mouse move
+  const isHoveredRef = useRef<boolean>(false);
+  const isVisibleRef = useRef<boolean>(false);
+
   useEffect(() => {
     if (!hasPointer) return;
 
@@ -58,7 +62,8 @@ export const CustomCursor: React.FC = () => {
     document.documentElement.classList.add('has-custom-cursor');
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isVisible) {
+      if (!isVisibleRef.current) {
+        isVisibleRef.current = true;
         setIsVisible(true);
         // Initialize companion at mouse position on first entrance
         companionPos.current = { x: e.clientX, y: e.clientY };
@@ -77,16 +82,25 @@ export const CustomCursor: React.FC = () => {
         const isInteractive = Boolean(
           target.closest('button, a, input, textarea, select, [role="button"], [tabindex="0"], label, summary, .cursor-pointer')
         );
-        setIsHovered(isInteractive);
+        if (isHoveredRef.current !== isInteractive) {
+          isHoveredRef.current = isInteractive;
+          setIsHovered(isInteractive);
+        }
       }
     };
 
     const handleMouseLeave = () => {
-      setIsVisible(false);
+      if (isVisibleRef.current) {
+        isVisibleRef.current = false;
+        setIsVisible(false);
+      }
     };
 
     const handleMouseEnter = () => {
-      setIsVisible(true);
+      if (!isVisibleRef.current) {
+        isVisibleRef.current = true;
+        setIsVisible(true);
+      }
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
