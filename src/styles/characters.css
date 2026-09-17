@@ -331,7 +331,7 @@
 }
 
 .pz-thinking-peek .pz-character {
-  animation: pz-peek 6.4s ease-in-out infinite;
+  animation: pz-peek 5s ease-in-out infinite;
   animation-delay: var(--pz-delay, 0s);
 }
 
@@ -367,15 +367,17 @@
 }
 
 @keyframes pz-peek {
-  0%, 52% {
+  /* Visible for most of the loop (and right away on page load) so it is
+     easy to notice; only dips out of view briefly near the end. */
+  0% {
     opacity: 0;
     transform: translateY(6px);
   }
-  62%, 84% {
+  6%, 78% {
     opacity: 1;
     transform: translateY(0);
   }
-  96%, 100% {
+  92%, 100% {
     opacity: 0;
     transform: translateY(6px);
   }
