@@ -484,6 +484,7 @@ export default function App() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="relative"
           >
+            <ThinkingPeek lang={lang} />
             <div className="relative rounded-3xl p-4 sm:p-6 bg-white/80 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm transition-all overflow-hidden flex flex-col gap-4">
             {/* 1. Domain Selector */}
             <DomainSelector
@@ -511,7 +512,6 @@ export default function App() {
             {/* 3. Two-Column Cockpit Layout: Input (Raw Prompt) & Output (Structured Prompt) - Perfectly Aligned */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1 items-stretch text-left" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
               <div className="relative flex flex-col h-full">
-                <ThinkingPeek lang={lang} />
                 <InputPanel
                   rawText={rawText}
                   onChangeText={setRawText}

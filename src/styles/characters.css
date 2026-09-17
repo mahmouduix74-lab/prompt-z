@@ -292,19 +292,22 @@
 
 /* ==========================================================================
    Thinking character — peeks above the raw-prompt input frame.
-   Position (left/right) and facing direction mirror the reading direction:
-   RTL (Arabic) sits on the right, using the artwork's natural orientation
-   (its laptop/focus side already reads to the right); LTR (English) sits on
-   the left and is flipped (scaleX(-1)) so it faces that side instead.
+   Position (left/right) mirrors the reading direction: RTL (Arabic) sits on
+   the right, LTR (English) sits on the left. Facing direction is inward,
+   toward the console frame it peeks over: Arabic (right side) is flipped
+   (scaleX(-1)) to face left/inward, English (left side) uses the artwork's
+   natural orientation, which already faces right/inward.
+   It sits above the whole console frame (the outer .relative wrapper this
+   is a sibling of), not just above the input panel.
    ========================================================================== */
 .pz-thinking-peek {
   position: absolute;
   top: 0;
   z-index: 5;
-  width: 96px;
-  height: 73px; /* matches the SVG's own 1000:760 aspect ratio */
+  width: 130px;
+  height: 99px; /* matches the SVG's own 1000:760 aspect ratio */
   pointer-events: none;
-  transform: translateY(-62%);
+  transform: translateY(-78%);
 }
 
 .pz-thinking-peek--rtl {
@@ -317,8 +320,8 @@
 
 @media (max-width: 639px) {
   .pz-thinking-peek {
-    width: 72px;
-    height: 55px;
+    width: 96px;
+    height: 73px;
   }
 
   .pz-thinking-peek--rtl {
