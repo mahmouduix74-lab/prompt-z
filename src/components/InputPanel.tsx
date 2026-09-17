@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppLang, UI_STRINGS } from '../utils/i18n';
 import { Sparkles, Trash2, ArrowUpLeft, ArrowUpRight, Loader2, Wand2, Undo2, PenLine, Info } from 'lucide-react';
-import { Character } from './Character';
 
 interface InputPanelProps {
   rawText: string;
@@ -136,6 +135,25 @@ export const InputPanel: React.FC<InputPanelProps> = ({
       if (!isBusy && rawText.trim()) {
         onSubmit();
       }
+    }
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget;
+    const isScrollable = textarea.scrollHeight > textarea.clientHeight + 2;
+
+    if (!isScrollable) {
+      window.scrollBy({ top: e.deltaY, behavior: 'auto' });
+      return;
+    }
+
+    const isAtTop = textarea.scrollTop <= 0 && e.deltaY < 0;
+    const isAtBottom =
+      Math.ceil(textarea.scrollTop + textarea.clientHeight) >= textarea.scrollHeight - 2 &&
+      e.deltaY > 0;
+
+    if (isAtTop || isAtBottom) {
+      window.scrollBy({ top: e.deltaY, behavior: 'auto' });
     }
   };
 
@@ -274,27 +292,10 @@ export const InputPanel: React.FC<InputPanelProps> = ({
       {/* Textarea with one-line typewriter animated placeholder & centered empty character watermark */}
       <div className="relative flex-1 flex flex-col p-1">
         {!rawText && (
-          <>
-            <AnimatedPromptPlaceholder
-              lines={placeholderLines}
-              onClick={() => textareaRef.current?.focus()}
-            />
-
-            <AnimatePresence>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2 }}
-                className="absolute inset-0 pt-10 flex items-center justify-center pointer-events-none select-none z-10"
-              >
-                {/* Reduced Opacity Watermark Character */}
-                <div className="w-28 h-28 sm:w-32 sm:h-32 opacity-25 dark:opacity-20 transition-opacity">
-                  <Character name="organize" instance="textarea-organize-character" flip={lang === 'ar'} />
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </>
+          <AnimatedPromptPlaceholder
+            lines={placeholderLines}
+            onClick={() => textareaRef.current?.focus()}
+          />
         )}
 
         <textarea
@@ -303,21 +304,23 @@ export const InputPanel: React.FC<InputPanelProps> = ({
           value={rawText}
           onChange={(e) => onChangeText(e.target.value)}
           onKeyDown={handleKeyDown}
+          onWheel={handleWheel}
           disabled={isBusy}
-          className="w-full flex-1 p-3.5 bg-transparent text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 resize-none focus:outline-none min-h-[380px] leading-relaxed relative z-20 font-sans"
+          className="w-full flex-1 p-3.5 bg-transparent text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 resize-none focus:outline-none min-h-[380px] leading-relaxed relative z-20 font-sans overscroll-y-auto"
           dir="auto"
         />
       </div>
 
       {/* Input Footer: Counts, Clear & Solid Purple Generate Button */}
-      <div className="flex items-center justify-between gap-2 px-4 py-3 min-h-[52px] border-t border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/50 backdrop-blur-md rounded-b-2xl text-xs">
-        <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 font-mono text-[11px]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-2 px-4 py-3 border-t border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/50 backdrop-blur-md rounded-b-2xl text-xs">
+        {/* Character & Word Count - Stacked cleanly above action buttons on mobile */}
+        <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 font-mono text-[11px] pb-1 sm:pb-0 border-b sm:border-b-0 border-zinc-200/40 dark:border-zinc-800/40">
           <span>{charCount} {t.charCount}</span>
           <span className="text-zinc-300 dark:text-zinc-700">•</span>
           <span>{wordCount} {t.wordCount}</span>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-end gap-2.5 w-full sm:w-auto">
           {rawText.length > 0 && (
             <motion.button
               type="button"
@@ -325,7 +328,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
               disabled={isBusy}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-1 px-3 py-2 rounded-xl text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer disabled:opacity-50 text-xs font-medium"
               title={t.clear}
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -333,30 +336,25 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             </motion.button>
           )}
 
-          {/* Primary Action Button: Solid Purple Generate Button */}
+          {/* Primary Action Button: Solid Purple Generate Button (48px Height, Single Icon) */}
           <motion.button
             type="button"
             onClick={onSubmit}
             disabled={isBusy || !rawText.trim()}
             whileHover={isBusy || !rawText.trim() ? {} : { scale: 1.03 }}
             whileTap={isBusy || !rawText.trim() ? {} : { scale: 0.96 }}
-            className="flex items-center gap-2.5 px-6 py-2.5 sm:px-8 sm:py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-600 dark:hover:bg-purple-500 text-white text-xs sm:text-sm font-bold shadow-[0_6px_20px_rgba(124,58,237,0.38)] hover:shadow-[0_8px_25px_rgba(124,58,237,0.5)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 sm:px-8 h-[48px] min-h-[48px] rounded-2xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-600 dark:hover:bg-purple-500 text-white text-sm font-bold shadow-[0_6px_20px_rgba(124,58,237,0.38)] hover:shadow-[0_8px_25px_rgba(124,58,237,0.5)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             title="Shortcut: Ctrl/Cmd + Enter"
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" />
                 <span>{t.generating}</span>
               </>
             ) : (
               <>
-                <Wand2 className="w-4 h-4 text-white" />
+                <Wand2 className="w-5 h-5 text-white" />
                 <span>{t.generate}</span>
-                {lang === 'ar' ? (
-                  <ArrowUpLeft className="w-4 h-4 opacity-80" />
-                ) : (
-                  <ArrowUpRight className="w-4 h-4 opacity-80" />
-                )}
               </>
             )}
           </motion.button>

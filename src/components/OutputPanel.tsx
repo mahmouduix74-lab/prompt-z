@@ -15,7 +15,7 @@ import {
   FastForward,
   History,
 } from 'lucide-react';
-import { Character } from './Character';
+import { SnakeGame } from './SnakeGame';
 
 interface OutputPanelProps {
   output: string;
@@ -23,6 +23,7 @@ interface OutputPanelProps {
   modelUsed?: string;
   timestamp?: number;
   lang: AppLang;
+  theme?: 'light' | 'dark';
   onSaveToLibrary?: () => void;
   isSaved?: boolean;
   onOpenLibrary?: () => void;
@@ -37,6 +38,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
   modelUsed,
   timestamp,
   lang,
+  theme,
   onSaveToLibrary,
   isSaved = false,
   onOpenLibrary,
@@ -134,6 +136,25 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
     if (timerRef.current) clearInterval(timerRef.current);
     setDisplayedText(output);
     setIsTyping(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const isScrollable = el.scrollHeight > el.clientHeight + 2;
+
+    if (!isScrollable) {
+      window.scrollBy({ top: e.deltaY, behavior: 'auto' });
+      return;
+    }
+
+    const isAtTop = el.scrollTop <= 0 && e.deltaY < 0;
+    const isAtBottom =
+      Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight - 2 &&
+      e.deltaY > 0;
+
+    if (isAtTop || isAtBottom) {
+      window.scrollBy({ top: e.deltaY, behavior: 'auto' });
+    }
   };
 
   const handleCopy = async () => {
@@ -396,13 +417,14 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
       {/* Main Output Content Area */}
       <div
         ref={scrollContainerRef}
-        className={`relative flex-1 p-4 bg-white/20 dark:bg-zinc-950/40 overflow-auto min-h-[380px] text-xs sm:text-sm font-mono leading-relaxed select-text flex flex-col transition-all duration-500 ${
+        onWheel={handleWheel}
+        className={`relative flex-1 p-4 bg-white/20 dark:bg-zinc-950/40 overflow-y-auto overscroll-y-auto min-h-[380px] text-xs sm:text-sm font-mono leading-relaxed select-text flex flex-col transition-all duration-500 ${
           copyFlash
             ? 'ring-2 ring-emerald-500/40 dark:ring-emerald-400/30 bg-emerald-500/[0.04]'
             : ''
         }`}
       >
-        {/* Loading / Thinking Overlay with Mascot Animation */}
+        {/* Loading / Thinking Overlay with Animated Ghost Laptop Character & Playable Snake Game */}
         <AnimatePresence>
           {isLoading && (
             <motion.div
@@ -411,19 +433,10 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
               transition={{ duration: 0.28, ease: 'easeOut' }}
-              className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-white/92 dark:bg-zinc-950/92 backdrop-blur-md z-20 text-zinc-700 dark:text-zinc-200"
+              className="absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-6 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md z-20 text-zinc-700 dark:text-zinc-200 overflow-y-auto"
             >
-              <div className="w-[120px] h-[120px]">
-                <Character name="create" instance="output-loading" flip={isAr} />
-              </div>
-              <p className="mt-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-                {isAr ? 'جاري التفكير وصياغة البرومبت...' : 'Thinking & Crafting Prompt...'}
-              </p>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                {isAr
-                  ? 'تطبيق معايير هندسة البرومبت، تصنيف الأقسام، وبناء السياق'
-                  : 'Applying prompt engineering logic and structuring sections'}
-              </p>
+              {/* Playable Snake Arcade Game while waiting */}
+              <SnakeGame lang={lang} isAr={isAr} theme={theme} />
             </motion.div>
           )}
         </AnimatePresence>

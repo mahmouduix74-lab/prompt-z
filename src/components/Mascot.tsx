@@ -1,37 +1,38 @@
 import React from 'react';
 import { Character } from './Character';
 import { AppLang } from '../utils/i18n';
-import '../styles/characters.css';
 
 interface MascotProps {
   lang: AppLang;
 }
 
 /**
- * Peeking Mascot: The "Create" character fixed to the top edge of the main prompt console frame.
- * Positioned on the left if English (lang === 'en') and on the right if Arabic (lang === 'ar').
- * Sits on the frame's top border so only its head/top portion is visible at rest, with a peekaboo loop.
+ * Mascot sitting directly on the top border frame of the Domain Context container.
+ * Features:
+ * - The "Explore" character holding the magnifying glass / search icon with animated discovery rays
+ * - Sits firmly on the frame edge above Domain Context
+ * - Positioned on the left in English (above "Domain Context"), on the right in Arabic (above "المجال التخصصي")
+ * - Flipped to face inward towards the workspace controls
  */
 export const Mascot: React.FC<MascotProps> = ({ lang }) => {
   const isAr = lang === 'ar';
 
   return (
     <div
-      className={`absolute bottom-full z-20 pointer-events-none ${
-        isAr ? 'right-4 sm:right-8' : 'left-4 sm:left-8'
+      className={`absolute bottom-full z-20 pointer-events-none select-none transition-all duration-300 ${
+        isAr ? 'right-4 sm:right-8 md:right-12' : 'left-4 sm:left-8 md:left-12'
       }`}
-      style={{ marginBottom: '-1px' }}
+      style={{ marginBottom: '-8px' }}
+      aria-hidden="true"
     >
-      {/* The Peeking Mascot: Clipped at the console frame's top edge */}
-      <div
-        className="pz-peeking-mascot overflow-hidden w-20 h-20 sm:w-22 sm:h-22 md:w-24 md:h-24 pointer-events-none select-none drop-shadow-xs"
-        aria-hidden="true"
-      >
-        <div className="pz-peeking-mascot__inner w-full h-full">
-          <Character name="explore" instance="peeking-mascot" flip={isAr} />
-        </div>
+      <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 pointer-events-none select-none drop-shadow-md">
+        <Character
+          name="explore"
+          instance="domain-context-mascot"
+          flip={isAr}
+          className="w-full h-full"
+        />
       </div>
     </div>
   );
 };
-

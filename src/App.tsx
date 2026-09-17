@@ -29,7 +29,6 @@ import { LibraryDrawer } from './components/LibraryDrawer';
 import { ErrorBanner } from './components/ErrorBanner';
 import { SettingsModal } from './components/SettingsModal';
 import { Clock } from 'lucide-react';
-import { Mascot } from './components/Mascot';
 import { CustomCursor } from './components/CustomCursor';
 
 const STORAGE_KEYS = {
@@ -476,7 +475,7 @@ export default function App() {
             onRetry={handleGenerate}
           />
 
-          {/* Clean, Refined Frame for Prompt Workspace Console with Peeking Mascot */}
+          {/* Clean, Refined Frame for Prompt Workspace Console */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -484,9 +483,6 @@ export default function App() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="relative"
           >
-            {/* The "Create" Peeking Mascot on top border of prompt console frame (left for en, right for ar) */}
-            <Mascot lang={lang} />
-
             <div className="relative rounded-3xl p-4 sm:p-6 bg-white/80 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm transition-all overflow-hidden flex flex-col gap-4">
             {/* 1. Domain Selector */}
             <DomainSelector
@@ -538,6 +534,7 @@ export default function App() {
                   modelUsed={selectedModel}
                   timestamp={currentResultTimestamp}
                   lang={lang}
+                  theme={theme}
                   onSaveToLibrary={handleManualSaveToLibrary}
                   isSaved={isCurrentOutputSaved}
                   onOpenLibrary={() => setIsLibraryOpen(true)}

@@ -25,19 +25,28 @@ export function prepareCharacterMarkup(
   name?: CharacterName,
   bodyOnly?: boolean
 ): string {
-  let cleaned = markup.replace(/<\?xml[^>]*\?>\s*/, '').replace(/\sid="([^"]+)"/g, ` id="${prefix}-$1"`);
+  let cleaned = markup
+    .replace(/<\?xml[^>]*\?>\s*/, '')
+    .replace(/\sid="([^"]+)"/g, ` id="${prefix}-$1"`);
 
   if (name === 'create' && bodyOnly) {
-    // Remove the Light-bulb and Idea-rays groups completely
+    // Remove the Light-bulb and Idea-rays groups for clean companion cursor
     cleaned = cleaned.replace(/<g id="[^"]*-Light-bulb">[\s\S]*?<\/g>/, '');
     cleaned = cleaned.replace(/<g id="[^"]*-Idea-rays">[\s\S]*?<\/g>/, '');
   }
 
   if (name === 'create') {
-    // Inject a silhouette filled body element behind the line art
+    // Inject a silhouette filled body element behind the line art for solid fill
     const bodySilhouette = `<path id="${prefix}-Body-fill" class="pz-character-body-fill" d="M 1309 253 C 1312 226 1328 192 1354 180 C 1382 168 1405 181 1409 244 C 1424 231 1429 208 1440 209 C 1457 209 1459 235 1446 260 C 1439 274 1427 287 1417 294 C 1400 310 1375 328 1348 330 C 1318 330 1301 315 1308 300 C 1310 280 1318 258 1309 253 Z" />`;
     cleaned = cleaned.replace(/(<g id="[^"]*-Character">)/, `$1${bodySilhouette}`);
   }
+
+  if (name === 'explore') {
+    // Inject a silhouette filled body element for explore (magnifying glass search mascot)
+    const exploreSilhouette = `<path id="${prefix}-Explore-body-fill" class="pz-character-body-fill" d="M 823 244 C 825 218 839 194 861 186 C 879 179 892 182 901 190 C 915 205 918 230 918 260 C 917 280 920 305 921 329 C 880 330 830 330 789 323 C 794 293 811 266 827 250 Z" />`;
+    cleaned = cleaned.replace(/(<g id="[^"]*-Character">)/, `$1${exploreSilhouette}`);
+  }
+
   return cleaned;
 }
 
@@ -46,7 +55,7 @@ interface CharacterProps {
   /** Id prefix; use a different one when the same character appears twice. */
   instance?: string;
   className?: string;
-  /** When true, renders only the Character body, omitting accessories like lightbulb & rays */
+  /** When true, renders only the Character body, omitting accessories */
   bodyOnly?: boolean;
   /** When true, flips the character horizontally so it faces left instead of right */
   flip?: boolean;

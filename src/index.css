@@ -6,12 +6,16 @@
   /* Default body font is SF Pro with native Apple and system fallbacks */
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'SF Pro', system-ui, sans-serif;
   letter-spacing: -0.011em;
-  scroll-behavior: smooth;
 }
 
-/* Smooth crossfade on theme changes */
+/* Smooth crossfade on theme changes & native fluid scrolling */
 html,
 body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
   transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
 }
 
