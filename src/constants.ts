@@ -1,4 +1,4 @@
-import { DomainType, DepthType, OutputLanguage } from './types';
+import { DomainType, DepthType, OutputLanguage } from './types.js';
 
 export interface DomainOption {
   id: DomainType;

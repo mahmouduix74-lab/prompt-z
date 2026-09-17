@@ -1,5 +1,5 @@
-import { DomainType, DepthType, OutputLanguage } from '../types';
-import { DOMAINS, DEPTHS } from '../constants';
+import { DomainType, DepthType, OutputLanguage } from '../types.js';
+import { DOMAINS, DEPTHS } from '../constants.js';
 
 /**
  * Intelligent local rule-based prompt structuring engine.
