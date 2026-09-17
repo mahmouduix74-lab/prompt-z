@@ -138,25 +138,6 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     }
   };
 
-  const handleWheel = (e: React.WheelEvent<HTMLTextAreaElement>) => {
-    const textarea = e.currentTarget;
-    const isScrollable = textarea.scrollHeight > textarea.clientHeight + 2;
-
-    if (!isScrollable) {
-      window.scrollBy({ top: e.deltaY, behavior: 'auto' });
-      return;
-    }
-
-    const isAtTop = textarea.scrollTop <= 0 && e.deltaY < 0;
-    const isAtBottom =
-      Math.ceil(textarea.scrollTop + textarea.clientHeight) >= textarea.scrollHeight - 2 &&
-      e.deltaY > 0;
-
-    if (isAtTop || isAtBottom) {
-      window.scrollBy({ top: e.deltaY, behavior: 'auto' });
-    }
-  };
-
   const charCount = rawText.length;
   const wordCount = rawText.trim() ? rawText.trim().split(/\s+/).length : 0;
   const placeholderLines = lang === 'ar' ? PROMPT_PLACEHOLDERS_AR : PROMPT_PLACEHOLDERS_EN;
@@ -304,9 +285,8 @@ export const InputPanel: React.FC<InputPanelProps> = ({
           value={rawText}
           onChange={(e) => onChangeText(e.target.value)}
           onKeyDown={handleKeyDown}
-          onWheel={handleWheel}
           disabled={isBusy}
-          className="w-full flex-1 p-3.5 bg-transparent text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 resize-none focus:outline-none min-h-[380px] leading-relaxed relative z-20 font-sans overscroll-y-auto"
+          className="w-full flex-1 p-3.5 bg-transparent text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 resize-none focus:outline-none min-h-[380px] leading-relaxed relative z-20 font-sans"
           dir="auto"
         />
       </div>

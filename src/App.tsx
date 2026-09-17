@@ -30,6 +30,7 @@ import { ErrorBanner } from './components/ErrorBanner';
 import { SettingsModal } from './components/SettingsModal';
 import { Clock } from 'lucide-react';
 import { CustomCursor } from './components/CustomCursor';
+import { Mascot } from './components/Mascot';
 
 const STORAGE_KEYS = {
   MODELS: 'gemini_available_models',
@@ -85,7 +86,15 @@ export default function App() {
   };
 
   const scrollToBuilder = () => {
-    builderRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!builderRef.current) return;
+    const headerOffset = 80;
+    const elementPosition = builderRef.current.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+    window.scrollTo({
+      top: Math.max(0, offsetPosition),
+      behavior: 'smooth',
+    });
   };
 
   // Editable System Instruction (viewed and saved from the Settings panel)
@@ -481,8 +490,11 @@ export default function App() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="relative"
+            className="relative mt-6 sm:mt-8"
           >
+            {/* Animated Character sitting on top border of Domain Context frame */}
+            <Mascot lang={lang} />
+
             <div className="relative rounded-3xl p-4 sm:p-6 bg-white/80 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm transition-all overflow-hidden flex flex-col gap-4">
             {/* 1. Domain Selector */}
             <DomainSelector
@@ -509,7 +521,7 @@ export default function App() {
 
             {/* 3. Two-Column Cockpit Layout: Input (Raw Prompt) & Output (Structured Prompt) - Perfectly Aligned */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1 items-stretch text-left" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-              <div className="relative flex flex-col h-full">
+              <div className="flex flex-col h-full">
                 <InputPanel
                   rawText={rawText}
                   onChangeText={setRawText}

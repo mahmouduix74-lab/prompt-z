@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import '../styles/characters.css';
 import createSvg from '../assets/characters/create-character.svg?raw';
 import customizeSvg from '../assets/characters/customize-character.svg?raw';
 import exploreSvg from '../assets/characters/explore-character.svg?raw';
@@ -45,6 +46,12 @@ export function prepareCharacterMarkup(
     // Inject a silhouette filled body element for explore (magnifying glass search mascot)
     const exploreSilhouette = `<path id="${prefix}-Explore-body-fill" class="pz-character-body-fill" d="M 823 244 C 825 218 839 194 861 186 C 879 179 892 182 901 190 C 915 205 918 230 918 260 C 917 280 920 305 921 329 C 880 330 830 330 789 323 C 794 293 811 266 827 250 Z" />`;
     cleaned = cleaned.replace(/(<g id="[^"]*-Character">)/, `$1${exploreSilhouette}`);
+  }
+
+  if (name === 'organize') {
+    // Inject a silhouette filled body element for organize (document/notes mascot)
+    const organizeSilhouette = `<path id="${prefix}-Organize-body-fill" class="pz-character-body-fill" d="M 1043 319 C 1043 300 1048 281 1052 269 C 1041 252 1044 229 1058 213 C 1071 198 1088 191 1101 196 C 1112 200 1119 212 1122 226 C 1125 240 1123 260 1120 280 C 1116 300 1080 320 1043 319 Z" />`;
+    cleaned = cleaned.replace(/(<g id="[^"]*-Character">)/, `$1${organizeSilhouette}`);
   }
 
   return cleaned;
