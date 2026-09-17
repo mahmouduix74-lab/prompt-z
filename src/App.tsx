@@ -30,6 +30,7 @@ import { ErrorBanner } from './components/ErrorBanner';
 import { SettingsModal } from './components/SettingsModal';
 import { Clock } from 'lucide-react';
 import { CustomCursor } from './components/CustomCursor';
+import { ThinkingPeek } from './components/ThinkingPeek';
 
 const STORAGE_KEYS = {
   MODELS: 'gemini_available_models',
@@ -509,7 +510,8 @@ export default function App() {
 
             {/* 3. Two-Column Cockpit Layout: Input (Raw Prompt) & Output (Structured Prompt) - Perfectly Aligned */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1 items-stretch text-left" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-              <div className="flex flex-col h-full">
+              <div className="relative flex flex-col h-full">
+                <ThinkingPeek lang={lang} />
                 <InputPanel
                   rawText={rawText}
                   onChangeText={setRawText}

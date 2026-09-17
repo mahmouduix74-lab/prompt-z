@@ -289,3 +289,105 @@
   45% { stroke-dashoffset: 60; }
   75%, 100% { stroke-dashoffset: 0; }
 }
+
+/* ==========================================================================
+   Thinking character — peeks above the raw-prompt input frame.
+   Position (left/right) and facing direction mirror the reading direction:
+   RTL (Arabic) sits on the right, using the artwork's natural orientation
+   (its laptop/focus side already reads to the right); LTR (English) sits on
+   the left and is flipped (scaleX(-1)) so it faces that side instead.
+   ========================================================================== */
+.pz-thinking-peek {
+  position: absolute;
+  top: 0;
+  z-index: 5;
+  width: 96px;
+  height: 73px; /* matches the SVG's own 1000:760 aspect ratio */
+  pointer-events: none;
+  transform: translateY(-62%);
+}
+
+.pz-thinking-peek--rtl {
+  right: 28px;
+}
+
+.pz-thinking-peek--ltr {
+  left: 28px;
+}
+
+@media (max-width: 639px) {
+  .pz-thinking-peek {
+    width: 72px;
+    height: 55px;
+  }
+
+  .pz-thinking-peek--rtl {
+    right: 12px;
+  }
+
+  .pz-thinking-peek--ltr {
+    left: 12px;
+  }
+}
+
+.pz-thinking-peek .pz-character {
+  animation: pz-peek 6.4s ease-in-out infinite;
+  animation-delay: var(--pz-delay, 0s);
+}
+
+/* Both eyes blink together (the SVG groups them as one "eyes" element). */
+.pz-character--thinking [id$="-eyes"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pz-blink 4.6s ease-in-out infinite;
+}
+
+/* Thought-bubble dots pulse one after another, like a typing indicator. */
+.pz-character--thinking [id$="-ellipsis"] circle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pz-dot-pulse 1.4s ease-in-out infinite;
+}
+
+.pz-character--thinking [id$="-ellipsis"] circle:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.pz-character--thinking [id$="-ellipsis"] circle:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+/* The two small "idea spark" marks flicker gently. */
+.pz-character--thinking [id$="-accent-marks"] rect {
+  animation: pz-ray-blink 2.2s ease-in-out infinite;
+}
+
+.pz-character--thinking [id$="-accent-marks"] rect:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+@keyframes pz-peek {
+  0%, 52% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  62%, 84% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  96%, 100% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes pz-dot-pulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}

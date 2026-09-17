@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 760">
+<defs>
+  <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F2ECFF"/></linearGradient>
+  <linearGradient id="laptopGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7655E8"/><stop offset="1" stop-color="#35206F"/></linearGradient>
+  <linearGradient id="bubbleGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6F0FF"/><stop offset="1" stop-color="#D8C8FF"/></linearGradient>
+</defs>
+<g id="shadow"><ellipse cx="500" cy="650" rx="355" ry="20" fill="#DCCEFF" opacity=".35"/></g>
+<g id="body" stroke="#24183F" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+<path d="M250 575 C220 470 225 355 270 260 C310 175 380 125 470 130 C565 136 620 212 618 315 C617 357 609 398 596 437 C640 448 676 475 697 518 C716 559 696 599 650 620 C600 643 534 643 466 639 C390 635 315 620 276 599 C263 592 255 584 250 575Z" fill="url(#bodyGrad)"/>
+</g>
+<g id="eyes" fill="#201432"><ellipse cx="430" cy="325" rx="13" ry="27"/><ellipse cx="486" cy="314" rx="13" ry="27"/></g>
+<g id="thinking-arm" stroke="#24183F" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+<path d="M365 555 C392 520 411 484 427 449 C442 417 462 397 483 402 C500 406 510 421 505 438 C502 450 492 462 485 474 C497 488 501 508 494 529 C485 557 464 579 438 592 C411 605 387 595 365 555Z" fill="url(#bodyGrad)"/>
+</g>
+<g id="mug">
+<path d="M171 585 h105 v70 h-105 q-18 0-18-18 v-34 q0-18 18-18Z" fill="#E9DEFF"/>
+<path d="M153 599 h-18 q-25 0-25 22 q0 22 25 22 h18" fill="none" stroke="#5A3FB1" stroke-width="12" stroke-linecap="round"/>
+<ellipse cx="223" cy="585" rx="52" ry="9" fill="#FFFFFF"/><ellipse cx="223" cy="585" rx="38" ry="6" fill="#4C2E90"/>
+</g>
+<g id="laptop">
+<path d="M540 492 L827 478 Q849 477 844 499 L801 627 Q796 643 775 645 L512 654 Q492 655 499 636 L539 504 Q542 494 540 492Z" fill="url(#laptopGrad)" stroke="#7655E8" stroke-width="8"/>
+<path d="M503 654 h282 q18 0 18 12 q0 12-18 12H490 q-22 0-22-12 q0-12 35-12Z" fill="#2D1A5C"/>
+<path d="M654 553 C671 541 688 541 702 551 L680 571 L711 586 L696 607 C681 614 660 615 645 604 L666 584 L637 569 Z" fill="#DCCEFF"/>
+</g>
+<g id="thought-bubble">
+<circle cx="680" cy="152" r="18" fill="#E4D8FF"/><circle cx="723" cy="113" r="28" fill="#E4D8FF"/>
+<path d="M748 45 C779 45 799 58 808 80 C829 62 864 64 883 85 C904 108 900 143 876 160 C897 187 884 226 853 238 C829 247 803 239 788 219 C773 240 739 246 716 231 C687 212 686 170 711 150 C685 125 693 82 726 66 C733 62 740 59 748 58Z" fill="url(#bubbleGrad)"/>
+<g id="ellipsis" fill="#5B3BA7"><circle cx="757" cy="143" r="11"/><circle cx="797" cy="143" r="11"/><circle cx="837" cy="143" r="11"/></g>
+</g>
+<g id="accent-marks" fill="#8B5CFF"><rect x="576" y="222" width="14" height="44" rx="7" transform="rotate(26 583 244)"/><rect x="606" y="248" width="14" height="44" rx="7" transform="rotate(52 613 270)"/></g>
+</svg>
