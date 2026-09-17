@@ -3,16 +3,14 @@ import createSvg from '../assets/characters/create-character.svg?raw';
 import customizeSvg from '../assets/characters/customize-character.svg?raw';
 import exploreSvg from '../assets/characters/explore-character.svg?raw';
 import organizeSvg from '../assets/characters/organize-character.svg?raw';
-import thinkingSvg from '../assets/characters/thinking-character.svg?raw';
 
-export type CharacterName = 'create' | 'customize' | 'explore' | 'organize' | 'thinking';
+export type CharacterName = 'create' | 'customize' | 'explore' | 'organize';
 
 const SOURCES: Record<CharacterName, string> = {
   create: createSvg,
   customize: customizeSvg,
   explore: exploreSvg,
   organize: organizeSvg,
-  thinking: thinkingSvg,
 };
 
 /**

@@ -30,7 +30,6 @@ import { ErrorBanner } from './components/ErrorBanner';
 import { SettingsModal } from './components/SettingsModal';
 import { Clock } from 'lucide-react';
 import { CustomCursor } from './components/CustomCursor';
-import { ThinkingPeek } from './components/ThinkingPeek';
 
 const STORAGE_KEYS = {
   MODELS: 'gemini_available_models',
@@ -484,7 +483,6 @@ export default function App() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="relative"
           >
-            <ThinkingPeek lang={lang} />
             <div className="relative rounded-3xl p-4 sm:p-6 bg-white/80 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm transition-all overflow-hidden flex flex-col gap-4">
             {/* 1. Domain Selector */}
             <DomainSelector
