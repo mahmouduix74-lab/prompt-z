@@ -161,9 +161,10 @@
 /* ==========================================================================
    Peeking Mascot on Prompt Console Frame
    Fixed to top edge of main prompt console frame at top-left corner.
-   Rises once from below the border to its full pose (upper body & magnifying
-   glass visible), then settles there with a gentle idle bob — it no longer
-   glides back down and disappears each cycle.
+   Two-stage smooth peek:
+   Stage 1: Inquisitive peek (head and eyes peek above border, looking around)
+   Stage 2: Full reveal (rises smoothly up to show the magnifying glass and rays)
+   Then glides down gracefully, with silky smooth bezier easing.
    ========================================================================== */
 
 .pz-peeking-mascot {
@@ -174,31 +175,30 @@
 .pz-peeking-mascot__inner {
   width: 100%;
   height: 100%;
-  transform: translateY(105%);
-  animation:
-    pz-mascot-rise 1.3s cubic-bezier(0.25, 1, 0.35, 1) 1 forwards,
-    pz-mascot-idle-bob 3s ease-in-out infinite 1.3s;
+  transform: translateY(60%);
+  animation: pz-two-step-peek 7s cubic-bezier(0.25, 1, 0.35, 1) infinite;
   will-change: transform;
 }
 
-@keyframes pz-mascot-rise {
-  0% {
+@keyframes pz-two-step-peek {
+  /* 0% - 8%: Hidden below the border frame */
+  0%, 8% {
     transform: translateY(105%);
   }
-  55% {
+
+  /* 16% - 34%: Step 1 - First Peek (head and eyes pop up to peek curiously) */
+  16%, 34% {
     transform: translateY(58%);
   }
-  100% {
-    transform: translateY(0%);
-  }
-}
 
-@keyframes pz-mascot-idle-bob {
-  0%, 100% {
+  /* 42% - 66%: Step 2 - Second Peek (rises up fully, showing upper body & magnifying glass) */
+  42%, 66% {
     transform: translateY(0%);
   }
-  50% {
-    transform: translateY(-6%);
+
+  /* 76% - 100%: Glides down smoothly back out of view */
+  76%, 100% {
+    transform: translateY(105%);
   }
 }
 
