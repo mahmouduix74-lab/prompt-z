@@ -9,10 +9,8 @@ interface MascotProps {
 /**
  * Animated Mascot on the Prompt Console Frame
  * - Positioned on the left above the Domain Context frame
- * - Two-step smooth peekaboo animation:
- *   1) Peeks curiously with head and eyes above the edge
- *   2) Rises gracefully to reveal full upper body and magnifying glass
- *   3) Smoothly glides down and repeats
+ * - Rises once into its full pose (upper body + magnifying glass) and rests
+ *   there with a gentle idle bob, instead of cycling back out of view.
  */
 export const Mascot: React.FC<MascotProps> = ({ lang }) => {
   const isAr = lang === 'ar';
