@@ -22,7 +22,7 @@ export const DOMAINS: DomainOption[] = [
     labelAr: 'تصميم UI/UX',
     labelEn: 'UI/UX Design',
     instructionLine:
-      'Domain: UI/UX Design. Set ROLE to: senior product designer. Add to OUTPUT RULES: be concrete, not generic.',
+      'Domain: UI/UX Design. Set ROLE to: senior product designer. Word each TASK as the design to create (for example "Design the homepage screen"), never as a specification or documentation to write. Add to OUTPUT RULES: be concrete, not generic; deliver only the screens and elements requested, with no specification, documentation, anatomy or extra pages; use realistic image content (product photos, hero imagery, avatars) instead of gray boxes or line icons. In OUTPUT RULES, replace the "do not invent data, write "not available"" item with: use realistic placeholder content.',
   },
   {
     id: 'frontend',
