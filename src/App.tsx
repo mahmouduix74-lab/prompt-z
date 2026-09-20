@@ -14,6 +14,7 @@ import {
   fetchGeminiModels,
   generateStructuredPrompt,
   refinePromptText,
+  polishStructuredPrompt,
 } from './services/gemini';
 import { refineLocalPromptText } from './services/localRefiner';
 import { generateLocalStructuredPrompt } from './services/localEngine';
@@ -134,6 +135,8 @@ export default function App() {
   const [previousRawText, setPreviousRawText] = useState<string | null>(null);
   const [exclusions, setExclusions] = useState<string>('');
   const [output, setOutput] = useState<string>('');
+  const [previousOutput, setPreviousOutput] = useState<string | null>(null);
+  const [isPolishing, setIsPolishing] = useState(false);
   const [currentResultTimestamp, setCurrentResultTimestamp] = useState<number | undefined>(undefined);
 
   // Status & Error state
@@ -266,6 +269,32 @@ export default function App() {
     }
   };
 
+  // Raise the professional quality of the generated structure, keeping its scope
+  const handlePolishOutput = async () => {
+    if (!output.trim() || isPolishing) return;
+
+    setGenerationError(null);
+    const model = resolveModel() || 'gemini-3.8-flash';
+
+    setIsPolishing(true);
+    try {
+      const polished = await polishStructuredPrompt({ structuredText: output, model, domain });
+      setPreviousOutput(output);
+      setOutput(polished);
+    } catch (err: any) {
+      setGenerationError(toErrorDetails(err, 'Failed to polish prompt'));
+    } finally {
+      setIsPolishing(false);
+    }
+  };
+
+  const handleUndoPolish = () => {
+    if (previousOutput !== null) {
+      setOutput(previousOutput);
+      setPreviousOutput(null);
+    }
+  };
+
   const handleUndoEnhance = () => {
     if (previousRawText !== null) {
       setRawText(previousRawText);
@@ -331,6 +360,7 @@ export default function App() {
             });
 
       const now = Date.now();
+      setPreviousOutput(null);
       setOutput(finalOutput);
       setCurrentResultTimestamp(now);
 
@@ -354,6 +384,7 @@ export default function App() {
         outputLanguage,
       });
       const now = Date.now();
+      setPreviousOutput(null);
       setOutput(fallbackPrompt);
       setCurrentResultTimestamp(now);
       saveToLibrary({
@@ -396,6 +427,7 @@ export default function App() {
   const handleClear = () => {
     setRawText('');
     setExclusions('');
+    setPreviousOutput(null);
     setOutput('');
     setCurrentResultTimestamp(undefined);
     setGenerationError(null);
@@ -410,6 +442,7 @@ export default function App() {
     if (item.outputLanguage) {
       handleChangeOutputLanguage(item.outputLanguage);
     }
+    setPreviousOutput(null);
     setOutput(item.output);
     setCurrentResultTimestamp(item.timestamp);
     if (item.model) {
@@ -551,6 +584,10 @@ export default function App() {
                   isSaved={isCurrentOutputSaved}
                   onOpenLibrary={() => setIsLibraryOpen(true)}
                   savedCount={savedItems.length}
+                  onPolish={handlePolishOutput}
+                  isPolishing={isPolishing}
+                  canUndoPolish={previousOutput !== null}
+                  onUndoPolish={handleUndoPolish}
                 />
               </div>
             </div>

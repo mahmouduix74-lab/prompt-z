@@ -343,3 +343,33 @@ export async function refinePromptText(params: {
   // Bulletproof fallback: Never throw EMPTY_RESPONSE or fail!
   return refineLocalPromptText({ rawText, domain });
 }
+
+/**
+ * Asks Gemini (via /api/polish) to raise the professional quality of an
+ * already-structured prompt without changing its scope. Throws a
+ * GeminiApiError on failure so the caller can keep the current output.
+ */
+export async function polishStructuredPrompt(params: {
+  structuredText: string;
+  model: string;
+  domain?: string;
+}): Promise<string> {
+  const { structuredText, model, domain } = params;
+  if (!structuredText || !structuredText.trim()) return '';
+
+  const { res, data } = await postJson('/api/polish', {
+    structuredText: structuredText.trim(),
+    model,
+    domain,
+  });
+
+  if (!res.ok) {
+    throw new GeminiApiError(parseGeminiError(res.status, data));
+  }
+
+  const polished = stripMarkdownFences(String(data?.result || ''));
+  if (!polished) {
+    throw new GeminiApiError({ statusCode: 502, rawMessage: 'EMPTY_RESPONSE' });
+  }
+  return polished;
+}

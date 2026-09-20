@@ -14,6 +14,9 @@ import {
   CheckCircle2,
   FastForward,
   History,
+  Wand2,
+  Undo2,
+  Loader2,
 } from 'lucide-react';
 import { SnakeGame } from './SnakeGame';
 
@@ -28,6 +31,10 @@ interface OutputPanelProps {
   isSaved?: boolean;
   onOpenLibrary?: () => void;
   savedCount?: number;
+  onPolish?: () => void;
+  isPolishing?: boolean;
+  canUndoPolish?: boolean;
+  onUndoPolish?: () => void;
 }
 
 type ViewMode = 'formatted' | 'raw' | 'sections';
@@ -43,6 +50,10 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
   isSaved = false,
   onOpenLibrary,
   savedCount = 0,
+  onPolish,
+  isPolishing = false,
+  canUndoPolish = false,
+  onUndoPolish,
 }) => {
   const [copied, setCopied] = useState(false);
   const [showCopyToast, setShowCopyToast] = useState(false);
@@ -372,6 +383,31 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 )}
               </AnimatePresence>
             </motion.button>
+
+            {onPolish && (
+              <button
+                type="button"
+                onClick={canUndoPolish && !isPolishing ? onUndoPolish : onPolish}
+                disabled={!hasResult || isLoading || isPolishing}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  hasResult && !isLoading && !isPolishing
+                    ? 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 cursor-pointer shadow-2xs'
+                    : 'bg-zinc-100/50 dark:bg-zinc-900/50 text-zinc-400 dark:text-zinc-600 cursor-not-allowed border border-zinc-200/60 dark:border-zinc-800/40 opacity-50'
+                }`}
+                title={canUndoPolish ? t.undoPolish : t.polishTooltip}
+              >
+                {isPolishing ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : canUndoPolish ? (
+                  <Undo2 className="w-3.5 h-3.5" />
+                ) : (
+                  <Wand2 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                )}
+                <span className="hidden sm:inline">
+                  {isPolishing ? t.polishing : canUndoPolish ? t.undoPolish : t.polish}
+                </span>
+              </button>
+            )}
 
             <button
               type="button"

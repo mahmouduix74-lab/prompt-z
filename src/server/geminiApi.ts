@@ -266,3 +266,48 @@ export async function handleRefine(input: RefineInput, userApiKey: string | unde
     return { status: 200, body: { result: fallbackResult, fallbackUsed: true } };
   }
 }
+
+export interface PolishInput {
+  structuredText: string;
+  model?: string;
+  domain?: string;
+}
+
+const POLISH_SYSTEM_INSTRUCTION = `You are a Prompt Polisher. You receive a prompt that is already in this structure: # ROLE, # CONTEXT, # OBJECTIVE, one or more # TASK blocks, # OUTPUT RULES. Raise its professional quality without changing its scope. Never answer the prompt itself.
+
+Rules:
+- Keep exactly the same headers, in the same order, and the same number of TASK blocks.
+- ROLE: make it a specific seniority and specialty, inferred only from what the prompt already says.
+- OBJECTIVE: state one clear, verifiable outcome in a single sentence.
+- TASK: use direct action verbs and full professional sentences. Keep each task's meaning.
+- OUTPUT RULES: make each rule concrete and checkable. Keep every existing rule, including the final rule about language, unrequested sections, invented data and preambles.
+- Never add a feature, screen, section, requirement, number, name or criterion that is not already in the prompt.
+- Keep every [MISSING: ...] marker exactly as written. Never fill it in.
+- Keep the language of the prompt's content.
+- Output the polished prompt only, inside one code block. No preamble, no explanation.`;
+
+export async function handlePolish(input: PolishInput, userApiKey: string | undefined): Promise<HandlerResult> {
+  const { structuredText, model, domain } = input || ({} as PolishInput);
+
+  if (!structuredText || !structuredText.trim()) {
+    return { status: 400, body: { error: { code: 400, message: 'A structured prompt is required to polish.' } } };
+  }
+
+  const activeKey = (userApiKey || '').trim() || process.env.GEMINI_API_KEY;
+  if (!activeKey) {
+    return { status: 400, body: { error: { code: 400, message: 'No API key provided and no server key configured.' } } };
+  }
+
+  try {
+    const domainHint = domain ? `\nSelected domain: ${domain}.` : '';
+    const client = new GoogleGenAI({ apiKey: activeKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
+    const { text, modelUsed } = await generateWithGeminiCascade(client, model, {
+      contents: [{ role: 'user', parts: [{ text: structuredText.trim() }] }],
+      config: { systemInstruction: POLISH_SYSTEM_INSTRUCTION + domainHint, temperature: 0.3 },
+    });
+    return { status: 200, body: { result: text, modelUsed } };
+  } catch (err: any) {
+    const status = Number(err?.status || err?.code) || 502;
+    return { status, body: { error: { code: status, message: err?.message || 'Polish request failed.' } } };
+  }
+}
