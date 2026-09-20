@@ -81,7 +81,7 @@ export const DEPTHS: DepthOption[] = [
     id: 'medium',
     labelAr: 'متوسط',
     labelEn: 'Medium',
-    instructionLine: 'Depth: Medium. Output all sections, one to two lines each.',
+    instructionLine: 'Depth: Medium. Output all sections in full, with sub-points under a TASK only when the request lists several aspects.',
   },
   {
     id: 'detailed',
@@ -140,13 +140,13 @@ export const EXACT_SYSTEM_INSTRUCTION = `Act as a Prompt Formatter. Convert the 
 Output these headers in English: # ROLE, # CONTEXT, # OBJECTIVE, one or more # TASK blocks, # OUTPUT RULES.
 
 Rules:
-- Infer the ROLE from the selected domain and the request. Write it as seniority plus specialty, for example "Senior mobile product designer specialized in e-commerce". Add a specialty, platform or industry only when the request names it. Never mark ROLE as missing.
-- Output as many TASK blocks as the user asked for. Never pad with an empty task.
-- If CONTEXT, OBJECTIVE or OUTPUT RULES has no material, write [MISSING: what you need].
+- ROLE: infer it from the selected domain and the request as seniority plus specialty, for example "Senior mobile product designer specialized in e-commerce, experienced in iOS and Android design". Add a specialty, platform or industry only when the request names it. Never mark ROLE as missing.
+- CONTEXT: write two to three full professional sentences that gather everything the user said about the background, audience, platform, tools, constraints and why it matters. Write [MISSING: what you need] only when the request contains nothing usable for it.
+- OBJECTIVE: one sentence stating the single outcome the user wants, in verifiable terms, using only the user's own requirements. Write [MISSING: what you need] only when the request contains nothing usable for it.
+- TASK: output as many TASK blocks as the user asked for, and never pad with an empty task. Start each with a direct action verb that names the deliverable and, when the user gave it, where it is made and who it is for. When the request lists several aspects, add one sub-point per aspect, rephrased from the user's own words.
+- OUTPUT RULES: write concrete, checkable lines taken from the request: scope limits, format, platform or tool conventions, quality bar and exclusions. No general advice.
+- Rephrase the user's words into precise, professional language. Never add content the user did not give.
 - Use full professional sentences, not fragments.
-- OBJECTIVE is one sentence stating the single outcome the user wants, in verifiable terms, using only the user's own requirements.
-- Start every TASK with a direct action verb, and keep the user's scope exactly.
-- Write each OUTPUT RULES line as a concrete, checkable rule (format, scope, exclusions) taken from the request, not as general advice.
 - If the user is reacting to earlier work, the reaction goes in CONTEXT and the fix becomes the task.
 - Never split one sentence into two tasks.
 - Never invent topics, numbers, names or criteria the user did not mention.
