@@ -15,49 +15,49 @@ export const DOMAINS: DomainOption[] = [
     labelAr: 'عام',
     labelEn: 'General',
     instructionLine:
-      'Domain: General. Set ROLE to: a specialist inferred from the request.',
+      'Domain: General. Base the ROLE on: a specialist inferred from the request.',
   },
   {
     id: 'ui_ux',
     labelAr: 'تصميم UI/UX',
     labelEn: 'UI/UX Design',
     instructionLine:
-      'Domain: UI/UX Design. Set ROLE to: senior product designer. Word each TASK as the design to create (for example "Design the homepage screen"), never as a specification or documentation to write. Add to OUTPUT RULES: be concrete, not generic; deliver only the screens and elements requested, with no specification, documentation, anatomy or extra pages; use realistic image content (product photos, hero imagery, avatars) instead of gray boxes or line icons. In OUTPUT RULES, replace the "do not invent data, write "not available"" item with: use realistic placeholder content.',
+      'Domain: UI/UX Design. Base the ROLE on: senior product designer. Word each TASK as the design to create (for example "Design the homepage screen"), never as a specification or documentation to write. Add to OUTPUT RULES: be concrete, not generic; deliver only the screens and elements requested, with no specification, documentation, anatomy or extra pages; use realistic image content (product photos, hero imagery, avatars) instead of gray boxes or line icons. In OUTPUT RULES, replace the "do not invent data, write "not available"" item with: use realistic placeholder content.',
   },
   {
     id: 'frontend',
     labelAr: 'واجهات Frontend',
     labelEn: 'Frontend',
     instructionLine:
-      'Domain: Frontend. Set ROLE to: senior frontend engineer. Add to OUTPUT RULES: name the framework only if the user named it; no backend scope.',
+      'Domain: Frontend. Base the ROLE on: senior frontend engineer. Add to OUTPUT RULES: name the framework only if the user named it; no backend scope.',
   },
   {
     id: 'backend',
     labelAr: 'أنظمة Backend',
     labelEn: 'Backend',
     instructionLine:
-      'Domain: Backend. Set ROLE to: senior backend engineer. Add to OUTPUT RULES: name data models, endpoints and constraints precisely where the user mentioned them; no UI scope.',
+      'Domain: Backend. Base the ROLE on: senior backend engineer. Add to OUTPUT RULES: name data models, endpoints and constraints precisely where the user mentioned them; no UI scope.',
   },
   {
     id: 'research',
     labelAr: 'بحث وتحليل',
     labelEn: 'Research',
     instructionLine:
-      'Domain: Research. Set ROLE to: strategic researcher. Add to OUTPUT RULES: require a source link for every external claim; separate sourced facts from inference.',
+      'Domain: Research. Base the ROLE on: strategic researcher. Add to OUTPUT RULES: require a source link for every external claim; separate sourced facts from inference.',
   },
   {
     id: 'content',
     labelAr: 'كتابة محتوى',
     labelEn: 'Content',
     instructionLine:
-      'Domain: Content. Set ROLE to: senior copywriter. Add to OUTPUT RULES: state the target reader and tone only if the user gave them; no technical scope.',
+      'Domain: Content. Base the ROLE on: senior copywriter. Add to OUTPUT RULES: state the target reader and tone only if the user gave them; no technical scope.',
   },
   {
     id: 'media',
     labelAr: 'صور وفيديو',
     labelEn: 'Image/Video',
     instructionLine:
-      'Domain: Image/Video. Set ROLE to: visual art director. Add to OUTPUT RULES: describe subject, composition, lighting and style only where the user specified them.',
+      'Domain: Image/Video. Base the ROLE on: visual art director. Add to OUTPUT RULES: describe subject, composition, lighting and style only where the user specified them.',
   },
 ];
 
@@ -140,10 +140,13 @@ export const EXACT_SYSTEM_INSTRUCTION = `Act as a Prompt Formatter. Convert the 
 Output these headers in English: # ROLE, # CONTEXT, # OBJECTIVE, one or more # TASK blocks, # OUTPUT RULES.
 
 Rules:
-- Infer the ROLE from the selected domain. Never mark ROLE as missing.
+- Infer the ROLE from the selected domain and the request. Write it as seniority plus specialty, for example "Senior mobile product designer specialized in e-commerce". Add a specialty, platform or industry only when the request names it. Never mark ROLE as missing.
 - Output as many TASK blocks as the user asked for. Never pad with an empty task.
 - If CONTEXT, OBJECTIVE or OUTPUT RULES has no material, write [MISSING: what you need].
 - Use full professional sentences, not fragments.
+- OBJECTIVE is one sentence stating the single outcome the user wants, in verifiable terms, using only the user's own requirements.
+- Start every TASK with a direct action verb, and keep the user's scope exactly.
+- Write each OUTPUT RULES line as a concrete, checkable rule (format, scope, exclusions) taken from the request, not as general advice.
 - If the user is reacting to earlier work, the reaction goes in CONTEXT and the fix becomes the task.
 - Never split one sentence into two tasks.
 - Never invent topics, numbers, names or criteria the user did not mention.
