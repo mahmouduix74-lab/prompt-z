@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import { handleHealth, handleModels, handleGenerate, handleRefine, handlePolish } from './src/server/geminiApi.js';
+import { handleHealth, handleModels, handleGenerate, handleRefine } from './src/server/geminiApi.js';
 
 // This Express server is used for local development and for platforms that
 // run a persistent Node process (AI Studio's own Publish button / Cloud Run).
@@ -34,12 +34,6 @@ app.post('/api/generate', async (req, res) => {
 app.post('/api/refine', async (req, res) => {
   const userApiKey = (req.headers['x-api-key'] as string) || '';
   const { status, body } = await handleRefine(req.body || {}, userApiKey);
-  res.status(status).json(body);
-});
-
-app.post('/api/polish', async (req, res) => {
-  const userApiKey = (req.headers['x-api-key'] as string) || '';
-  const { status, body } = await handlePolish(req.body || {}, userApiKey);
   res.status(status).json(body);
 });
 
