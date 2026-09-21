@@ -433,7 +433,7 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col bg-[#FAFAFC] dark:bg-[#070709] text-zinc-900 dark:text-zinc-100 font-sans transition-colors duration-200 overflow-x-hidden ${
+      className={`min-h-screen flex flex-col bg-[#FAFAFC] dark:bg-[#070709] text-zinc-900 dark:text-zinc-100 font-sans transition-colors duration-200 overflow-x-clip ${
         charactersPaused ? 'pz-characters-paused' : ''
       }`}
       dir={lang === 'ar' ? 'rtl' : 'ltr'}

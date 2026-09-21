@@ -120,12 +120,17 @@ export const InputPanel: React.FC<InputPanelProps> = ({
   const t = UI_STRINGS[lang];
   const isBusy = isLoading || isEnhancing;
 
-  // Auto resize main textarea
+  // Keep the current 380px minimum; once the text needs more room the box grows to hug it
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.max(280, textareaRef.current.scrollHeight)}px`;
-    }
+    const resize = () => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = `${Math.max(380, el.scrollHeight)}px`;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
   }, [rawText]);
 
   // Handle Ctrl+Enter / Cmd+Enter shortcut
@@ -135,25 +140,6 @@ export const InputPanel: React.FC<InputPanelProps> = ({
       if (!isBusy && rawText.trim()) {
         onSubmit();
       }
-    }
-  };
-
-  const handleWheel = (e: React.WheelEvent<HTMLTextAreaElement>) => {
-    const textarea = e.currentTarget;
-    const isScrollable = textarea.scrollHeight > textarea.clientHeight + 2;
-
-    if (!isScrollable) {
-      window.scrollBy({ top: e.deltaY, behavior: 'auto' });
-      return;
-    }
-
-    const isAtTop = textarea.scrollTop <= 0 && e.deltaY < 0;
-    const isAtBottom =
-      Math.ceil(textarea.scrollTop + textarea.clientHeight) >= textarea.scrollHeight - 2 &&
-      e.deltaY > 0;
-
-    if (isAtTop || isAtBottom) {
-      window.scrollBy({ top: e.deltaY, behavior: 'auto' });
     }
   };
 
@@ -290,7 +276,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
       </div>
 
       {/* Textarea with one-line typewriter animated placeholder & centered empty character watermark */}
-      <div className="relative flex-1 flex flex-col p-1">
+      <div className="relative flex-1 flex flex-col p-1 cursor-text" onClick={() => textareaRef.current?.focus()}>
         {!rawText && (
           <AnimatedPromptPlaceholder
             lines={placeholderLines}
@@ -304,9 +290,8 @@ export const InputPanel: React.FC<InputPanelProps> = ({
           value={rawText}
           onChange={(e) => onChangeText(e.target.value)}
           onKeyDown={handleKeyDown}
-          onWheel={handleWheel}
           disabled={isBusy}
-          className="w-full flex-1 p-3.5 bg-transparent text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 resize-none focus:outline-none min-h-[380px] leading-relaxed relative z-20 font-sans overscroll-y-auto"
+          className="w-full flex-none p-3.5 bg-transparent text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 resize-none overflow-hidden focus:outline-none min-h-[380px] leading-relaxed relative z-20 font-sans"
           dir="auto"
         />
       </div>

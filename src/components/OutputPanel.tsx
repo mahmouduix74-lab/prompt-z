@@ -138,25 +138,6 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
     setIsTyping(false);
   };
 
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    const isScrollable = el.scrollHeight > el.clientHeight + 2;
-
-    if (!isScrollable) {
-      window.scrollBy({ top: e.deltaY, behavior: 'auto' });
-      return;
-    }
-
-    const isAtTop = el.scrollTop <= 0 && e.deltaY < 0;
-    const isAtBottom =
-      Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight - 2 &&
-      e.deltaY > 0;
-
-    if (isAtTop || isAtBottom) {
-      window.scrollBy({ top: e.deltaY, behavior: 'auto' });
-    }
-  };
-
   const handleCopy = async () => {
     if (!hasResult) return;
     handleSkipTyping();
@@ -417,8 +398,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
       {/* Main Output Content Area */}
       <div
         ref={scrollContainerRef}
-        onWheel={handleWheel}
-        className={`relative flex-1 p-4 bg-white/20 dark:bg-zinc-950/40 overflow-y-auto overscroll-y-auto min-h-[380px] text-xs sm:text-sm font-mono leading-relaxed select-text flex flex-col transition-all duration-500 ${
+        className={`relative flex-1 p-4 bg-white/20 dark:bg-zinc-950/40 overflow-y-auto min-h-[380px] text-xs sm:text-sm font-mono leading-relaxed select-text flex flex-col transition-all duration-500 ${
           copyFlash
             ? 'ring-2 ring-emerald-500/40 dark:ring-emerald-400/30 bg-emerald-500/[0.04]'
             : ''
