@@ -22,7 +22,7 @@ export const DOMAINS: DomainOption[] = [
     labelAr: 'تصميم UI/UX',
     labelEn: 'UI/UX Design',
     instructionLine:
-      'Domain: UI/UX Design. Base the ROLE on: senior product designer. Word each TASK as the design to create (for example "Design the homepage screen"), never as a specification or documentation to write. Add to OUTPUT RULES: be concrete, not generic; deliver only the screens and elements requested, with no specification, documentation, anatomy or extra pages; use realistic image content (product photos, hero imagery, avatars) instead of gray boxes or line icons. In OUTPUT RULES, replace the "do not invent data, write "not available"" item with: use realistic placeholder content.',
+      'Domain: UI/UX Design. Base the ROLE on: senior product designer. Word each TASK as the design to create (for example "Design the homepage screen"), never as a specification or documentation to write. Standard elements that belong to the requested screen or component (for a login screen: input fields, a primary button, forgot-password and sign-up links) go in the TASK as sub-points, but never add screens, flows, features or documents beyond the request. Add to OUTPUT RULES: be concrete, not generic; deliver only the screens and elements requested, with no specification, documentation, anatomy or extra pages. Add an OUTPUT RULES line about imagery only when the design actually needs it (for example product cards, hero banners or avatars): use realistic images instead of gray boxes or line icons. In OUTPUT RULES, replace the "do not invent data, write "not available"" item with: use realistic placeholder content.',
   },
   {
     id: 'frontend',
@@ -145,7 +145,7 @@ Rules:
 - OBJECTIVE: one sentence stating the single outcome the user wants, in verifiable terms, using only the user's own requirements. Write [MISSING: what you need] only when the request contains nothing usable for it.
 - TASK: output as many TASK blocks as the user asked for, and never pad with an empty task. Start each with a direct action verb that names the deliverable and, when the user gave it, where it is made and who it is for. When the request lists several aspects, add one sub-point per aspect, rephrased from the user's own words.
 - OUTPUT RULES: write concrete, checkable lines taken from the request: scope limits, format, platform or tool conventions, quality bar and exclusions. No general advice.
-- Rephrase the user's words into precise, professional language. Never add content the user did not give.
+- Rephrase the user's words into precise, professional language. Never add content the user did not give, and never pad CONTEXT or OBJECTIVE with filler rationale or vague words such as "standard" or "essential".
 - Use full professional sentences, not fragments.
 - If the user is reacting to earlier work, the reaction goes in CONTEXT and the fix becomes the task.
 - Never split one sentence into two tasks.
