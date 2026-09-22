@@ -91,7 +91,10 @@ const dpad = [
 // cursor sets off towards it, so rects are always post-scroll.
 const sel = {
   toggle: 'header button[aria-label="Appearance"]',
+  general: '#prompt-builder button:nth-of-type(1)',
   domain: '#prompt-builder button:nth-of-type(2)',
+  depth: '#prompt-builder button[aria-pressed]:nth-of-type(3)',
+  medium: '#prompt-builder button[aria-pressed]:nth-of-type(2)',
   textarea: '#raw-prompt',
   select: '#output-language',
   generate: '#prompt-builder button[title^="Shortcut"]',
@@ -105,8 +108,16 @@ const waypoints = [
   { t: 7.3, sel: sel.toggle },
   { t: 8.3, pt: [1010, 470] },
   { t: 9.3, pt: [1010, 470] },
+  // Glide over "General", then across to UI/UX Design.
+  { t: 9.6, sel: sel.general },
+  { t: 9.72, sel: sel.general },
   { t: C.domain - 0.05, sel: sel.domain },
-  { t: C.domain + 0.1, sel: sel.domain },
+  { t: C.domain + 0.12, sel: sel.domain },
+  // Down to the depth tabs: rest on Medium, then pick Detailed.
+  { t: C.depth - 0.4, sel: sel.medium },
+  { t: C.depth - 0.3, sel: sel.medium },
+  { t: C.depth - 0.05, sel: sel.depth },
+  { t: C.depth + 0.12, sel: sel.depth },
   { t: C.textarea - 0.05, sel: sel.textarea, fx: 0.62, fy: 0, dy: 70 },
   { t: C.textarea + 0.1, sel: sel.textarea, fx: 0.62, fy: 0, dy: 70 },
   { t: TL.typing.start + 0.45, sel: sel.textarea, fx: 0.45, fy: 0, dy: 190 },
@@ -128,6 +139,7 @@ const waypoints = [
 ];
 const realClicks = [
   { t: C.domain, sel: sel.domain },
+  { t: C.depth, sel: sel.depth },
   { t: C.textarea, sel: sel.textarea },
   { t: C.generate, sel: sel.generate },
   ...dpad.map((d) => ({ t: d.at, sel: sel[d.dir.toLowerCase()] })),
@@ -136,6 +148,7 @@ const realClicks = [
 const shownClicks = [
   { t: TL.theme[1].at, kind: 'toggle' },
   { t: C.domain, kind: 'real' },
+  { t: C.depth, kind: 'real' },
   { t: C.textarea, kind: 'real' },
   { t: C.select, kind: 'select' },
   { t: C.selectPick, kind: 'pick' },
@@ -338,16 +351,28 @@ async function main() {
     return [r.x + r.w * (wp.fx ?? 0.5) + (wp.dx ?? 0), r.y + r.h * (wp.fy ?? 0.5) + (wp.dy ?? 0)];
   };
 
+  // Containers the close-ups frame: the input panel, the domain chip row, the depth tabs.
+  const anchorRect = (anchor) =>
+    page.evaluate(
+      ({ anchor, sel }) => {
+        const el =
+          anchor === 'input'
+            ? document.querySelector('#raw-prompt').closest('.rounded-2xl')
+            : anchor === 'chips'
+              ? document.querySelector(sel.domain).parentElement
+              : anchor === 'depth'
+                ? document.querySelector(sel.depth).parentElement
+                : document.querySelector(sel[anchor]);
+        const r = el.getBoundingClientRect();
+        return { x: r.x, y: r.y, w: r.width, h: r.height };
+      },
+      { anchor, sel },
+    );
+
   // Region a macro pass shoots, in viewport px, kept inside the viewport.
   const macroRect = async (m) => {
     if (m.rect) return m.rect;
-    const a =
-      m.anchor === 'input'
-        ? await page.evaluate(() => {
-            const r = document.querySelector('#raw-prompt').closest('.rounded-2xl').getBoundingClientRect();
-            return { x: r.x, y: r.y, w: r.width, h: r.height };
-          })
-        : await rectOf(sel[m.anchor]);
+    const a = await anchorRect(m.anchor);
     const x0 = m.anchor === 'input' ? a.x - (m.pad ?? 0) : a.x + a.w / 2 - m.w / 2;
     const y0 = m.anchor === 'input' ? a.y - (m.pad ?? 0) : a.y + a.h / 2 - m.h / 2;
     const x = Math.round(Math.max(0, Math.min(VW - m.w, x0)));
@@ -472,6 +497,8 @@ async function main() {
         return { x: r.x, y: r.y, w: r.width, h: r.height };
       });
       await snap('generate', sel.generate);
+      meta.rects.chips = await anchorRect('chips');
+      meta.rects.depth = await anchorRect('depth');
       await snap('toggleScrolled', sel.toggle);
     }
     if (t >= C.generate + 0.5 && !meta.rects.snake) {

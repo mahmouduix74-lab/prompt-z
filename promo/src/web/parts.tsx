@@ -100,94 +100,17 @@ const Page: React.FC<{ theme: Theme; t: number; style?: React.CSSProperties }> =
   );
 };
 
-const SPLIT = TL.split;
-
-/** Divider position (viewport px) during the light/dark split, or null outside it. */
-export const splitAt = (t: number): number | null => {
-  if (t < SPLIT.start) return null;
-  const k = clamp01((t - SPLIT.start) / (SPLIT.settle - SPLIT.start));
-  // Sweeps in from the right edge and settles on the centre with a small overshoot.
-  const e = 1 - Math.pow(1 - k, 3) * Math.cos(k * Math.PI * 0.5);
-  return VIEW.width - e * (VIEW.width / 2) - Math.sin(k * Math.PI) * 30;
-};
-
-/** The captured page: theme wipe from the toggle, then the light/dark split. */
+/** The captured page, with the theme wipe growing out of the header toggle. */
 export const Viewport: React.FC<{ t: number; children?: React.ReactNode }> = ({ t, children }) => {
   const th = themeAt(t);
-  const split = splitAt(t);
   return (
     <div style={{ position: 'absolute', left: 0, top: BAR, width: VIEW.width, height: VIEW.height, overflow: 'hidden' }}>
-      {split !== null ? (
-        <>
-          <Page theme="dark" t={t} />
-          <Page theme="light" t={t} style={{ clipPath: `inset(0 ${VIEW.width - split}px 0 0)` }} />
-        </>
-      ) : (
-        <>
-          <Page theme={th.base} t={t} />
-          {th.top ? (
-            <Page theme={th.top} t={t} style={{ clipPath: `circle(${Math.max(0.1, th.p * MAX_R)}px at ${ORIGIN.x}px ${ORIGIN.y}px)` }} />
-          ) : null}
-        </>
-      )}
+      <Page theme={th.base} t={t} />
+      {th.top ? (
+        <Page theme={th.top} t={t} style={{ clipPath: `circle(${Math.max(0.1, th.p * MAX_R)}px at ${ORIGIN.x}px ${ORIGIN.y}px)` }} />
+      ) : null}
       {children}
     </div>
-  );
-};
-
-/** The split's handle: a hairline with a round grip and a label on each side. */
-export const SplitHandle: React.FC<{ t: number }> = ({ t }) => {
-  const x = splitAt(t);
-  if (x === null) return null;
-  const labels = easeOut(clamp01((t - SPLIT.settle + 0.25) / 0.4));
-  const pill = (side: 'left' | 'right', dark: boolean): React.CSSProperties => ({
-    position: 'absolute',
-    top: 96,
-    [side]: side === 'left' ? x - 118 : VIEW.width - x - 118,
-    width: 92,
-    height: 30,
-    borderRadius: 15,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontFamily: INTER,
-    fontSize: 13,
-    fontWeight: 600,
-    color: dark ? '#F4F4F5' : '#18181B',
-    background: dark ? 'rgba(24,24,27,0.85)' : 'rgba(255,255,255,0.9)',
-    border: `1px solid ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'}`,
-    boxShadow: '0 6px 18px -6px rgba(0,0,0,0.35)',
-    opacity: labels,
-    transform: `translateY(${(1 - labels) * -8}px)`,
-  });
-  return (
-    <>
-      <div style={{ position: 'absolute', left: x - 1, top: 0, width: 2, height: VIEW.height, background: 'rgba(255,255,255,0.9)', boxShadow: '0 0 18px rgba(124,58,237,0.7)' }} />
-      <div
-        style={{
-          position: 'absolute',
-          left: x - 22,
-          top: VIEW.height / 2 - 22,
-          width: 44,
-          height: 44,
-          borderRadius: 22,
-          background: '#FFFFFF',
-          boxShadow: '0 8px 24px -6px rgba(76,29,149,0.6), 0 0 0 4px rgba(124,58,237,0.35)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 4,
-          color: '#7C3AED',
-          fontFamily: INTER,
-          fontWeight: 700,
-          fontSize: 14,
-        }}
-      >
-        ‹ ›
-      </div>
-      <div style={pill('left', false)}>☀ Light</div>
-      <div style={pill('right', true)}>☾ Dark</div>
-    </>
   );
 };
 

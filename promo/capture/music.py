@@ -1,12 +1,13 @@
 """Synthesises the promo's light background track and UI sounds (no samples, no licences).
 
-Output: public/audio/music.mp3 (25 s), click.wav, whoosh.wav
+Output: public/audio/music.mp3 (the timeline's duration), click.wav, whoosh.wav
 """
-import numpy as np, soundfile as sf, os, subprocess
+import numpy as np, soundfile as sf, os, subprocess, json
 from scipy.signal import butter, sosfilt, fftconvolve
 
 SR = 48000
-DUR = 25.0
+TL = json.load(open(os.path.join(os.path.dirname(__file__), '..', 'src', 'web', 'timeline.json')))
+DUR = float(TL['duration'])
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'audio')
 rng = np.random.default_rng(7)
 N = int(SR * DUR)
@@ -91,7 +92,7 @@ drums = np.zeros(N)
 b = 0.0
 while b < DUR:
     idx = int(b * SR)
-    in_mix = 8.5 <= b <= 22.0
+    in_mix = 8.5 <= b <= TL['outro']['start'] - 0.2
     if in_mix:
         # kick
         if (round(b / beat) % 2) == 0:
@@ -141,16 +142,32 @@ click = lp(click, 6000)
 click /= np.max(np.abs(click)) / 0.7
 sf.write(os.path.join(OUT, 'click.wav'), np.stack([click, click], 1), SR, subtype='PCM_16')
 
-# Keyboard: four soft key variants (a damped tick over a short noise body) and a heavier backspace.
-for i, (f0, body, name) in enumerate([(2400, 0.9, 'key1'), (2100, 1.0, 'key2'), (2700, 0.8, 'key3'), (1900, 1.1, 'key4'), (1500, 1.4, 'backspace')]):
-    ln = int(0.09 * SR)
+# Keyboard: a laptop's low-profile keys. Each press is a short plastic "tock" (two damped body
+# modes plus a bright contact transient), with a softer release a few ms later; six variants
+# with slightly different pitch so a run of keys never sounds like one sample repeated.
+def key_sound(body_hz, bright_hz, release_ms, weight):
+    ln = int(0.11 * SR)
     tk = np.arange(ln) / SR
-    tick = np.sin(2 * np.pi * f0 * tk) * np.exp(-tk * 160)
-    thud = np.sin(2 * np.pi * (180 + 30 * i) * tk) * np.exp(-tk * 55) * 0.5 * body
-    noise = hp(rng.standard_normal(ln), 1800) * np.exp(-tk * 120) * 0.35
-    k = lp(tick + thud + noise, 7000)
-    k /= np.max(np.abs(k)) / 0.6
-    sf.write(os.path.join(OUT, f'{name}.wav'), np.stack([k, k], 1), SR, subtype='PCM_16')
+    contact = hp(rng.standard_normal(ln), 4000) * np.exp(-tk * 900) * 0.55
+    body = (np.sin(2 * np.pi * body_hz * tk) * 0.8 + np.sin(2 * np.pi * body_hz * 2.37 * tk) * 0.35) * np.exp(-tk * 75)
+    bright = np.sin(2 * np.pi * bright_hz * tk) * np.exp(-tk * 260) * 0.25
+    press = contact + (body + bright) * weight
+    d = int(release_ms / 1000 * SR)
+    rel = np.zeros(ln)
+    rel[d:] = (hp(rng.standard_normal(ln - d), 3000) * np.exp(-np.arange(ln - d) / SR * 1100) * 0.18
+               + np.sin(2 * np.pi * body_hz * 1.6 * np.arange(ln - d) / SR) * np.exp(-np.arange(ln - d) / SR * 120) * 0.12)
+    k = lp(press + rel, 9000)
+    k *= np.minimum(1, tk / 0.0008)
+    return k / (np.max(np.abs(k)) / 0.55)
+
+variants = [(610, 3100, 38, 0.9), (560, 2900, 42, 1.0), (660, 3300, 35, 0.85), (590, 3000, 45, 0.95), (640, 3200, 40, 0.9), (540, 2800, 36, 1.05)]
+for i, v in enumerate(variants):
+    k = key_sound(*v)
+    sf.write(os.path.join(OUT, f'key{i + 1}.wav'), np.stack([k, k * 0.96], 1), SR, subtype='PCM_16')
+# Space bar and backspace: longer keys, deeper and a touch louder.
+for name, v in [('space', (430, 2400, 55, 1.25)), ('backspace', (480, 2600, 50, 1.2))]:
+    k = key_sound(*v)
+    sf.write(os.path.join(OUT, f'{name}.wav'), np.stack([k, k * 0.96], 1), SR, subtype='PCM_16')
 
 # Quick whip for hard cuts: a short, bright noise swish
 ln = int(0.32 * SR)

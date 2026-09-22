@@ -18,7 +18,7 @@ OUT = os.path.join(ROOT, 'public', 'vo')
 MODEL_DIR = os.environ.get('KOKORO_DIR', os.path.join(HERE, 'kokoro'))
 
 # Slightly slower than default for the short lines so they don't sound clipped.
-SPEED = {'l1': 0.95, 'l2': 1.0, 'l3': 0.95, 'l8': 0.92}
+SPEED = {'l1': 0.95, 'l2': 1.0, 'l3': 0.95, 'l9': 0.92}
 
 tl = json.load(open(os.path.join(ROOT, 'src', 'web', 'timeline.json')))
 k = Kokoro(os.path.join(MODEL_DIR, 'kokoro-v1.0.onnx'), os.path.join(MODEL_DIR, 'voices-v1.0.bin'))

@@ -3,8 +3,8 @@
  "themes": [
   "dark"
  ],
- "from": 9.9,
- "to": 13.4,
+ "from": 11.25,
+ "to": 14.75,
  "anchor": "input",
  "pad": 24,
  "w": 820,

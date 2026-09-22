@@ -3,14 +3,14 @@ import { AbsoluteFill, Audio, Sequence, interpolate, staticFile, useCurrentFrame
 import { CUTS, cameraAt, sinceCut } from './camera';
 import { INTER } from './fonts';
 import { OUTRO_CLICK, Outro } from './Outro';
-import { ClickRipples, Focus, SelectMenu, SplitHandle, Stage, THEME, Viewport, WindowChrome, themeAt } from './parts';
+import { ClickRipples, Focus, SelectMenu, Stage, THEME, Viewport, WindowChrome, themeAt } from './parts';
 import { FPS, META, REVEALS, STAGE, TL, VO, WIN, clamp01, easeInOut, easeOutExpo, rect } from './timing';
 
 /*
- * PromptZ web promo, 16:9, 25 s.
+ * PromptZ web promo, 16:9, 26 s.
  * The page itself is the real site captured frame by frame (capture/capture.mjs) in light and
  * dark, with 4× passes for the close-ups; this composition frames it in a browser window, runs
- * the shot list (camera.ts), wipes between the themes, splits light/dark, and adds the
+ * the shot list (camera.ts), wipes between the themes, and adds the
  * voice-over, music, sound design, captions and the end card.
  */
 
@@ -19,7 +19,7 @@ const f = (s: number) => Math.round(s * FPS);
 
 /** Voice-over captions, one line at a time, for sound-off viewing. The end card speaks for itself. */
 const Captions: React.FC<{ t: number }> = ({ t }) => {
-  const line = VO.find((l) => l.id !== 'l8' && t >= l.at - 0.05 && t <= l.at + l.dur + 0.25);
+  const line = VO.find((l) => l.id !== 'l9' && t >= l.at - 0.05 && t <= l.at + l.dur + 0.25);
   if (!line) return null;
   const p = Math.min(clamp01((t - line.at + 0.05) / 0.15), clamp01((line.at + line.dur + 0.25 - t) / 0.15));
   return (
@@ -45,17 +45,27 @@ const Captions: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 
-/** Music ducks under the voice-over. (Remotion caps volume at 1; `npm run render:web` adds +4.3 dB after the render.) */
+/** Music ducks under the voice-over. (Remotion caps volume at 1; `npm run render:web` adds +3.5 dB after the render.) */
 const musicVolume = (frame: number) => {
   const t = frame / FPS;
   const inVo = VO.reduce((m, l) => Math.max(m, Math.min(clamp01((t - l.at + 0.25) / 0.25), clamp01((l.at + l.dur + 0.3 - t) / 0.3))), 0);
   return interpolate(inVo, [0, 1], [0.36, 0.16]);
 };
 
-// The typing close-up keeps the input panel sharp and softens the rest of the page.
-const input = rect('inputPanel');
-const focusAt = (t: number) =>
-  Math.min(clamp01((t - TL.typing.start + 0.1) / 0.4), clamp01((TL.typing.end + 0.25 - t) / 0.25));
+// Close-ups keep their subject sharp and soften the rest of the page.
+const FOCI = [
+  { rect: rect('chips'), from: TL.scroll.end + 0.1, to: TL.cuts[1] },
+  { rect: rect('depth'), from: TL.cuts[1], to: TL.cuts[2] },
+  { rect: rect('inputPanel'), from: TL.cuts[2], to: TL.typing.end + 0.25 },
+];
+const focusAt = (t: number) => {
+  const f = FOCI.find((x) => t >= x.from && t < x.to);
+  if (!f) return null;
+  // Fades in on a continuous move, snaps on at a cut, and fades out at the end of the run.
+  const fadeIn = f.from === TL.scroll.end + 0.1 ? clamp01((t - f.from) / 0.35) : 1;
+  const last = f === FOCI[FOCI.length - 1];
+  return { rect: f.rect, k: Math.min(fadeIn, last ? clamp01((f.to - t) / 0.25) : 1) };
+};
 
 export const WebPromo: React.FC = () => {
   const frame = useCurrentFrame();
@@ -78,6 +88,7 @@ export const WebPromo: React.FC = () => {
   const rx = (1 - intro) * 24 + out * 12;
   const ry = (1 - intro) * -18 + out * -22;
   const rz = (1 - intro) * 5 + out * -3;
+  const focus = focusAt(t);
   const th = themeAt(t);
   const shadow = THEME[th.top && th.p > 0.5 ? th.top : th.base];
 
@@ -113,10 +124,9 @@ export const WebPromo: React.FC = () => {
           >
             <WindowChrome t={t} />
             <Viewport t={t}>
-              <Focus focus={input} k={focusAt(t)} />
+              {focus ? <Focus focus={focus.rect} k={focus.k} /> : null}
               <SelectMenu t={t} />
               <ClickRipples t={t} />
-              <SplitHandle t={t} />
             </Viewport>
           </div>
         </div>
@@ -139,7 +149,7 @@ export const WebPromo: React.FC = () => {
       ))}
       {META.keys.map((k, i) => (
         <Sequence key={`k${i}`} from={f(k.t)} durationInFrames={4}>
-          <Audio src={staticFile(`audio/${k.key === 'Backspace' ? 'backspace' : k.key === ' ' ? 'key4' : `key${(i % 3) + 1}`}.wav`)} volume={0.2} />
+          <Audio src={staticFile(`audio/${k.key === 'Backspace' ? 'backspace' : k.key === ' ' ? 'space' : `key${((i * 7) % 6) + 1}`}.wav`)} volume={0.24} />
         </Sequence>
       ))}
       {REVEALS.map((r) => (

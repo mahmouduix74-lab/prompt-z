@@ -1,43 +1,168 @@
 {
   "_note": "Shared by capture/capture.mjs (drives the real site) and the Remotion composition. All times in seconds of video time.",
   "fps": 30,
-  "duration": 25,
-  "viewport": { "width": 1440, "height": 900 },
+  "duration": 26,
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
   "warmup": 0.5,
   "bpm": 100,
   "vo": [
-    { "id": "l1", "at": 0.5, "text": "Meet PromptZ." },
-    { "id": "l2", "at": 1.85, "text": "Forge pro prompts, from your first idea to the final prompt, in one second." },
-    { "id": "l3", "at": 6.75, "text": "Light mode, or dark. Your call." },
-    { "id": "l4", "at": 9.9, "text": "Type your idea any way you like. Even in Arabic." },
-    { "id": "l5", "at": 13.3, "text": "Choose your output language, and hit Generate." },
-    { "id": "l6", "at": 15.95, "text": "Play a quick game while it thinks." },
-    { "id": "l7", "at": 18.7, "text": "A clean, professional prompt, ready to use." },
-    { "id": "l8", "at": 22.9, "text": "PromptZ. Try it now." }
+    {
+      "id": "l1",
+      "at": 0.5,
+      "text": "Meet PromptZ."
+    },
+    {
+      "id": "l2",
+      "at": 1.85,
+      "text": "Forge pro prompts, from your first idea to the final prompt, in one second."
+    },
+    {
+      "id": "l3",
+      "at": 6.75,
+      "text": "Light mode, or dark. Your call."
+    },
+    {
+      "id": "l4",
+      "at": 9.45,
+      "text": "Pick a domain, and a detail level."
+    },
+    {
+      "id": "l5",
+      "at": 11.6,
+      "text": "Type your idea any way you like. Even in Arabic."
+    },
+    {
+      "id": "l6",
+      "at": 14.75,
+      "text": "Choose your output language, and hit Generate."
+    },
+    {
+      "id": "l7",
+      "at": 17.45,
+      "text": "Play a quick game while it thinks."
+    },
+    {
+      "id": "l8",
+      "at": 20.05,
+      "text": "A clean, professional prompt, ready to use."
+    },
+    {
+      "id": "l9",
+      "at": 23.3,
+      "text": "PromptZ. Try it now."
+    }
   ],
   "theme": [
-    { "at": 0, "to": "light" },
-    { "at": 6.55, "to": "dark" }
+    {
+      "at": 0,
+      "to": "light"
+    },
+    {
+      "at": 6.55,
+      "to": "dark"
+    }
   ],
   "revealDuration": 0.9,
-  "split": { "start": 20.4, "settle": 21.15, "end": 22.2 },
-  "scroll": { "start": 8.45, "end": 9.3 },
-  "clicks": {
-    "domain": 9.6,
-    "textarea": 9.95,
-    "select": 13.35,
-    "selectPick": 14.15,
-    "generate": 15.2
+  "scroll": {
+    "start": 8.45,
+    "end": 9.3
   },
-  "typing": { "start": 10.15, "end": 13.05, "typo": { "word": 3, "at": 3, "wrong": "ب" } },
+  "clicks": {
+    "domain": 10.0,
+    "depth": 11.0,
+    "textarea": 11.4,
+    "select": 14.8,
+    "selectPick": 15.6,
+    "generate": 16.65
+  },
+  "typing": {
+    "start": 11.6,
+    "end": 14.5,
+    "typo": {
+      "word": 3,
+      "at": 3,
+      "wrong": "ب"
+    }
+  },
   "snakeTickMs": 260,
-  "resultAt": 18.45,
-  "outro": { "start": 22.2, "click": 24.15 },
+  "resultAt": 19.9,
+  "outro": {
+    "start": 22.6,
+    "click": 24.55
+  },
   "macros": [
-    { "id": "toggle", "themes": ["light", "dark"], "from": 5.3, "to": 7.9, "rect": { "x": 640, "y": 0, "w": 800, "h": 480 } },
-    { "id": "typing", "themes": ["dark"], "from": 9.9, "to": 13.4, "anchor": "input", "pad": 24, "w": 820, "h": 500 },
-    { "id": "generate", "themes": ["dark"], "from": 14.35, "to": 15.9, "anchor": "generate", "w": 820, "h": 480 }
+    {
+      "id": "toggle",
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "from": 5.3,
+      "to": 7.9,
+      "rect": {
+        "x": 640,
+        "y": 0,
+        "w": 800,
+        "h": 480
+      }
+    },
+    {
+      "id": "domain",
+      "themes": [
+        "dark"
+      ],
+      "from": 9.3,
+      "to": 10.6,
+      "anchor": "chips",
+      "w": 900,
+      "h": 480
+    },
+    {
+      "id": "depth",
+      "themes": [
+        "dark"
+      ],
+      "from": 10.4,
+      "to": 11.4,
+      "anchor": "depth",
+      "w": 820,
+      "h": 460
+    },
+    {
+      "id": "typing",
+      "themes": [
+        "dark"
+      ],
+      "from": 11.25,
+      "to": 14.75,
+      "anchor": "input",
+      "pad": 24,
+      "w": 820,
+      "h": 500
+    },
+    {
+      "id": "generate",
+      "themes": [
+        "dark"
+      ],
+      "from": 15.8,
+      "to": 17.1,
+      "anchor": "generate",
+      "w": 820,
+      "h": 480
+    }
   ],
   "idea": "عايز أصمم صفحة تسجيل دخول لتطبيق موبايل في Figma",
-  "result": "# ROLE\nSenior mobile product designer\n\n# OBJECTIVE\nA clean, ready-to-build login screen.\n\n# TASK\nDesign the login screen in Figma\n- Email and password fields\n- Sign-in button\n- Forgot password & sign-up links\n\n# OUTPUT RULES\n- Only the requested screen\n- No preambles"
+  "result": "# ROLE\nSenior mobile product designer\n\n# OBJECTIVE\nA clean, ready-to-build login screen.\n\n# TASK\nDesign the login screen in Figma\n- Email and password fields\n- Sign-in button\n- Forgot password & sign-up links\n\n# OUTPUT RULES\n- Only the requested screen\n- No preambles",
+  "cuts": [
+    5.4,
+    10.5,
+    11.3,
+    14.65,
+    15.85,
+    17.05
+  ]
 }
