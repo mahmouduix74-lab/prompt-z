@@ -35,7 +35,7 @@ import { Mascot } from './components/Mascot';
 const STORAGE_KEYS = {
   MODELS: 'gemini_available_models',
   SELECTED_MODEL: 'gemini_active_model',
-  SYSTEM_INSTRUCTION: 'gemini_system_instruction',
+  SYSTEM_INSTRUCTION: 'gemini_system_instruction_v2',
   SAVED_PROMPTS: 'gemini_structured_prompts_library',
   DEPTH: 'prompt_depth_preference',
   OUTPUT_LANGUAGE: 'prompt_output_language_preference',

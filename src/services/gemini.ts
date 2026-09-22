@@ -5,12 +5,7 @@ import {
   GeminiModelInfo,
   GenerationErrorDetails,
 } from '../types';
-import {
-  DOMAINS,
-  DEPTHS,
-  OUTPUT_LANGUAGES,
-  EXACT_SYSTEM_INSTRUCTION,
-} from '../constants';
+import { EXACT_SYSTEM_INSTRUCTION } from '../constants';
 import { refineLocalPromptText } from './localRefiner';
 import { generateLocalStructuredPrompt } from './localEngine';
 
@@ -27,42 +22,6 @@ export class GeminiApiError extends Error {
     this.name = 'GeminiApiError';
     this.details = details;
   }
-}
-
-/**
- * Builds the system instruction that is actually sent:
- * base instruction (or the version edited in Settings)
- * + one line for the domain
- * + one line for the depth
- * + one line for the output language (none for "match my request")
- * + the exclusions, if any
- */
-export function buildSystemInstruction(params: {
-  baseInstruction: string;
-  domain: DomainType;
-  depth: DepthType;
-  outputLanguage: OutputLanguage;
-  exclusions?: string;
-}): string {
-  const { baseInstruction, domain, depth, outputLanguage, exclusions } = params;
-
-  const domainOption = DOMAINS.find((d) => d.id === domain) || DOMAINS[0];
-  const depthOption = DEPTHS.find((d) => d.id === depth) || DEPTHS[1];
-  const languageOption = OUTPUT_LANGUAGES.find((l) => l.id === outputLanguage);
-
-  let instruction = baseInstruction.trim();
-
-  instruction += `\n\n${domainOption.instructionLine}\n${depthOption.instructionLine}`;
-
-  if (languageOption?.instructionLine) {
-    instruction += `\n${languageOption.instructionLine}`;
-  }
-
-  if (exclusions && exclusions.trim()) {
-    instruction += `\nUser explicitly specified the following exclusions (append as negative lines under # OUTPUT RULES):\n${exclusions.trim()}`;
-  }
-
-  return instruction;
 }
 
 /**
@@ -253,19 +212,16 @@ export async function generateStructuredPrompt(params: {
   }
   requireModel(model);
 
-  const systemInstruction = buildSystemInstruction({
-    baseInstruction: baseSystemInstruction,
-    domain,
-    depth,
-    outputLanguage,
-    exclusions,
-  });
 
   for (let attempt = 0; ; attempt++) {
     const { res, data } = await postJson('/api/generate', {
       rawText: rawText.trim(),
       model,
-      systemInstruction,
+      systemInstruction: baseSystemInstruction,
+      domain,
+      depth,
+      outputLanguage,
+      exclusions,
     });
 
     if (res.ok) {

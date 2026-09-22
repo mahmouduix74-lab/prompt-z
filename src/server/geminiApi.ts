@@ -7,7 +7,7 @@
  * actually handled — only the thin req/res adapter at each entry point differs.
  */
 import { GoogleGenAI } from '@google/genai';
-import { DOMAINS, DEPTHS, EXACT_SYSTEM_INSTRUCTION } from '../constants.js';
+import { EXACT_SYSTEM_INSTRUCTION, buildSystemInstruction } from '../constants.js';
 import { refineLocalPromptText } from '../services/localRefiner.js';
 import { generateLocalStructuredPrompt } from '../services/localEngine.js';
 import { DomainType, DepthType, OutputLanguage } from '../types.js';
@@ -189,14 +189,13 @@ export async function handleGenerate(input: GenerateInput, userApiKey: string | 
   }
 
   try {
-    const domainObj = DOMAINS.find((d) => d.id === domain) || DOMAINS[0];
-    const depthObj = DEPTHS.find((d) => d.id === depth) || DEPTHS[1];
-    const baseInstruction = (systemInstruction || EXACT_SYSTEM_INSTRUCTION).trim();
-
-    let fullSystemInstruction = `${baseInstruction}\n\n${domainObj.instructionLine}\n${depthObj.instructionLine}`;
-    if (exclusions && exclusions.trim()) {
-      fullSystemInstruction += `\nUser explicitly specified the following exclusions (append as negative lines under # OUTPUT RULES):\n${exclusions.trim()}`;
-    }
+    const fullSystemInstruction = buildSystemInstruction({
+      baseInstruction: (systemInstruction || EXACT_SYSTEM_INSTRUCTION).trim(),
+      domain,
+      depth,
+      outputLanguage,
+      exclusions,
+    });
 
     const client = new GoogleGenAI({ apiKey: activeKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
 

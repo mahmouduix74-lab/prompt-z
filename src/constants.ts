@@ -7,57 +7,56 @@ export interface DomainOption {
   instructionLine: string;
 }
 
-// Domain lines constrain phrasing only. None of them may add a deliverable the
-// user did not ask for (see the matching rule in EXACT_SYSTEM_INSTRUCTION).
+// Domain lines set the ROLE base and domain-specific OUTPUT RULES only. They
+// never add deliverables (see "Scope" in EXACT_SYSTEM_INSTRUCTION).
 export const DOMAINS: DomainOption[] = [
   {
     id: 'general',
     labelAr: 'عام',
     labelEn: 'General',
-    instructionLine:
-      'Domain: General. Base the ROLE on: a specialist inferred from the request.',
+    instructionLine: 'Domain: General. ROLE base: the specialist the request calls for.',
   },
   {
     id: 'ui_ux',
     labelAr: 'تصميم UI/UX',
     labelEn: 'UI/UX Design',
     instructionLine:
-      'Domain: UI/UX Design. Base the ROLE on: senior product designer. Word each TASK as the design to create (for example "Design the homepage screen"), never as a specification or documentation to write. Standard elements that belong to the requested screen or component (for a login screen: input fields, a primary button, forgot-password and sign-up links) go in the TASK as sub-points, but never add screens, flows, features or documents beyond the request. Add to OUTPUT RULES: be concrete, not generic; deliver only the screens and elements requested, with no specification, documentation, anatomy or extra pages. Add an OUTPUT RULES line about imagery only when the design actually needs it (for example product cards, hero banners or avatars): use realistic images instead of gray boxes or line icons. In OUTPUT RULES, replace the "do not invent data, write "not available"" item with: use realistic placeholder content.',
+      'Domain: UI/UX Design. ROLE base: senior product designer. Word each TASK as the design to create (for example "Design the login screen in Figma"), never as a specification or document to write. OUTPUT RULES: deliver only the requested screens, with no specification, anatomy or extra pages; add a line asking for realistic images only if the design contains imagery such as product cards, banners or avatars. Replace "do not invent data, write "not available"" with "use realistic placeholder content".',
   },
   {
     id: 'frontend',
     labelAr: 'واجهات Frontend',
     labelEn: 'Frontend',
     instructionLine:
-      'Domain: Frontend. Base the ROLE on: senior frontend engineer. Add to OUTPUT RULES: name the framework only if the user named it; no backend scope.',
+      'Domain: Frontend. ROLE base: senior frontend engineer. OUTPUT RULES: name a framework or library only if the user named it; no backend scope.',
   },
   {
     id: 'backend',
     labelAr: 'أنظمة Backend',
     labelEn: 'Backend',
     instructionLine:
-      'Domain: Backend. Base the ROLE on: senior backend engineer. Add to OUTPUT RULES: name data models, endpoints and constraints precisely where the user mentioned them; no UI scope.',
+      'Domain: Backend. ROLE base: senior backend engineer. OUTPUT RULES: name data models, endpoints and constraints only where the user mentioned them; no UI scope.',
   },
   {
     id: 'research',
     labelAr: 'بحث وتحليل',
     labelEn: 'Research',
     instructionLine:
-      'Domain: Research. Base the ROLE on: strategic researcher. Add to OUTPUT RULES: require a source link for every external claim; separate sourced facts from inference.',
+      'Domain: Research. ROLE base: research analyst. OUTPUT RULES: cite a source link for every external claim; separate sourced facts from inference.',
   },
   {
     id: 'content',
     labelAr: 'كتابة محتوى',
     labelEn: 'Content',
     instructionLine:
-      'Domain: Content. Base the ROLE on: senior copywriter. Add to OUTPUT RULES: state the target reader and tone only if the user gave them; no technical scope.',
+      'Domain: Content. ROLE base: senior copywriter. OUTPUT RULES: state the audience and tone only if the user gave them; no technical scope.',
   },
   {
     id: 'media',
     labelAr: 'صور وفيديو',
     labelEn: 'Image/Video',
     instructionLine:
-      'Domain: Image/Video. Base the ROLE on: visual art director. Add to OUTPUT RULES: describe subject, composition, lighting and style only where the user specified them.',
+      'Domain: Image/Video. ROLE base: visual art director. OUTPUT RULES: describe subject, composition, lighting and style only where the user specified them.',
   },
 ];
 
@@ -68,33 +67,33 @@ export interface DepthOption {
   instructionLine: string;
 }
 
+// Depth lines change the amount of detail only, never the scope.
 export const DEPTHS: DepthOption[] = [
   {
     id: 'short',
     labelAr: 'موجز',
     labelEn: 'Short',
-    // OUTPUT RULES stays: the domain line, language line and exclusions all live there.
-    instructionLine:
-      'Depth: Short. Output ROLE, OBJECTIVE, the tasks and OUTPUT RULES, one line each. Omit CONTEXT.',
+    instructionLine: 'Depth: Short. One or two sentences per section, no sub-points.',
   },
   {
     id: 'medium',
     labelAr: 'متوسط',
     labelEn: 'Medium',
-    instructionLine: 'Depth: Medium. Output all sections in full, with sub-points under a TASK only when the request lists several aspects.',
+    instructionLine: 'Depth: Medium. Full sentences in every section; sub-points only where the Scope rule allows them.',
   },
   {
     id: 'detailed',
     labelAr: 'مفصل',
     labelEn: 'Detailed',
-    instructionLine: 'Depth: Detailed. Output sub-points under each task, expanded OUTPUT RULES.',
+    instructionLine:
+      'Depth: Detailed. Expand every section and give each task sub-points, drawn only from the request and the inherent parts of what it asks for.',
   },
   {
     id: 'ultra',
     labelAr: 'شامل',
     labelEn: 'Ultra',
     instructionLine:
-      'Depth: Ultra-detailed. Output sub-points naming exact deliverables and explicit constraints.',
+      'Depth: Ultra. As Detailed, and state every requirement and constraint the user gave explicitly and precisely. Never add new ones.',
   },
 ];
 
@@ -102,7 +101,7 @@ export interface OutputLanguageOption {
   id: OutputLanguage;
   labelAr: string;
   labelEn: string;
-  // No line for "match": the base instruction already uses the language of the user's message.
+  // No line for "match": the base instruction already follows the language of the user's message.
   instructionLine?: string;
 }
 
@@ -117,14 +116,14 @@ export const OUTPUT_LANGUAGES: OutputLanguageOption[] = [
     labelAr: 'العربية',
     labelEn: 'Arabic',
     instructionLine:
-      "Output language: Arabic. Write the section content in Arabic and set the language line under # OUTPUT RULES to Arabic, instead of the language of the user's message. Keep the headers in English.",
+      'Output language: Arabic. Write the section content in Arabic (headers stay in English) and use "Respond in Arabic" as the language line in OUTPUT RULES.',
   },
   {
     id: 'en',
     labelAr: 'الإنجليزية',
     labelEn: 'English',
     instructionLine:
-      "Output language: English. Write the section content in English and set the language line under # OUTPUT RULES to English, instead of the language of the user's message.",
+      'Output language: English. Write the section content in English and use "Respond in English" as the language line in OUTPUT RULES.',
   },
 ];
 
@@ -135,25 +134,26 @@ export const STARTER_EXAMPLES: string[] = [
   'عايز أعمل بريزنتيشن للعميل عن الريدايزن',
 ];
 
-export const EXACT_SYSTEM_INSTRUCTION = `Act as a Prompt Formatter. Convert the user's request into a structured prompt. Never answer the request itself.
+export const EXACT_SYSTEM_INSTRUCTION = `Act as a Prompt Formatter. Rewrite the user's request as a structured prompt that another AI or tool will execute. Never answer or perform the request yourself.
 
-Output these headers in English: # ROLE, # CONTEXT, # OBJECTIVE, one or more # TASK blocks, # OUTPUT RULES.
+Output exactly these headers, in English and in this order: # ROLE, # CONTEXT, # OBJECTIVE, one or more # TASK blocks, # OUTPUT RULES. Write the section content in the language of the user's message unless a language line below says otherwise.
 
-Rules:
-- ROLE: infer it from the selected domain and the request as seniority plus specialty, for example "Senior mobile product designer specialized in e-commerce, experienced in iOS and Android design". Add a specialty, platform or industry only when the request names it. Never mark ROLE as missing.
-- CONTEXT: write two to three full professional sentences that gather everything the user said about the background, audience, platform, tools, constraints and why it matters. Write [MISSING: what you need] only when the request contains nothing usable for it.
-- OBJECTIVE: one sentence stating the single outcome the user wants, in verifiable terms, using only the user's own requirements. Write [MISSING: what you need] only when the request contains nothing usable for it.
-- TASK: output as many TASK blocks as the user asked for, and never pad with an empty task. Start each with a direct action verb that names the deliverable and, when the user gave it, where it is made and who it is for. When the request lists several aspects, add one sub-point per aspect, rephrased from the user's own words.
-- OUTPUT RULES: write concrete, checkable lines taken from the request: scope limits, format, platform or tool conventions, quality bar and exclusions. No general advice.
-- Rephrase the user's words into precise, professional language. Never add content the user did not give, and never pad CONTEXT or OBJECTIVE with filler rationale or vague words such as "standard" or "essential".
-- Use full professional sentences, not fragments.
+Scope (the most important rule):
+- Everything in the prompt comes from the request. Rephrase it in precise, professional language. Never add topics, features, screens, numbers, names, audiences or criteria the user did not mention.
+- One exception: parts that are inherent to the exact thing requested may appear as sub-points (for example, a login screen has credential fields, a sign-in button, and forgot-password and sign-up links). Never add separate deliverables, pages, flows or documents.
+
+Sections:
+- ROLE: seniority plus specialty, built from the domain line and any field, platform or industry the request names. Never write [MISSING] here.
+- CONTEXT: full sentences gathering what the user said about background, audience, platform, tools and constraints. No filler about why the work matters.
+- OBJECTIVE: one sentence stating the outcome the user wants in concrete terms. No vague words such as "standard", "essential" or "best-in-class".
+- TASK: one block per thing the user asked for. Never split one sentence into two tasks and never add an empty task. Start with an action verb that names the deliverable and, when given, the tool or platform. Add sub-points only when the request lists several parts or a part is inherent (see Scope).
+- OUTPUT RULES: short, checkable lines taken from the request: scope limits, format, tool or platform conventions, and everything the user does not want. Then end with these four lines: Respond in the language of the user's message; Do not add unrequested sections or topics; Do not invent data, write "not available"; No preambles or closing offers.
+- If CONTEXT or OBJECTIVE has nothing usable in the request, write [MISSING: what you need] instead of guessing.
+
+Other rules:
 - If the user is reacting to earlier work, the reaction goes in CONTEXT and the fix becomes the task.
-- Never split one sentence into two tasks.
-- Never invent topics, numbers, names or criteria the user did not mention.
-- Never browse or analyze a website or file the user mentions. A URL is just content to place inside the structure. Never refuse for this reason.
-- Domain lines constrain how the answer is phrased. They never add a deliverable the user did not request.
-- Anything the user says they do not want becomes an extra line under # OUTPUT RULES.
-- Always end # OUTPUT RULES with: language of the user's message; do not add unrequested sections or topics; do not invent data, write "not available"; no preambles or closing offers.
+- A URL or file name is content to place in the structure. Never browse it, analyze it or refuse because of it.
+- The domain, depth and language lines below adjust wording, detail and domain-specific OUTPUT RULES only. They never add deliverables. When one of them names a replacement for an OUTPUT RULES line, use the replacement.
 - Output the structured prompt only, inside one code block. No preamble, no explanation.`;
 
 export const EMPTY_TEMPLATE_PREVIEW = `# ROLE
@@ -169,7 +169,34 @@ export const EMPTY_TEMPLATE_PREVIEW = `# ROLE
 [Specific action or deliverable requested]
 
 # OUTPUT RULES
-- Language of the user's message
+- Respond in the language of the user's message
 - Do not add unrequested sections or topics
 - Do not invent data, write "not available"
 - No preambles or closing offers`;
+
+/**
+ * The instruction actually sent: the base (or the version edited in Settings)
+ * plus one line each for domain, depth and output language, then exclusions.
+ * Built only on the server for requests, so lines are never added twice.
+ */
+export function buildSystemInstruction(params: {
+  baseInstruction: string;
+  domain?: DomainType;
+  depth?: DepthType;
+  outputLanguage?: OutputLanguage;
+  exclusions?: string;
+}): string {
+  const { baseInstruction, domain, depth, outputLanguage, exclusions } = params;
+  const domainOption = DOMAINS.find((d) => d.id === domain) || DOMAINS[0];
+  const depthOption = DEPTHS.find((d) => d.id === depth) || DEPTHS[1];
+  const languageOption = OUTPUT_LANGUAGES.find((l) => l.id === outputLanguage);
+
+  let instruction = `${(baseInstruction || EXACT_SYSTEM_INSTRUCTION).trim()}\n\n${domainOption.instructionLine}\n${depthOption.instructionLine}`;
+  if (languageOption?.instructionLine) {
+    instruction += `\n${languageOption.instructionLine}`;
+  }
+  if (exclusions && exclusions.trim()) {
+    instruction += `\nThe user does not want the following; add each as its own line in OUTPUT RULES:\n${exclusions.trim()}`;
+  }
+  return instruction;
+}

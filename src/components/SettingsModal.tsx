@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { DomainType, DepthType, OutputLanguage } from '../types';
-import { EXACT_SYSTEM_INSTRUCTION } from '../constants';
-import { buildSystemInstruction } from '../services/gemini';
+import { EXACT_SYSTEM_INSTRUCTION, buildSystemInstruction } from '../constants';
 import { AppLang, UI_STRINGS } from '../utils/i18n';
 import { X, Code, RotateCcw, Check, Sparkles, Eye } from 'lucide-react';
 
