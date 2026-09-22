@@ -1,0 +1,37 @@
+{
+  "_note": "Shared by capture/capture.mjs (drives the real site) and the Remotion composition. All times in seconds of video time.",
+  "fps": 30,
+  "duration": 25,
+  "viewport": { "width": 1440, "height": 900 },
+  "warmup": 0.5,
+  "vo": [
+    { "id": "l1", "at": 0.5, "text": "Meet PromptZ." },
+    { "id": "l2", "at": 1.85, "text": "Forge pro prompts, from your first idea to the final prompt, in one second." },
+    { "id": "l3", "at": 6.75, "text": "Light mode, or dark. Your call." },
+    { "id": "l4", "at": 9.0, "text": "Type your idea any way you like. Even in Arabic." },
+    { "id": "l5", "at": 12.3, "text": "Choose your output language, and hit Generate." },
+    { "id": "l6", "at": 15.1, "text": "Play a quick game while it thinks." },
+    { "id": "l7", "at": 18.2, "text": "And there it is. A clean, professional prompt, ready to use." },
+    { "id": "l8", "at": 22.75, "text": "PromptZ. Try it now." }
+  ],
+  "theme": [
+    { "at": 0, "to": "light" },
+    { "at": 6.55, "to": "dark" },
+    { "at": 20.75, "to": "light" }
+  ],
+  "revealDuration": 0.75,
+  "scroll": { "start": 8.45, "end": 9.3 },
+  "clicks": {
+    "domain": 9.75,
+    "textarea": 10.15,
+    "select": 12.75,
+    "selectPick": 13.55,
+    "generate": 14.6
+  },
+  "typing": { "start": 10.35, "end": 12.1 },
+  "snakeTickMs": 260,
+  "resultAt": 17.95,
+  "outro": { "start": 22.0 },
+  "idea": "عايز أصمم صفحة تسجيل دخول لتطبيق موبايل في Figma",
+  "result": "# ROLE\nSenior mobile product designer\n\n# OBJECTIVE\nA clean, ready-to-build login screen.\n\n# TASK\nDesign the login screen in Figma\n- Email and password fields\n- Sign-in button\n- Forgot password & sign-up links\n\n# OUTPUT RULES\n- Only the requested screen\n- No preambles"
+}

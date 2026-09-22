@@ -1,2 +1,5 @@
 node_modules/
 out/
+# Captured site frames (~350 MB): regenerate with `node capture/capture.mjs light|dark`.
+public/capture/light/
+public/capture/dark/

@@ -177,7 +177,8 @@ export default function App() {
     return err?.details || { statusCode: 0, rawMessage: err?.message || fallbackMessage };
   };
 
-  // Fetch models available to the server key. Errors show in the banner.
+  // Fetch models available to the server key. A failure here is not shown to the user:
+  // generation keeps the default model and falls back to the local engine if needed.
   const handleFetchModels = useCallback(async () => {
     setIsLoadingModels(true);
     try {
@@ -205,7 +206,7 @@ export default function App() {
         return chosenId;
       });
     } catch (err: any) {
-      setGenerationError(toErrorDetails(err, 'Failed to fetch models'));
+      console.warn('Could not fetch models, keeping the default model:', toErrorDetails(err, 'Failed to fetch models'));
     } finally {
       setIsLoadingModels(false);
     }
