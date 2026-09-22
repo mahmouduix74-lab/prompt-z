@@ -1,0 +1,25 @@
+{
+  "name": "promptz-promo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts Promo out/promptz-promo.mp4 --codec=h264 --crf=18",
+    "still": "remotion still src/index.ts Promo",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.527",
+    "@remotion/fonts": "4.0.527",
+    "@remotion/google-fonts": "4.0.527",
+    "@remotion/transitions": "^4.0.527",
+    "react": "19.0.1",
+    "react-dom": "19.0.1",
+    "remotion": "4.0.527"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "~5.8.2"
+  }
+}
