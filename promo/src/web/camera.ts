@@ -45,7 +45,12 @@ const result = (t: number): Shot => {
 };
 
 export const CUTS: number[] = TL.cuts;
-const [, CUT_DEPTH, CUT_TYPING, CUT_SELECT, CUT_GENERATE, CUT_SNAKE] = CUTS;
+const [, CUT_LANGUAGE, CUT_DEPTH, CUT_TYPING, CUT_SELECT, CUT_GENERATE, CUT_SNAKE, CUT_ACTIONS] = CUTS;
+const copy = rect('copy');
+const download = rect('download');
+const history = rect('history');
+const language = rect('language');
+const drawer = rect('drawer');
 
 const stops: Stop[] = [
   { t: 0, shot: wide },
@@ -57,6 +62,12 @@ const stops: Stop[] = [
   { t: TL.theme[1].at, shot: { cx: toggle.x + toggle.w / 2 - 120, cy: BAR + toggle.y + 120, z: 3.1 } },
   // …and pull all the way out while the dark theme floods the page.
   { t: TL.theme[1].at + 1.2, shot: wide, ease: easeInOut },
+  { t: CUT_LANGUAGE, shot: wide },
+  // Cut: the language toggle, very close; the page turns Arabic (RTL) and the camera pulls out,
+  // then the wide shot holds while it switches back to English.
+  { t: CUT_LANGUAGE, shot: { cx: language.x + language.w / 2 - 60, cy: BAR + language.y + 120, z: 3 }, cut: true },
+  { t: C.language + 0.1, shot: { cx: language.x + language.w / 2 - 60, cy: BAR + language.y + 120, z: 3.1 } },
+  { t: C.language + 1.1, shot: wide, ease: easeInOut },
   { t: TL.scroll.end, shot: wide },
   // Domain chips, close: the cursor glides over General and picks UI/UX Design. (The row's box
   // spans the whole card, so the shot is framed from its left edge.)
@@ -78,7 +89,15 @@ const stops: Stop[] = [
   { t: CUT_SNAKE, shot: { cx: snake.x + snake.w / 2, cy: BAR + snake.y + snake.h / 2 + 60, z: 1.75 }, cut: true },
   { t: TL.resultAt, shot: { cx: snake.x + snake.w / 2, cy: BAR + snake.y + snake.h / 2 + 50, z: 1.9 } },
   { t: TL.resultAt + 0.35, shot: result, ease: easeInOut },
-  { t: TL.outro.start, shot: result },
+  { t: CUT_ACTIONS, shot: result },
+  // Cut: Copy and Download .md, close; then across to History.
+  { t: CUT_ACTIONS, shot: { cx: (copy.x + download.x + download.w) / 2, cy: BAR + copy.y + 70, z: 2.25 }, cut: true },
+  { t: C.download + 0.3, shot: { cx: (copy.x + download.x + download.w) / 2 + 30, cy: BAR + copy.y + 70, z: 2.32 } },
+  { t: C.history - 0.05, shot: { cx: history.x + history.w / 2 - 60, cy: BAR + history.y + 70, z: 2.2 }, ease: easeInOut },
+  // …and pull back as the History drawer slides in.
+  { t: C.history + 0.6, shot: { cx: drawer.x + drawer.w / 2 - 120, cy: BAR + drawer.y + 330, z: 1.35 }, ease: easeInOut },
+  { t: C.drawerClose + 0.2, shot: { cx: drawer.x + drawer.w / 2 - 110, cy: BAR + drawer.y + 330, z: 1.4 } },
+  { t: TL.outro.start, shot: { cx: drawer.x + drawer.w / 2 - 100, cy: BAR + drawer.y + 330, z: 1.44 } },
 ];
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;

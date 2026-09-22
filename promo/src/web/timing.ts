@@ -1,12 +1,15 @@
 import TL from './timeline.json';
-import META from '../../public/capture/meta-light.json';
+// The dark run covers the whole timeline (light is only needed up to the theme wipe).
+import META from '../../public/capture/meta-dark.json';
 import VO_DUR from '../../public/vo/durations.json';
 import MACRO_TOGGLE_LIGHT from '../../public/capture/macro/toggle-light.json';
 import MACRO_TOGGLE_DARK from '../../public/capture/macro/toggle-dark.json';
+import MACRO_LANGUAGE_DARK from '../../public/capture/macro/language-dark.json';
 import MACRO_DOMAIN_DARK from '../../public/capture/macro/domain-dark.json';
 import MACRO_DEPTH_DARK from '../../public/capture/macro/depth-dark.json';
 import MACRO_TYPING_DARK from '../../public/capture/macro/typing-dark.json';
 import MACRO_GENERATE_DARK from '../../public/capture/macro/generate-dark.json';
+import MACRO_ACTIONS_DARK from '../../public/capture/macro/actions-dark.json';
 
 export { TL, META };
 
@@ -37,10 +40,12 @@ export type Macro = { id: string; theme: Theme; from: number; to: number; rect: 
 export const MACROS: Macro[] = [
   { ...MACRO_TOGGLE_LIGHT, theme: 'light' },
   { ...MACRO_TOGGLE_DARK, theme: 'dark' },
+  { ...MACRO_LANGUAGE_DARK, theme: 'dark' },
   { ...MACRO_DOMAIN_DARK, theme: 'dark' },
   { ...MACRO_DEPTH_DARK, theme: 'dark' },
   { ...MACRO_TYPING_DARK, theme: 'dark' },
   { ...MACRO_GENERATE_DARK, theme: 'dark' },
+  { ...MACRO_ACTIONS_DARK, theme: 'dark' },
 ].map((m) => ({ id: m.id, theme: m.theme as Theme, from: m.from, to: m.to, rect: m.rect }));
 
 const frameAt = (t: number) => META.frames[Math.max(0, Math.min(META.frames.length - 1, Math.round(t * FPS)))];

@@ -1,7 +1,7 @@
 {
   "_note": "Shared by capture/capture.mjs (drives the real site) and the Remotion composition. All times in seconds of video time.",
   "fps": 30,
-  "duration": 26,
+  "duration": 32,
   "viewport": {
     "width": 1440,
     "height": 900
@@ -26,32 +26,47 @@
     },
     {
       "id": "l4",
-      "at": 9.45,
-      "text": "Pick a domain, and a detail level."
+      "at": 8.75,
+      "text": "Arabic or English. It speaks both."
     },
     {
       "id": "l5",
-      "at": 11.6,
-      "text": "Type your idea any way you like. Even in Arabic."
+      "at": 11.5,
+      "text": "Pick a domain, and a detail level."
     },
     {
       "id": "l6",
-      "at": 14.75,
-      "text": "Choose your output language, and hit Generate."
+      "at": 13.65,
+      "text": "Type your idea any way you like. Even in Arabic."
     },
     {
       "id": "l7",
-      "at": 17.45,
-      "text": "Play a quick game while it thinks."
+      "at": 16.8,
+      "text": "Choose your output language, and hit Generate."
     },
     {
       "id": "l8",
-      "at": 20.05,
-      "text": "A clean, professional prompt, ready to use."
+      "at": 19.5,
+      "text": "Play a quick game while it thinks."
     },
     {
       "id": "l9",
-      "at": 23.3,
+      "at": 22.1,
+      "text": "A clean, professional prompt, ready to use."
+    },
+    {
+      "id": "l10",
+      "at": 24.8,
+      "text": "Copy it, or download it as Markdown."
+    },
+    {
+      "id": "l11",
+      "at": 27.25,
+      "text": "Every prompt you make is saved in History."
+    },
+    {
+      "id": "l12",
+      "at": 30.0,
       "text": "PromptZ. Try it now."
     }
   ],
@@ -67,20 +82,26 @@
   ],
   "revealDuration": 0.9,
   "scroll": {
-    "start": 8.45,
-    "end": 9.3
+    "start": 10.5,
+    "end": 11.35
   },
   "clicks": {
-    "domain": 10.0,
-    "depth": 11.0,
-    "textarea": 11.4,
-    "select": 14.8,
-    "selectPick": 15.6,
-    "generate": 16.65
+    "language": 8.6,
+    "languageBack": 10.1,
+    "domain": 12.05,
+    "depth": 13.05,
+    "textarea": 13.45,
+    "select": 16.85,
+    "selectPick": 17.65,
+    "generate": 18.7,
+    "copy": 24.45,
+    "download": 25.85,
+    "history": 27.35,
+    "drawerClose": 28.85
   },
   "typing": {
-    "start": 11.6,
-    "end": 14.5,
+    "start": 13.65,
+    "end": 16.55,
     "typo": {
       "word": 3,
       "at": 3,
@@ -88,10 +109,10 @@
     }
   },
   "snakeTickMs": 260,
-  "resultAt": 19.9,
+  "resultAt": 21.95,
   "outro": {
-    "start": 22.6,
-    "click": 24.55
+    "start": 29.3,
+    "click": 31.25
   },
   "macros": [
     {
@@ -110,12 +131,26 @@
       }
     },
     {
+      "id": "language",
+      "themes": [
+        "dark"
+      ],
+      "from": 7.85,
+      "to": 8.95,
+      "rect": {
+        "x": 540,
+        "y": 0,
+        "w": 900,
+        "h": 500
+      }
+    },
+    {
       "id": "domain",
       "themes": [
         "dark"
       ],
-      "from": 9.3,
-      "to": 10.6,
+      "from": 11.35,
+      "to": 12.65,
       "anchor": "chips",
       "w": 900,
       "h": 480
@@ -125,8 +160,8 @@
       "themes": [
         "dark"
       ],
-      "from": 10.4,
-      "to": 11.4,
+      "from": 12.45,
+      "to": 13.45,
       "anchor": "depth",
       "w": 820,
       "h": 460
@@ -136,8 +171,8 @@
       "themes": [
         "dark"
       ],
-      "from": 11.25,
-      "to": 14.75,
+      "from": 13.3,
+      "to": 16.8,
       "anchor": "input",
       "pad": 24,
       "w": 820,
@@ -148,9 +183,20 @@
       "themes": [
         "dark"
       ],
-      "from": 15.8,
-      "to": 17.1,
+      "from": 17.85,
+      "to": 19.15,
       "anchor": "generate",
+      "w": 820,
+      "h": 480
+    },
+    {
+      "id": "actions",
+      "themes": [
+        "dark"
+      ],
+      "from": 23.65,
+      "to": 27.65,
+      "anchor": "copy",
       "w": 820,
       "h": 480
     }
@@ -159,10 +205,69 @@
   "result": "# ROLE\nSenior mobile product designer\n\n# OBJECTIVE\nA clean, ready-to-build login screen.\n\n# TASK\nDesign the login screen in Figma\n- Email and password fields\n- Sign-in button\n- Forgot password & sign-up links\n\n# OUTPUT RULES\n- Only the requested screen\n- No preambles",
   "cuts": [
     5.4,
-    10.5,
-    11.3,
-    14.65,
-    15.85,
-    17.05
+    7.9,
+    12.55,
+    13.35,
+    16.7,
+    17.9,
+    19.1,
+    23.75
+  ],
+  "features": [
+    {
+      "at": 5.4,
+      "to": 7.85,
+      "title": "Light & Dark"
+    },
+    {
+      "at": 7.9,
+      "to": 11.3,
+      "title": "Arabic & English"
+    },
+    {
+      "at": 11.4,
+      "to": 12.55,
+      "title": "Domain Context"
+    },
+    {
+      "at": 12.55,
+      "to": 13.35,
+      "title": "Detail Depth"
+    },
+    {
+      "at": 13.35,
+      "to": 16.65,
+      "title": "Write It Your Way"
+    },
+    {
+      "at": 16.7,
+      "to": 17.9,
+      "title": "Output Language"
+    },
+    {
+      "at": 17.9,
+      "to": 19.1,
+      "title": "One-Click Generate"
+    },
+    {
+      "at": 19.1,
+      "to": 21.9,
+      "title": "Play While It Thinks"
+    },
+    {
+      "at": 21.95,
+      "to": 23.7,
+      "title": "Structured Prompt"
+    },
+    {
+      "at": 23.75,
+      "to": 27.2,
+      "title": "Copy & Download .md"
+    },
+    {
+      "at": 27.25,
+      "to": 29.2,
+      "title": "Prompt History"
+    }
   ]
 }

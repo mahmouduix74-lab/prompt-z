@@ -2,12 +2,13 @@ import React from 'react';
 import { AbsoluteFill, Audio, Sequence, interpolate, staticFile, useCurrentFrame } from 'remotion';
 import { CUTS, cameraAt, sinceCut } from './camera';
 import { INTER } from './fonts';
+import { FeatureTitle } from './FeatureTitle';
 import { OUTRO_CLICK, Outro } from './Outro';
-import { ClickRipples, Focus, SelectMenu, Stage, THEME, Viewport, WindowChrome, themeAt } from './parts';
+import { ClickRipples, DownloadChip, Focus, SelectMenu, Stage, THEME, Viewport, WindowChrome, themeAt } from './parts';
 import { FPS, META, REVEALS, STAGE, TL, VO, WIN, clamp01, easeInOut, easeOutExpo, rect } from './timing';
 
 /*
- * PromptZ web promo, 16:9, 26 s.
+ * PromptZ web promo, 16:9, 32 s.
  * The page itself is the real site captured frame by frame (capture/capture.mjs) in light and
  * dark, with 4× passes for the close-ups; this composition frames it in a browser window, runs
  * the shot list (camera.ts), wipes between the themes, and adds the
@@ -19,7 +20,7 @@ const f = (s: number) => Math.round(s * FPS);
 
 /** Voice-over captions, one line at a time, for sound-off viewing. The end card speaks for itself. */
 const Captions: React.FC<{ t: number }> = ({ t }) => {
-  const line = VO.find((l) => l.id !== 'l9' && t >= l.at - 0.05 && t <= l.at + l.dur + 0.25);
+  const line = VO.find((l) => l.id !== VO[VO.length - 1].id && t >= l.at - 0.05 && t <= l.at + l.dur + 0.25);
   if (!line) return null;
   const p = Math.min(clamp01((t - line.at + 0.05) / 0.15), clamp01((line.at + line.dur + 0.25 - t) / 0.15));
   return (
@@ -53,10 +54,11 @@ const musicVolume = (frame: number) => {
 };
 
 // Close-ups keep their subject sharp and soften the rest of the page.
+const [, , CUT_DEPTH, CUT_TYPING] = TL.cuts;
 const FOCI = [
-  { rect: rect('chips'), from: TL.scroll.end + 0.1, to: TL.cuts[1] },
-  { rect: rect('depth'), from: TL.cuts[1], to: TL.cuts[2] },
-  { rect: rect('inputPanel'), from: TL.cuts[2], to: TL.typing.end + 0.25 },
+  { rect: rect('chips'), from: TL.scroll.end + 0.1, to: CUT_DEPTH },
+  { rect: rect('depth'), from: CUT_DEPTH, to: CUT_TYPING },
+  { rect: rect('inputPanel'), from: CUT_TYPING, to: TL.typing.end + 0.25 },
 ];
 const focusAt = (t: number) => {
   const f = FOCI.find((x) => t >= x.from && t < x.to);
@@ -127,12 +129,14 @@ export const WebPromo: React.FC = () => {
               {focus ? <Focus focus={focus.rect} k={focus.k} /> : null}
               <SelectMenu t={t} />
               <ClickRipples t={t} />
+              <DownloadChip t={t} />
             </Viewport>
           </div>
         </div>
       ) : null}
 
       <Outro t={t} />
+      <FeatureTitle t={t} />
       <Captions t={t} />
 
       {/* ---- Sound ---- */}

@@ -307,3 +307,58 @@ export const ClickRipples: React.FC<{ t: number }> = ({ t }) => (
 
 export const WINDOW_RADIUS = 14;
 export { WIN };
+
+/**
+ * Download .md: the browser's download isn't painted in a headless capture, so show the file
+ * leaving the button and landing top-right as a downloaded-file pill.
+ */
+export const DownloadChip: React.FC<{ t: number }> = ({ t }) => {
+  const at = TL.clicks.download;
+  if (t < at || t > at + 1.5) return null;
+  const b = rect('download');
+  const fly = easeInOut(clamp01((t - at) / 0.7));
+  const out = clamp01((t - at - 1.2) / 0.3);
+  const x0 = b.x + b.w / 2;
+  const y0 = b.y + b.h / 2;
+  const x1 = VIEW.width - 150;
+  const y1 = 110;
+  // Arc: straight-line blend plus a lift in the middle of the flight.
+  const x = x0 + (x1 - x0) * fly;
+  const y = y0 + (y1 - y0) * fly - Math.sin(fly * Math.PI) * 60;
+  const landed = fly >= 1;
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: x,
+        top: y,
+        transform: `translate(-50%, -50%) scale(${landed ? 1 : 0.7 + 0.3 * fly})`,
+        opacity: 1 - out,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: landed ? '8px 12px' : '6px',
+        borderRadius: 12,
+        background: 'rgba(24, 24, 27, 0.95)',
+        border: '1px solid rgba(139, 92, 246, 0.45)',
+        boxShadow: '0 12px 30px -8px rgba(0,0,0,0.6), 0 0 22px rgba(124,58,237,0.35)',
+        fontFamily: INTER,
+        fontSize: 12,
+        fontWeight: 600,
+        color: '#F4F4F5',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <path d="M14 2v6h6" />
+      </svg>
+      {landed ? (
+        <>
+          <span>promptz-2026-09-22.md</span>
+          <span style={{ color: '#34D399', fontSize: 13 }}>✓</span>
+        </>
+      ) : null}
+    </div>
+  );
+};

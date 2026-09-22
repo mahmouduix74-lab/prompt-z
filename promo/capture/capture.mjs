@@ -47,7 +47,8 @@ const VH = TL.viewport.height;
 // ---- Fonts --------------------------------------------------------------------
 // The site's body stack is -apple-system / SF Pro; on this Linux box those resolve to
 // nothing, so alias the SF names to Inter (Latin). Arabic typed into the prompt box is set in
-// Cairo (the second face in the site's Arabic stack, src/index.css). Clash Display (titles) comes
+// Cairo (the second face in the site's Arabic stack, src/index.css). IBM Plex Sans Arabic, the
+// Arabic hero face, is loaded too since the site's own <link> doesn't include it. Clash Display (titles) comes
 // from api.fontshare.com, which is blocked here, so it is served from the promo's own copy.
 const googleCss = fs.readFileSync(path.join(here, 'google-fonts.css'), 'utf8');
 const faces = googleCss.split('@font-face').slice(1).map((b) => '@font-face' + b.split('}')[0] + '}');
@@ -99,6 +100,11 @@ const sel = {
   select: '#output-language',
   generate: '#prompt-builder button[title^="Shortcut"]',
   up: 'button[aria-label="Up"]',
+  copy: '#prompt-builder button[title="Copy"]',
+  download: '#prompt-builder button[title="Download .md"]',
+  history: '#prompt-builder button[aria-label="Saved Library"]',
+  drawerClose: '.fixed.inset-0.z-50 button:has(svg.lucide-x)',
+  language: 'header button[aria-label="Language"]',
   left: 'button[aria-label="Left"]',
 };
 const C = TL.clicks;
@@ -106,11 +112,18 @@ const waypoints = [
   { t: 5.1, pt: [1290, 230] },
   { t: 6.3, sel: sel.toggle },
   { t: 7.3, sel: sel.toggle },
-  { t: 8.3, pt: [1010, 470] },
-  { t: 9.3, pt: [1010, 470] },
+  // The UI language: to Arabic (the page mirrors to RTL), a look, then back to English.
+  { t: C.language - 0.12, sel: sel.language },
+  { t: C.language + 0.3, sel: sel.language },
+  { t: C.language + 0.8, pt: [760, 330] },
+  { t: C.languageBack - 0.5, pt: [760, 330] },
+  { t: C.languageBack - 0.08, sel: sel.language },
+  { t: C.languageBack + 0.25, sel: sel.language },
+  { t: TL.scroll.start - 0.1, pt: [1010, 470] },
+  { t: TL.scroll.end, pt: [1010, 470] },
   // Glide over "General", then across to UI/UX Design.
-  { t: 9.6, sel: sel.general },
-  { t: 9.72, sel: sel.general },
+  { t: C.domain - 0.4, sel: sel.general },
+  { t: C.domain - 0.28, sel: sel.general },
   { t: C.domain - 0.05, sel: sel.domain },
   { t: C.domain + 0.12, sel: sel.domain },
   // Down to the depth tabs: rest on Medium, then pick Detailed.
@@ -135,9 +148,25 @@ const waypoints = [
   { t: dpad[1].at + 0.3, sel: sel.left },
   // Rest beside the result while it streams, out of the text's way.
   { t: TL.resultAt + 0.3, sel: sel.left, dx: -150, dy: 60 },
-  { t: TL.outro.start + 1, sel: sel.left, dx: -150, dy: 60 },
+  { t: C.copy - 0.5, sel: sel.left, dx: -150, dy: 60 },
+  // The features after the result: Copy, Download .md, History, then the UI language.
+  { t: C.copy - 0.08, sel: sel.copy },
+  { t: C.copy + 0.25, sel: sel.copy },
+  { t: C.download - 0.1, sel: sel.download },
+  { t: C.download + 0.25, sel: sel.download },
+  { t: C.history - 0.1, sel: sel.history },
+  { t: C.history + 0.9, sel: sel.history },
+  { t: C.drawerClose - 0.08, sel: sel.drawerClose },
+  { t: C.drawerClose + 0.2, sel: sel.drawerClose },
+  { t: TL.outro.start + 1, sel: sel.drawerClose, dx: -200, dy: 200 },
 ];
 const realClicks = [
+  { t: C.copy, sel: sel.copy },
+  { t: C.download, sel: sel.download },
+  { t: C.history, sel: sel.history },
+  { t: C.drawerClose, sel: sel.drawerClose },
+  { t: C.language, sel: sel.language },
+  { t: C.languageBack, sel: sel.language },
   { t: C.domain, sel: sel.domain },
   { t: C.depth, sel: sel.depth },
   { t: C.textarea, sel: sel.textarea },
@@ -154,6 +183,12 @@ const shownClicks = [
   { t: C.selectPick, kind: 'pick' },
   { t: C.generate, kind: 'real' },
   ...dpad.map((d) => ({ t: d.at, kind: 'real' })),
+  { t: C.copy, kind: 'real' },
+  { t: C.download, kind: 'download' },
+  { t: C.history, kind: 'real' },
+  { t: C.drawerClose, kind: 'real' },
+  { t: C.language, kind: 'real' },
+  { t: C.languageBack, kind: 'real' },
 ];
 
 // ---- Typing -----------------------------------------------------------------------
@@ -203,6 +238,8 @@ async function main() {
     colorScheme: theme,
     reducedMotion: 'no-preference',
   });
+
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(SITE).origin });
 
   let releaseResult;
   const resultGate = new Promise((r) => (releaseResult = r));
@@ -482,6 +519,7 @@ async function main() {
       await snap('toggle', sel.toggle);
       await snap('heroTitle', '#hero-title');
       await snap('header', 'header');
+      await snap('language', sel.language);
     }
     if (t >= TL.scroll.end && !meta.rects.card) {
       await snap('card', '#prompt-builder .rounded-3xl');
@@ -500,6 +538,19 @@ async function main() {
       meta.rects.chips = await anchorRect('chips');
       meta.rects.depth = await anchorRect('depth');
       await snap('toggleScrolled', sel.toggle);
+    }
+    if (t >= TL.resultAt + 1 && !meta.rects.copy) {
+      await snap('copy', sel.copy);
+      await snap('download', sel.download);
+      await snap('history', sel.history);
+    }
+    if (t >= C.history + 0.8 && !meta.rects.drawer) {
+      meta.rects.drawer = await page.evaluate(() => {
+        const d = document.querySelector('.fixed.inset-0.z-50 button:has(svg.lucide-x)');
+        const panel = d && d.closest('.fixed.inset-0.z-50').lastElementChild;
+        const r = (panel || d).getBoundingClientRect();
+        return { x: r.x, y: r.y, w: r.width, h: r.height };
+      });
     }
     if (t >= C.generate + 0.5 && !meta.rects.snake) {
       await snap('snake', '#prompt-builder canvas');
