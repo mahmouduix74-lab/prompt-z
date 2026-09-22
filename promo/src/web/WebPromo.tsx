@@ -1,56 +1,42 @@
 import React from 'react';
 import { AbsoluteFill, Audio, Sequence, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { cameraAt } from './camera';
+import { CUTS, cameraAt, sinceCut } from './camera';
 import { INTER } from './fonts';
 import { OUTRO_CLICK, Outro } from './Outro';
-import { ClickRipples, SelectMenu, Stage, THEME, Viewport, WindowChrome, themeAt } from './parts';
-import { FPS, META, REVEALS, STAGE, TL, VO, WIN, clamp01, easeInOut, easeOut } from './timing';
+import { ClickRipples, Focus, SelectMenu, SplitHandle, Stage, THEME, Viewport, WindowChrome, themeAt } from './parts';
+import { FPS, META, REVEALS, STAGE, TL, VO, WIN, clamp01, easeInOut, easeOutExpo, rect } from './timing';
 
 /*
  * PromptZ web promo, 16:9, 25 s.
  * The page itself is the real site captured frame by frame (capture/capture.mjs) in light and
- * dark; this composition frames it in a browser window, moves the camera, wipes between the
- * themes from the header toggle, and adds the voice-over, music, captions and the end card.
+ * dark, with 4× passes for the close-ups; this composition frames it in a browser window, runs
+ * the shot list (camera.ts), wipes between the themes, splits light/dark, and adds the
+ * voice-over, music, sound design, captions and the end card.
  */
 
 const OUTRO = TL.outro.start;
 const f = (s: number) => Math.round(s * FPS);
 
-// Lines spoken while the action sits at the bottom of the frame (Generate button, the result's
-// last lines) are captioned at the top instead.
-const TOP_LINES = new Set(['l5', 'l7']);
-
 /** Voice-over captions, one line at a time, for sound-off viewing. The end card speaks for itself. */
 const Captions: React.FC<{ t: number }> = ({ t }) => {
-  const line = VO.find((l) => l.id !== 'l8' && t >= l.at - 0.05 && t <= l.at + l.dur + 0.3);
+  const line = VO.find((l) => l.id !== 'l8' && t >= l.at - 0.05 && t <= l.at + l.dur + 0.25);
   if (!line) return null;
-  const p = Math.min(clamp01((t - line.at + 0.05) / 0.15), clamp01((line.at + line.dur + 0.3 - t) / 0.15));
+  const p = Math.min(clamp01((t - line.at + 0.05) / 0.15), clamp01((line.at + line.dur + 0.25 - t) / 0.15));
   return (
-    <div
-      style={{
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        ...(TOP_LINES.has(line.id) ? { top: 34 } : { bottom: 34 }),
-        display: 'flex',
-        justifyContent: 'center',
-        opacity: p,
-      }}
-    >
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 30, display: 'flex', justifyContent: 'center', opacity: p }}>
       <div
         style={{
-          maxWidth: 1400,
-          padding: '12px 26px',
-          borderRadius: 16,
-          background: 'rgba(16, 12, 24, 0.74)',
-          backdropFilter: 'blur(12px)',
-          color: '#FFFFFF',
+          padding: '8px 18px',
+          borderRadius: 12,
+          background: 'rgba(12, 10, 18, 0.62)',
+          backdropFilter: 'blur(14px)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          color: 'rgba(255,255,255,0.96)',
           fontFamily: INTER,
-          fontWeight: 600,
-          fontSize: 30,
-          letterSpacing: '-0.01em',
-          textAlign: 'center',
-          transform: `translateY(${(1 - p) * 8}px)`,
+          fontWeight: 500,
+          fontSize: 23,
+          letterSpacing: '-0.005em',
+          transform: `translateY(${(1 - p) * 6}px)`,
         }}
       >
         {line.text}
@@ -63,20 +49,35 @@ const Captions: React.FC<{ t: number }> = ({ t }) => {
 const musicVolume = (frame: number) => {
   const t = frame / FPS;
   const inVo = VO.reduce((m, l) => Math.max(m, Math.min(clamp01((t - l.at + 0.25) / 0.25), clamp01((l.at + l.dur + 0.3 - t) / 0.3))), 0);
-  return interpolate(inVo, [0, 1], [0.34, 0.15]);
+  return interpolate(inVo, [0, 1], [0.36, 0.16]);
 };
+
+// The typing close-up keeps the input panel sharp and softens the rest of the page.
+const input = rect('inputPanel');
+const focusAt = (t: number) =>
+  Math.min(clamp01((t - TL.typing.start + 0.1) / 0.4), clamp01((TL.typing.end + 0.25 - t) / 0.25));
 
 export const WebPromo: React.FC = () => {
   const frame = useCurrentFrame();
   const t = frame / FPS;
   const cam = cameraAt(t);
 
-  // Window entrance and exit around the camera.
-  const intro = easeOut(clamp01(t / 0.9));
-  const out = easeInOut(clamp01((t - (OUTRO - 0.15)) / 0.7));
-  const z = cam.z * (0.94 + 0.06 * intro) * (1 - 0.18 * out);
+  // Speed of the camera this frame (stage px) → a touch of blur on fast moves; plus a short
+  // whip blur on each hard cut.
+  const prev = cameraAt(Math.max(0, t - 1 / FPS));
+  const speed = Math.hypot((cam.cx - prev.cx) * cam.z, (cam.cy - prev.cy) * cam.z) + Math.abs(Math.log(cam.z / prev.z)) * 1200;
+  const cutBlur = interpolate(sinceCut(t), [0, 0.1], [7, 0], { extrapolateRight: 'clamp' });
+  const blur = Math.min(3.5, Math.max(0, speed - 25) / 90) + cutBlur;
+
+  // Window: tilts in from 3D at the start, tilts away into the end card.
+  const intro = easeOutExpo(clamp01(t / 1.4));
+  const out = easeInOut(clamp01((t - (OUTRO - 0.2)) / 0.8));
+  const z = cam.z * (0.82 + 0.18 * intro) * (1 - 0.22 * out);
   const x = STAGE.width / 2 - cam.cx * z;
-  const y = STAGE.height / 2 - cam.cy * z + (1 - intro) * 90 - out * 70;
+  const y = STAGE.height / 2 - cam.cy * z + (1 - intro) * 140 - out * 60;
+  const rx = (1 - intro) * 24 + out * 12;
+  const ry = (1 - intro) * -18 + out * -22;
+  const rz = (1 - intro) * 5 + out * -3;
   const th = themeAt(t);
   const shadow = THEME[th.top && th.p > 0.5 ? th.top : th.base];
 
@@ -84,7 +85,7 @@ export const WebPromo: React.FC = () => {
     <AbsoluteFill style={{ overflow: 'hidden' }}>
       <Stage t={t} />
 
-      {t < OUTRO + 0.6 ? (
+      {t < OUTRO + 0.7 ? (
         <div
           style={{
             position: 'absolute',
@@ -94,18 +95,30 @@ export const WebPromo: React.FC = () => {
             height: WIN.height,
             transformOrigin: '0 0',
             transform: `translate(${x}px, ${y}px) scale(${z})`,
-            opacity: intro * (1 - out),
-            filter: out > 0 ? `blur(${out * 8}px)` : undefined,
-            borderRadius: 14,
-            overflow: 'hidden',
-            boxShadow: `${shadow.shadow}, 0 0 0 1px ${shadow.frame}`,
+            perspective: 2400,
           }}
         >
-          <WindowChrome t={t} />
-          <Viewport t={t}>
-            <SelectMenu t={t} />
-            <ClickRipples t={t} />
-          </Viewport>
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              transform: `rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`,
+              transformOrigin: '50% 50%',
+              opacity: clamp01(t / 0.5) * (1 - out),
+              filter: blur > 0.3 || out > 0 ? `blur(${blur + out * 8}px)` : undefined,
+              borderRadius: 14,
+              overflow: 'hidden',
+              boxShadow: `${shadow.shadow}, 0 0 0 1px ${shadow.frame}`,
+            }}
+          >
+            <WindowChrome t={t} />
+            <Viewport t={t}>
+              <Focus focus={input} k={focusAt(t)} />
+              <SelectMenu t={t} />
+              <ClickRipples t={t} />
+              <SplitHandle t={t} />
+            </Viewport>
+          </div>
         </div>
       ) : null}
 
@@ -121,12 +134,22 @@ export const WebPromo: React.FC = () => {
       ))}
       {[...META.clicks.map((c) => c.t), OUTRO_CLICK].map((at, i) => (
         <Sequence key={`c${i}`} from={f(at)} durationInFrames={6}>
-          <Audio src={staticFile('audio/click.wav')} volume={0.32} />
+          <Audio src={staticFile('audio/click.wav')} volume={0.3} />
+        </Sequence>
+      ))}
+      {META.keys.map((k, i) => (
+        <Sequence key={`k${i}`} from={f(k.t)} durationInFrames={4}>
+          <Audio src={staticFile(`audio/${k.key === 'Backspace' ? 'backspace' : k.key === ' ' ? 'key4' : `key${(i % 3) + 1}`}.wav`)} volume={0.2} />
         </Sequence>
       ))}
       {REVEALS.map((r) => (
         <Sequence key={`w${r.at}`} from={f(r.at) - 3} durationInFrames={30}>
           <Audio src={staticFile('audio/whoosh.wav')} volume={0.26} />
+        </Sequence>
+      ))}
+      {[...CUTS, OUTRO - 0.2].map((c) => (
+        <Sequence key={`s${c}`} from={Math.max(0, f(c) - 4)} durationInFrames={12}>
+          <Audio src={staticFile('audio/swish.wav')} volume={0.16} />
         </Sequence>
       ))}
     </AbsoluteFill>

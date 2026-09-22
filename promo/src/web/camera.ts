@@ -1,52 +1,82 @@
-import { BAR, STAGE, TL, WIN, clamp01, easeInOut, rect } from './timing';
+import { BAR, STAGE, TL, WIN, caretAt, clamp01, easeInOut, easeOutExpo, outBottomAt, rect } from './timing';
 
-/** A camera stop: the window-space point placed at the frame centre, and the zoom. */
-type Shot = { cx: number; cy: number; z: number };
-type Stop = { t: number; shot: Shot };
+/*
+ * Shot list. Continuous moves in the hero and while typing; hard cuts on the music's beat
+ * (100 bpm → 0.6 s) everywhere else. A stop marked `cut` jumps there instead of travelling.
+ */
+
+/** The window-space point placed at the frame centre, and the zoom. */
+export type Shot = { cx: number; cy: number; z: number };
+type Stop = { t: number; shot: Shot | ((t: number) => Shot); cut?: boolean; ease?: (x: number) => number };
 
 const C = TL.clicks;
 const wide: Shot = { cx: WIN.width / 2, cy: WIN.height / 2, z: 1 };
 
 // Viewport rects (captured after the page scrolled to the console) → window space (+BAR).
 const hero = rect('heroTitle');
+const toggle = rect('toggle');
 const input = rect('inputPanel');
 const output = rect('outputPanel');
 const domain = rect('domain');
 const select = rect('select');
 const generate = rect('generate');
+const snake = rect('snake');
 
-const shots = {
-  hero: { cx: hero.x + hero.w / 2, cy: BAR + hero.y + hero.h / 2 + 34, z: 1.5 },
-  console: { cx: input.x + input.w / 2, cy: BAR + (domain.y + input.y + 200) / 2, z: 1.36 },
-  typing: { cx: input.x + input.w * 0.62, cy: BAR + input.y + 150, z: 1.62 },
-  select: { cx: select.x + select.w * 0.4, cy: BAR + select.y + 70, z: 1.62 },
-  generate: { cx: generate.x + generate.w / 2 - 170, cy: BAR + generate.y - 90, z: 1.58 },
-  snake: { cx: output.x + output.w / 2, cy: BAR + output.y + output.h / 2, z: 1.42 },
-  result: { cx: output.x + output.w / 2, cy: BAR + output.y + output.h / 2, z: 1.36 },
-} satisfies Record<string, Shot>;
+const heroShot = (z: number, dx = 0): Shot => ({ cx: hero.x + hero.w / 2 + dx, cy: BAR + hero.y + hero.h / 2 + 30, z });
+
+// Typing close-up: keeps the caret a little right of centre so the text being written is in view.
+const typing = (t: number): Shot => {
+  // Caret x averaged over ±0.4 s, so the camera glides with the words instead of per key.
+  const xs: number[] = [];
+  for (let d = -0.4; d <= 0.4; d += 1 / 30) {
+    const c = caretAt(Math.min(t + d, TL.typing.end + 0.05));
+    if (c) xs.push(c[0]);
+  }
+  const x = xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length + 150 : input.x + input.w - 260;
+  return { cx: Math.min(input.x + input.w - 300, x), cy: BAR + input.y + 170, z: 2.35 };
+};
+
+// Result: frame the panel's top, then follow the streamed text down as it grows.
+const result = (t: number): Shot => {
+  const b = outBottomAt(t);
+  const top = BAR + output.y + 300;
+  return { cx: output.x + output.w / 2, cy: b ? Math.max(top, BAR + b - 170) : top, z: 1.62 };
+};
+
+export const CUTS = [5.4, 13.2, 14.4, 15.6, TL.split.start];
 
 const stops: Stop[] = [
   { t: 0, shot: wide },
-  { t: 1.0, shot: wide },
-  { t: 5.3, shot: shots.hero },
-  { t: 6.25, shot: wide },
-  { t: TL.scroll.end - 0.05, shot: wide },
-  { t: C.domain - 0.15, shot: shots.console },
-  { t: C.textarea + 0.05, shot: shots.console },
-  { t: TL.typing.start + 0.35, shot: shots.typing },
-  { t: TL.typing.end + 0.1, shot: shots.typing },
-  { t: C.select - 0.05, shot: shots.select },
-  { t: C.selectPick + 0.2, shot: shots.select },
-  { t: C.generate - 0.1, shot: shots.generate },
-  { t: C.generate + 0.2, shot: shots.generate },
-  { t: C.generate + 0.8, shot: shots.snake },
-  { t: TL.resultAt, shot: shots.snake },
-  { t: TL.resultAt + 0.6, shot: shots.result },
-  { t: TL.theme[2].at - 0.75, shot: shots.result },
-  { t: TL.theme[2].at - 0.1, shot: wide },
+  { t: 1.3, shot: wide },
+  { t: 4.0, shot: heroShot(1.72), ease: easeInOut },
+  { t: 5.4, shot: heroShot(1.84, -40) },
+  // Cut: the header's theme toggle, very close, as the cursor arrives.
+  { t: 5.4, shot: { cx: toggle.x + toggle.w / 2 - 120, cy: BAR + toggle.y + 120, z: 3 }, cut: true },
+  { t: TL.theme[1].at, shot: { cx: toggle.x + toggle.w / 2 - 120, cy: BAR + toggle.y + 120, z: 3.1 } },
+  // …and pull all the way out while the dark theme floods the page.
+  { t: TL.theme[1].at + 1.2, shot: wide, ease: easeInOut },
+  { t: TL.scroll.end, shot: wide },
+  { t: C.domain - 0.1, shot: { cx: input.x + input.w / 2 + 60, cy: BAR + (domain.y + input.y + 180) / 2, z: 1.45 }, ease: easeOutExpo },
+  { t: C.textarea + 0.05, shot: { cx: input.x + input.w / 2 + 60, cy: BAR + (domain.y + input.y + 180) / 2, z: 1.45 } },
+  { t: TL.typing.start + 0.25, shot: typing, ease: easeInOut },
+  { t: TL.typing.end + 0.1, shot: typing },
+  // Cut: the output-language menu.
+  { t: 13.2, shot: { cx: select.x + select.w * 0.3, cy: BAR + select.y + 70, z: 2.2 }, cut: true },
+  { t: C.selectPick + 0.2, shot: { cx: select.x + select.w * 0.3 + 20, cy: BAR + select.y + 66, z: 2.28 } },
+  // Cut: Generate, close, through the press.
+  { t: 14.4, shot: { cx: generate.x + generate.w / 2 - 60, cy: BAR + generate.y + generate.h / 2 - 40, z: 2.5 }, cut: true },
+  { t: 15.6, shot: { cx: generate.x + generate.w / 2 - 70, cy: BAR + generate.y + generate.h / 2 - 44, z: 2.62 } },
+  // Cut: the snake, drifting in slowly while it plays.
+  { t: 15.6, shot: { cx: snake.x + snake.w / 2, cy: BAR + snake.y + snake.h / 2 + 60, z: 1.75 }, cut: true },
+  { t: TL.resultAt, shot: { cx: snake.x + snake.w / 2, cy: BAR + snake.y + snake.h / 2 + 50, z: 1.9 } },
+  { t: TL.resultAt + 0.35, shot: result, ease: easeInOut },
+  { t: TL.split.start, shot: result },
+  // Cut: wide, for the light/dark split.
+  { t: TL.split.start, shot: wide, cut: true },
 ];
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
+const resolveShot = (s: Stop['shot'], t: number) => (typeof s === 'function' ? s(t) : s);
 
 /**
  * Keeps a zoomed shot inside the window, so a close-up never shows the stage around it;
@@ -64,11 +94,20 @@ const fit = (s: Shot): Shot => {
 export const cameraAt = (t: number): Shot => {
   let i = stops.length - 1;
   while (i > 0 && stops[i].t > t) i--;
+  // At a cut the later of two same-time stops wins.
+  while (i + 1 < stops.length && stops[i + 1].t === stops[i].t && stops[i + 1].t <= t) i++;
   const a = stops[i];
   const b = stops[i + 1];
-  if (!b) return fit(a.shot);
-  const k = easeInOut(clamp01((t - a.t) / (b.t - a.t)));
+  const sa = fit(resolveShot(a.shot, t));
+  if (!b || b.cut) return sa;
+  const k = (b.ease ?? easeInOut)(clamp01((t - a.t) / (b.t - a.t)));
+  const sb = fit(resolveShot(b.shot, t));
   // Zoom interpolates in log space so pushes feel even; the centre follows linearly.
-  const z = Math.exp(lerp(Math.log(a.shot.z), Math.log(b.shot.z), k));
-  return fit({ cx: lerp(a.shot.cx, b.shot.cx, k), cy: lerp(a.shot.cy, b.shot.cy, k), z });
+  return { cx: lerp(sa.cx, sb.cx, k), cy: lerp(sa.cy, sb.cy, k), z: Math.exp(lerp(Math.log(sa.z), Math.log(sb.z), k)) };
+};
+
+/** Time since the most recent cut (for the whip blur that sells it), or Infinity. */
+export const sinceCut = (t: number) => {
+  const past = CUTS.filter((c) => c <= t);
+  return past.length ? t - past[past.length - 1] : Infinity;
 };

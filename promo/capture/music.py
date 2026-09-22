@@ -91,7 +91,7 @@ drums = np.zeros(N)
 b = 0.0
 while b < DUR:
     idx = int(b * SR)
-    in_mix = 8.5 <= b <= 21.8
+    in_mix = 8.5 <= b <= 22.0
     if in_mix:
         # kick
         if (round(b / beat) % 2) == 0:
@@ -140,6 +140,24 @@ click = (np.sin(2 * np.pi * 1850 * tc) * 0.5 + hp(rng.standard_normal(ln), 2500)
 click = lp(click, 6000)
 click /= np.max(np.abs(click)) / 0.7
 sf.write(os.path.join(OUT, 'click.wav'), np.stack([click, click], 1), SR, subtype='PCM_16')
+
+# Keyboard: four soft key variants (a damped tick over a short noise body) and a heavier backspace.
+for i, (f0, body, name) in enumerate([(2400, 0.9, 'key1'), (2100, 1.0, 'key2'), (2700, 0.8, 'key3'), (1900, 1.1, 'key4'), (1500, 1.4, 'backspace')]):
+    ln = int(0.09 * SR)
+    tk = np.arange(ln) / SR
+    tick = np.sin(2 * np.pi * f0 * tk) * np.exp(-tk * 160)
+    thud = np.sin(2 * np.pi * (180 + 30 * i) * tk) * np.exp(-tk * 55) * 0.5 * body
+    noise = hp(rng.standard_normal(ln), 1800) * np.exp(-tk * 120) * 0.35
+    k = lp(tick + thud + noise, 7000)
+    k /= np.max(np.abs(k)) / 0.6
+    sf.write(os.path.join(OUT, f'{name}.wav'), np.stack([k, k], 1), SR, subtype='PCM_16')
+
+# Quick whip for hard cuts: a short, bright noise swish
+ln = int(0.32 * SR)
+tw = np.arange(ln) / SR
+sw = sosfilt(butter(2, [1500, 7000], 'band', fs=SR, output='sos'), rng.standard_normal(ln)) * np.sin(np.pi * tw / tw[-1]) ** 2
+sw /= np.max(np.abs(sw)) / 0.5
+sf.write(os.path.join(OUT, 'swish.wav'), np.stack([sw, np.roll(sw, 150)], 1), SR, subtype='PCM_16')
 
 # Whoosh for the theme wipe: filtered noise sweeping up then down
 ln = int(0.9 * SR)

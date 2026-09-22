@@ -24,12 +24,20 @@ const TL = JSON.parse(fs.readFileSync(path.join(root, 'src/web/timeline.json'), 
 const theme = process.argv[2];
 if (theme !== 'light' && theme !== 'dark') throw new Error('theme must be light or dark');
 
+// ---- Macro passes -------------------------------------------------------------------
+// MACRO=<id> re-shoots one region at 4× for the close-ups named in the timeline.
+const MACRO = process.env.MACRO ? TL.macros.find((m) => m.id === process.env.MACRO) : null;
+if (process.env.MACRO && !MACRO) throw new Error('unknown macro ' + process.env.MACRO);
+if (MACRO && !MACRO.themes.includes(theme)) throw new Error(`macro ${MACRO.id} is not shot in ${theme}`);
+
 const FPS = TL.fps;
 const defaultLast = Math.round(TL.outro.start * FPS) + 18;
-const lastFrame = Number(process.argv[3] ?? defaultLast);
+const lastFrame = MACRO ? Math.round(MACRO.to * FPS) : Number(process.argv[3] ?? defaultLast);
 // Frames before this are replayed (so the state is identical) but not re-shot.
-const firstShot = Number(process.argv[4] ?? 0);
-const outDir = path.join(root, 'public/capture', theme);
+const firstShot = MACRO ? Math.round(MACRO.from * FPS) : Number(process.argv[4] ?? 0);
+const outDir = process.env.MACRO
+  ? path.join(root, 'public/capture/macro', `${process.env.MACRO}-${theme}`)
+  : path.join(root, 'public/capture', theme);
 fs.mkdirSync(outDir, { recursive: true });
 
 const SITE = process.env.SITE_URL || 'http://127.0.0.1:4173/';
@@ -114,11 +122,9 @@ const waypoints = [
   { t: dpad[0].at + 0.2, sel: sel.up },
   { t: dpad[1].at - 0.12, sel: sel.left },
   { t: dpad[1].at + 0.3, sel: sel.left },
-  { t: TL.resultAt + 0.2, sel: sel.left, dx: -150, dy: 40 },
-  { t: 20.0, sel: sel.left, dx: -150, dy: 40 },
-  { t: TL.theme[2].at - 0.2, sel: sel.toggle },
-  { t: 21.6, sel: sel.toggle },
-  { t: 22.4, pt: [1180, 330] },
+  // Rest beside the result while it streams, out of the text's way.
+  { t: TL.resultAt + 0.3, sel: sel.left, dx: -150, dy: 60 },
+  { t: TL.outro.start + 1, sel: sel.left, dx: -150, dy: 60 },
 ];
 const realClicks = [
   { t: C.domain, sel: sel.domain },
@@ -135,8 +141,37 @@ const shownClicks = [
   { t: C.selectPick, kind: 'pick' },
   { t: C.generate, kind: 'real' },
   ...dpad.map((d) => ({ t: d.at, kind: 'real' })),
-  { t: TL.theme[2].at, kind: 'toggle' },
 ];
+
+// ---- Typing -----------------------------------------------------------------------
+// A human rhythm: uneven key gaps, a longer beat after each space, and one slip (a wrong
+// letter noticed, erased, retyped) inside the word the timeline names. Deterministic.
+const keystrokes = (() => {
+  const { start, end, typo } = TL.typing;
+  const words = TL.idea.split(' ');
+  let seed = 0x51f15e;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const keys = [];
+  words.forEach((word, wi) => {
+    Array.from(word).forEach((ch, ci) => {
+      if (typo && wi === typo.word && ci === typo.at) {
+        keys.push({ key: typo.wrong, w: 0.9 + rnd() * 0.4 });
+        keys.push({ key: 'Backspace', w: 2.6 });
+        keys.push({ key: ch, w: 1.3 });
+        return;
+      }
+      keys.push({ key: ch, w: 0.7 + rnd() * 0.6 });
+    });
+    if (wi < words.length - 1) keys.push({ key: ' ', w: 1.6 + rnd() * 0.5 });
+  });
+  const total = keys.reduce((n, k) => n + k.w, 0);
+  let acc = 0;
+  return keys.map((k) => {
+    acc += k.w;
+    return { key: k.key, t: +(start + ((acc - k.w * 0.5) / total) * (end - start)).toFixed(4) };
+  });
+})();
+
 
 const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 const scrollEase = (x) => (x < 0.5 ? 16 * x ** 5 : 1 - Math.pow(-2 * x + 2, 5) / 2);
@@ -148,7 +183,7 @@ async function main() {
   });
   const context = await browser.newContext({
     viewport: { width: VW, height: VH },
-    deviceScaleFactor: 2,
+    deviceScaleFactor: MACRO ? 4 : 2,
     ignoreHTTPSErrors: true,
     locale: 'en-US',
     timezoneId: 'Africa/Cairo',
@@ -164,6 +199,29 @@ async function main() {
   await context.route('**/api/generate', async (r) => {
     await resultGate;
     await r.fulfill({ json: { result: TL.result } });
+  });
+  // Google Fonts (the site's own <link> and the aliases above) go through a disk cache, so a
+  // flaky connection can't leave a run with a fallback face.
+  const fontCache = path.join(here, '.font-cache');
+  fs.mkdirSync(fontCache, { recursive: true });
+  await context.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, async (r) => {
+    const url = r.request().url();
+    const file = path.join(fontCache, Buffer.from(url).toString('base64url').slice(-120));
+    if (!fs.existsSync(file)) {
+      for (let i = 0; ; i++) {
+        try {
+          const res = await r.fetch();
+          if (!res.ok()) throw new Error(`HTTP ${res.status()}`);
+          fs.writeFileSync(file, await res.body());
+          fs.writeFileSync(file + '.type', res.headers()['content-type'] || '');
+          break;
+        } catch (e) {
+          if (i >= 5) throw e;
+          await new Promise((res) => setTimeout(res, 800));
+        }
+      }
+    }
+    await r.fulfill({ contentType: fs.readFileSync(file + '.type', 'utf8'), body: fs.readFileSync(file), headers: { 'access-control-allow-origin': '*' } });
   });
   await context.route('https://api.fontshare.com/**', (r) => r.fulfill({ contentType: 'text/css', body: clashCss }));
   await context.route('https://fonts.local/**', (r) =>
@@ -280,6 +338,23 @@ async function main() {
     return [r.x + r.w * (wp.fx ?? 0.5) + (wp.dx ?? 0), r.y + r.h * (wp.fy ?? 0.5) + (wp.dy ?? 0)];
   };
 
+  // Region a macro pass shoots, in viewport px, kept inside the viewport.
+  const macroRect = async (m) => {
+    if (m.rect) return m.rect;
+    const a =
+      m.anchor === 'input'
+        ? await page.evaluate(() => {
+            const r = document.querySelector('#raw-prompt').closest('.rounded-2xl').getBoundingClientRect();
+            return { x: r.x, y: r.y, w: r.width, h: r.height };
+          })
+        : await rectOf(sel[m.anchor]);
+    const x0 = m.anchor === 'input' ? a.x - (m.pad ?? 0) : a.x + a.w / 2 - m.w / 2;
+    const y0 = m.anchor === 'input' ? a.y - (m.pad ?? 0) : a.y + a.h / 2 - m.h / 2;
+    const x = Math.round(Math.max(0, Math.min(VW - m.w, x0)));
+    const y = Math.round(Math.max(0, Math.min(VH - m.h, y0)));
+    return { x, y, w: m.w, h: m.h };
+  };
+
   // Scroll target: the console card plus the mascot's 100px stage clear of the sticky header.
   const scrollTarget = await page.evaluate(() => {
     const card = document.querySelector('#prompt-builder .rounded-3xl');
@@ -291,9 +366,9 @@ async function main() {
   await page.clock.runFor(warmMs);
   clockMs = warmMs;
 
-  const meta = { theme, fps: FPS, viewport: TL.viewport, scrollTarget, frames: [], rects: {}, clicks: shownClicks, foods: FOODS };
-  const ideaChars = Array.from(TL.idea);
+  const meta = { theme, fps: FPS, viewport: TL.viewport, scrollTarget, frames: [], rects: {}, clicks: shownClicks, foods: FOODS, keys: keystrokes };
   let typedCount = 0;
+  let macroClip = null;
   let segIndex = -1;
   let segFrom = null;
   let segTo = null;
@@ -346,12 +421,11 @@ async function main() {
     }
 
     // Typing
-    if (t >= TL.typing.start) {
-      const want = Math.min(ideaChars.length, Math.floor(((t - TL.typing.start) / (TL.typing.end - TL.typing.start)) * ideaChars.length));
-      while (typedCount < want) {
-        await page.keyboard.insertText(ideaChars[typedCount]);
-        typedCount++;
-      }
+    while (typedCount < keystrokes.length && keystrokes[typedCount].t <= t) {
+      const { key } = keystrokes[typedCount];
+      if (key === 'Backspace') await page.keyboard.press('Backspace');
+      else await page.keyboard.insertText(key);
+      typedCount++;
     }
 
     // Output language
@@ -405,8 +479,46 @@ async function main() {
       await snap('up', sel.up);
     }
 
-    meta.frames.push({ t: +t.toFixed(4), scrollY, mouse: mouseShown && mouse ? mouse.map((v) => +v.toFixed(1)) : null });
-    if (f >= firstShot) await page.screenshot({ path: path.join(outDir, `f${String(f).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 90, caret: 'hide' });
+    // Where the typed text ends (the caret, for the tracking close-up) and how far the streamed
+    // result reaches (for the shot that follows it down).
+    const track = await page.evaluate(() => {
+      const ta = document.querySelector('#raw-prompt');
+      const out = { caret: null, outBottom: null };
+      if (ta && ta.value) {
+        const cs = getComputedStyle(ta);
+        const ctx = document.createElement('canvas').getContext('2d');
+        ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        const r = ta.getBoundingClientRect();
+        const w = ctx.measureText(ta.value).width;
+        out.caret = [r.right - parseFloat(cs.paddingRight) - w, r.top + parseFloat(cs.paddingTop) + parseFloat(cs.lineHeight) / 2];
+      }
+      const panel = ta && ta.closest('.grid') && ta.closest('.grid').children[1];
+      const text = panel && panel.querySelector('.whitespace-pre-wrap.font-mono');
+      if (text && !panel.querySelector('canvas')) out.outBottom = text.getBoundingClientRect().bottom;
+      return out;
+    });
+    meta.frames.push({
+      t: +t.toFixed(4),
+      scrollY,
+      mouse: mouseShown && mouse ? mouse.map((v) => +v.toFixed(1)) : null,
+      caret: track.caret ? track.caret.map((v) => +v.toFixed(1)) : null,
+      outBottom: track.outBottom === null ? null : +track.outBottom.toFixed(1),
+    });
+
+    if (f >= firstShot) {
+      const file = path.join(outDir, `f${String(f).padStart(4, '0')}.jpg`);
+      if (MACRO) {
+        if (!macroClip) {
+          macroClip = await macroRect(MACRO);
+          fs.writeFileSync(`${outDir}.json`, JSON.stringify({ ...MACRO, rect: macroClip }, null, 1));
+        }
+        // The caret is only shown in the typing close-up: while keys land it stays solid.
+        const caret = MACRO.id === 'typing' && t <= TL.typing.end + 0.1 ? 'initial' : 'hide';
+        await page.screenshot({ path: file, type: 'jpeg', quality: 92, caret, clip: { x: macroClip.x, y: macroClip.y, width: macroClip.w, height: macroClip.h } });
+      } else {
+        await page.screenshot({ path: file, type: 'jpeg', quality: 90, caret: 'hide' });
+      }
+    }
     if (f % 30 === 0) console.log(`[${theme}] frame ${f}/${lastFrame}`);
   }
 

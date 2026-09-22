@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, Img, interpolate, staticFile } from 'remotion';
 import { LogoIcon } from '../components/Logo';
-import { BAR, FPS, LAST_CAPTURED, META, REVEALS, TL, VIEW, WIN, clamp01, easeInOut, easeOut, mouseAt, rect, type Theme } from './timing';
+import { BAR, FPS, LAST_CAPTURED, MACROS, META, REVEALS, TL, VIEW, WIN, clamp01, easeInOut, easeOut, mouseAt, rect, type Rect, type Theme } from './timing';
 import { INTER } from './fonts';
 
 // Page and chrome colours per theme, from the site (bg #FAFAFC / #070709) and macOS window chrome.
@@ -47,7 +47,10 @@ const MAX_R = Math.hypot(ORIGIN.x, VIEW.height - ORIGIN.y) + 40;
 
 /** Stage backdrop, cross-faded with the page theme. */
 export const Stage: React.FC<{ t: number }> = ({ t }) => {
-  const th = themeAt(t);
+  // The end card sits on the light stage, whatever the page ended on.
+  const toLight = easeInOut(clamp01((t - TL.outro.start + 0.2) / 0.7));
+  const page = themeAt(t);
+  const th = toLight > 0 && page.base === 'dark' && !page.top ? { base: 'dark' as Theme, top: 'light' as Theme, p: toLight } : page;
   const layer = (theme: Theme, opacity: number) => (
     <AbsoluteFill style={{ background: THEME[theme].stage, opacity }}>
       <div
@@ -75,26 +78,138 @@ export const Stage: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 
-const frameSrc = (theme: Theme, t: number) => {
-  const f = Math.max(0, Math.min(LAST_CAPTURED, Math.round(t * FPS)));
-  return staticFile(`capture/${theme}/f${String(f).padStart(4, '0')}.jpg`);
-};
+const frameIndex = (t: number) => Math.max(0, Math.min(LAST_CAPTURED, Math.round(t * FPS)));
+const frameSrc = (theme: Theme, t: number) => staticFile(`capture/${theme}/f${String(frameIndex(t)).padStart(4, '0')}.jpg`);
 
-/** The captured page. During a reveal the new theme is clipped to a growing circle. */
-export const Viewport: React.FC<{ t: number; children?: React.ReactNode }> = ({ t, children }) => {
-  const th = themeAt(t);
-  const img: React.CSSProperties = { position: 'absolute', inset: 0, width: VIEW.width, height: VIEW.height };
+const IMG: React.CSSProperties = { position: 'absolute', left: 0, top: 0, width: VIEW.width, height: VIEW.height };
+
+/** One theme's page at time t, with any 4× close-up pass laid exactly over its region. */
+const Page: React.FC<{ theme: Theme; t: number; style?: React.CSSProperties }> = ({ theme, t, style }) => {
+  const f = frameIndex(t);
+  const macro = MACROS.find((m) => m.theme === theme && f >= Math.round(m.from * FPS) && f <= Math.round(m.to * FPS));
   return (
-    <div style={{ position: 'absolute', left: 0, top: BAR, width: VIEW.width, height: VIEW.height, overflow: 'hidden' }}>
-      <Img src={frameSrc(th.base, t)} style={img} />
-      {th.top ? (
+    <div style={{ position: 'absolute', inset: 0, ...style }}>
+      <Img src={frameSrc(theme, t)} style={IMG} />
+      {macro ? (
         <Img
-          src={frameSrc(th.top, t)}
-          style={{ ...img, clipPath: `circle(${Math.max(0.1, th.p * MAX_R)}px at ${ORIGIN.x}px ${ORIGIN.y}px)` }}
+          src={staticFile(`capture/macro/${macro.id}-${theme}/f${String(f).padStart(4, '0')}.jpg`)}
+          style={{ position: 'absolute', left: macro.rect.x, top: macro.rect.y, width: macro.rect.w, height: macro.rect.h }}
         />
       ) : null}
+    </div>
+  );
+};
+
+const SPLIT = TL.split;
+
+/** Divider position (viewport px) during the light/dark split, or null outside it. */
+export const splitAt = (t: number): number | null => {
+  if (t < SPLIT.start) return null;
+  const k = clamp01((t - SPLIT.start) / (SPLIT.settle - SPLIT.start));
+  // Sweeps in from the right edge and settles on the centre with a small overshoot.
+  const e = 1 - Math.pow(1 - k, 3) * Math.cos(k * Math.PI * 0.5);
+  return VIEW.width - e * (VIEW.width / 2) - Math.sin(k * Math.PI) * 30;
+};
+
+/** The captured page: theme wipe from the toggle, then the light/dark split. */
+export const Viewport: React.FC<{ t: number; children?: React.ReactNode }> = ({ t, children }) => {
+  const th = themeAt(t);
+  const split = splitAt(t);
+  return (
+    <div style={{ position: 'absolute', left: 0, top: BAR, width: VIEW.width, height: VIEW.height, overflow: 'hidden' }}>
+      {split !== null ? (
+        <>
+          <Page theme="dark" t={t} />
+          <Page theme="light" t={t} style={{ clipPath: `inset(0 ${VIEW.width - split}px 0 0)` }} />
+        </>
+      ) : (
+        <>
+          <Page theme={th.base} t={t} />
+          {th.top ? (
+            <Page theme={th.top} t={t} style={{ clipPath: `circle(${Math.max(0.1, th.p * MAX_R)}px at ${ORIGIN.x}px ${ORIGIN.y}px)` }} />
+          ) : null}
+        </>
+      )}
       {children}
     </div>
+  );
+};
+
+/** The split's handle: a hairline with a round grip and a label on each side. */
+export const SplitHandle: React.FC<{ t: number }> = ({ t }) => {
+  const x = splitAt(t);
+  if (x === null) return null;
+  const labels = easeOut(clamp01((t - SPLIT.settle + 0.25) / 0.4));
+  const pill = (side: 'left' | 'right', dark: boolean): React.CSSProperties => ({
+    position: 'absolute',
+    top: 96,
+    [side]: side === 'left' ? x - 118 : VIEW.width - x - 118,
+    width: 92,
+    height: 30,
+    borderRadius: 15,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: INTER,
+    fontSize: 13,
+    fontWeight: 600,
+    color: dark ? '#F4F4F5' : '#18181B',
+    background: dark ? 'rgba(24,24,27,0.85)' : 'rgba(255,255,255,0.9)',
+    border: `1px solid ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'}`,
+    boxShadow: '0 6px 18px -6px rgba(0,0,0,0.35)',
+    opacity: labels,
+    transform: `translateY(${(1 - labels) * -8}px)`,
+  });
+  return (
+    <>
+      <div style={{ position: 'absolute', left: x - 1, top: 0, width: 2, height: VIEW.height, background: 'rgba(255,255,255,0.9)', boxShadow: '0 0 18px rgba(124,58,237,0.7)' }} />
+      <div
+        style={{
+          position: 'absolute',
+          left: x - 22,
+          top: VIEW.height / 2 - 22,
+          width: 44,
+          height: 44,
+          borderRadius: 22,
+          background: '#FFFFFF',
+          boxShadow: '0 8px 24px -6px rgba(76,29,149,0.6), 0 0 0 4px rgba(124,58,237,0.35)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 4,
+          color: '#7C3AED',
+          fontFamily: INTER,
+          fontWeight: 700,
+          fontSize: 14,
+        }}
+      >
+        ‹ ›
+      </div>
+      <div style={pill('left', false)}>☀ Light</div>
+      <div style={pill('right', true)}>☾ Dark</div>
+    </>
+  );
+};
+
+/**
+ * Shallow depth of field for the close-ups: everything outside `focus` is softened and dimmed,
+ * fading in with `k` (0–1).
+ */
+export const Focus: React.FC<{ focus: Rect; k: number; pad?: number }> = ({ focus, k, pad = 18 }) => {
+  if (k <= 0.01) return null;
+  const x0 = focus.x - pad;
+  const y0 = focus.y - pad;
+  const x1 = focus.x + focus.w + pad;
+  const y1 = focus.y + focus.h + pad;
+  const veil: React.CSSProperties = { position: 'absolute', backdropFilter: `blur(${5 * k}px) brightness(${1 - 0.3 * k})` };
+  // Four panes around the focus rectangle.
+  return (
+    <>
+      <div style={{ ...veil, left: 0, top: 0, width: VIEW.width, height: Math.max(0, y0) }} />
+      <div style={{ ...veil, left: 0, top: y1, width: VIEW.width, height: Math.max(0, VIEW.height - y1) }} />
+      <div style={{ ...veil, left: 0, top: y0, width: Math.max(0, x0), height: y1 - y0 }} />
+      <div style={{ ...veil, left: x1, top: y0, width: Math.max(0, VIEW.width - x1), height: y1 - y0 }} />
+    </>
   );
 };
 
