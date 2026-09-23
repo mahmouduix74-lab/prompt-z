@@ -12,6 +12,8 @@
     "run_worker_first": ["/api/*"]
   },
   "observability": { "enabled": true },
+  // Keep variables added in the dashboard (Settings → Variables and Secrets) across deploys.
+  "keep_vars": true,
   // Needed by `npx wrangler preview`, which Workers Builds runs for non-production branches (PRs).
   "previews": {}
   // OPENROUTER_API_KEY is a secret, not a var: set it with `npx wrangler secret put OPENROUTER_API_KEY`.
