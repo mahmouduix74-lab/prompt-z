@@ -11,7 +11,9 @@
     "lint": "tsc --noEmit",
     "vercel-build": "vite build",
     "cf:dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "deploy:ci": "node scripts/cf-deploy.mjs deploy",
+    "preview:ci": "node scripts/cf-deploy.mjs preview"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",

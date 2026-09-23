@@ -30,6 +30,9 @@ the Vite build in `dist/` is served as static assets, and `/api/*` runs in the W
    — or in the dashboard: Workers & Pages → prompt-z → Settings → Variables and Secrets → Add → type *Secret*.
    Preview deployments (pull requests, via `wrangler preview`) keep their own secrets:
    `npx wrangler preview secret put OPENROUTER_API_KEY` — without it a preview still works, using the local engine.
+   Alternatively, put `OPENROUTER_API_KEY` in **Settings → Builds → Variables and secrets** and set the
+   deploy commands to `npm run deploy:ci` / `npm run preview:ci`: every build then uploads it as the
+   runtime secret (`scripts/cf-deploy.mjs`).
 2. Deploy: `npm run deploy` (runs `vite build`, then `wrangler deploy`).
    With Workers Builds (Git integration), pushes to `main` run `npx wrangler deploy`, and other branches
    run `npx wrangler preview` (enabled by the `previews` block in `wrangler.jsonc`).
