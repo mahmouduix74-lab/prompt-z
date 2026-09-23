@@ -1,6 +1,6 @@
 /**
  * Cloudflare Worker entry. /api/* runs the shared handlers from
- * src/server/geminiApi.ts (the same ones server.ts and the Vercel functions use);
+ * src/server/geminiApi.ts (the same ones server.ts uses);
  * everything else is the Vite build in dist/, served as static assets.
  *
  * OPENROUTER_API_KEY is a Worker secret: `npx wrangler secret put OPENROUTER_API_KEY`,

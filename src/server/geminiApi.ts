@@ -1,9 +1,9 @@
 /**
  * Shared AI request handling (OpenRouter), decoupled from any HTTP framework.
  *
- * The Cloudflare Worker (worker/index.ts), server.ts (the Express server for
- * local dev / Node hosts) and the files under /api (Vercel) call these same functions,
- * so the two deployment targets can never drift apart on how a request is
+ * The Cloudflare Worker (worker/index.ts) and server.ts (the Express server for
+ * local dev / Node hosts) call these same functions,
+ * so the two entry points can never drift apart on how a request is
  * actually handled — only the thin req/res adapter at each entry point differs.
  */
 import { EXACT_SYSTEM_INSTRUCTION, OPENROUTER_MODEL, buildSystemInstruction } from '../constants.js';

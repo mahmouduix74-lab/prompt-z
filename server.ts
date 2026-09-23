@@ -4,10 +4,9 @@ import { createServer as createViteServer } from 'vite';
 import { handleHealth, handleModels, handleGenerate, handleRefine } from './src/server/geminiApi.js';
 
 // This Express server is used for local development and for platforms that
-// run a persistent Node process (AI Studio's own Publish button / Cloud Run).
-// On Vercel, this file is never executed — the routes below are mirrored as
-// individual serverless functions under /api, sharing the same handlers from
-// src/server/geminiApi.ts so the two deployment targets cannot drift apart.
+// run a persistent Node process. In production the site runs on Cloudflare
+// Workers (worker/index.ts); both share the handlers in src/server/geminiApi.ts
+// so the two entry points cannot drift apart.
 
 const app = express();
 const PORT = 3000;
