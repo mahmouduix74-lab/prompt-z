@@ -99,7 +99,11 @@ export const OUTPUT_LANGUAGES: OutputLanguageOption[] = [
   },
 ];
 
-/** The OpenRouter model every generation and refine request uses. */
-export const OPENROUTER_MODEL = 'google/gemini-2.0-flash-001';
+/**
+ * OpenRouter models, in order of preference. Requests use the first; a later one is tried only
+ * when an earlier one is unavailable (OpenRouter retired google/gemini-2.0-flash-001 this way).
+ */
+export const OPENROUTER_MODELS = ['google/gemini-3.1-flash-lite', 'google/gemini-3.8-flash'];
+export const OPENROUTER_MODEL = OPENROUTER_MODELS[0];
 
 export { EXACT_SYSTEM_INSTRUCTION, EMPTY_TEMPLATE_PREVIEW, buildSystemInstruction } from './prompting.js';

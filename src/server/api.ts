@@ -6,7 +6,7 @@
  * so the two entry points can never drift apart on how a request is
  * actually handled — only the thin req/res adapter at each entry point differs.
  */
-import { EXACT_SYSTEM_INSTRUCTION, OPENROUTER_MODEL, buildSystemInstruction } from '../constants.js';
+import { EXACT_SYSTEM_INSTRUCTION, OPENROUTER_MODEL, OPENROUTER_MODELS, buildSystemInstruction } from '../constants.js';
 import { refineLocalPromptText } from '../services/localRefiner.js';
 import { generateLocalStructuredPrompt } from '../services/localEngine.js';
 import { DomainType, DepthType, OutputLanguage } from '../types.js';
@@ -31,47 +31,63 @@ function resolveApiKey(userApiKey: string | undefined, serverKey: string | undef
   return (userApiKey || '').trim() || (serverKey || '').trim() || undefined;
 }
 
+/** A model that is retired or has no provider right now: try the next one in OPENROUTER_MODELS. */
+function isModelUnavailable(status: number, message: string): boolean {
+  return status === 404 || status >= 500 || (status === 400 && /model|endpoint/i.test(message));
+}
+
 /**
- * Sends one chat completion to OpenRouter and returns the generated text.
- * Retries once on 429/5xx; any other failure is thrown for the caller's fallback.
+ * Sends one chat completion to OpenRouter and returns the generated text. Retries a model once
+ * on 429/5xx, moves to the next model in OPENROUTER_MODELS when one is unavailable, and throws
+ * anything else for the caller's local fallback.
  */
 async function generateWithOpenRouter(
   apiKey: string,
   params: { systemInstruction: string; userText: string; temperature: number }
 ): Promise<{ text: string; modelUsed: string }> {
-  const body = JSON.stringify({
-    model: OPENROUTER_MODEL,
-    messages: [
-      { role: 'system', content: params.systemInstruction },
-      { role: 'user', content: params.userText },
-    ],
-    temperature: params.temperature,
-  });
-
   let lastError: Error | null = null;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await fetch(OPENROUTER_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body,
-    });
-    const data: any = await res.json().catch(() => null);
 
-    if (res.ok) {
-      const content = data?.choices?.[0]?.message?.content;
-      const text = (typeof content === 'string' ? content : '').trim();
-      if (text) return { text, modelUsed: data?.model || OPENROUTER_MODEL };
-      throw new Error('OpenRouter returned an empty response.');
+  for (const model of OPENROUTER_MODELS) {
+    const body = JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: params.systemInstruction },
+        { role: 'user', content: params.userText },
+      ],
+      temperature: params.temperature,
+    });
+
+    let status = 0;
+    let message = '';
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const res = await fetch(OPENROUTER_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body,
+      });
+      const data: any = await res.json().catch(() => null);
+
+      if (res.ok) {
+        const content = data?.choices?.[0]?.message?.content;
+        const text = (typeof content === 'string' ? content : '').trim();
+        if (text) return { text, modelUsed: data?.model || model };
+        throw new Error(`OpenRouter returned an empty response from ${model}.`);
+      }
+
+      status = res.status;
+      message = data?.error?.message || res.statusText;
+      lastError = new Error(`OpenRouter ${status}: ${message}`);
+      const isTransient = status === 429 || status >= 500;
+      if (!isTransient || attempt === 1) break;
+      console.warn(`[OpenRouter] ${model}: ${status}, retrying once...`);
+      await new Promise((resolve) => setTimeout(resolve, 800));
     }
 
-    lastError = new Error(`OpenRouter ${res.status}: ${data?.error?.message || res.statusText}`);
-    const isTransient = res.status === 429 || res.status >= 500;
-    if (!isTransient || attempt === 1) break;
-    console.warn(`[OpenRouter] ${res.status}, retrying once...`);
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    if (!isModelUnavailable(status, message)) break;
+    console.warn(`[OpenRouter] ${model} unavailable (${status}: ${message}), trying the next model.`);
   }
 
   throw lastError || new Error('OpenRouter request failed.');
@@ -95,11 +111,28 @@ async function checkOpenRouterKey(apiKey: string): Promise<{ ok: boolean; status
   }
 }
 
-/** /api/health, and with ?check also whether OpenRouter accepts the server key. */
+/** Whether OpenRouter currently serves a model (has at least one provider endpoint). */
+async function checkOpenRouterModel(apiKey: string, model: string): Promise<{ model: string; available: boolean; status: number }> {
+  try {
+    const res = await fetch(`https://openrouter.ai/api/v1/models/${model}/endpoints`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    const data: any = await res.json().catch(() => null);
+    const endpoints = data?.data?.endpoints;
+    return { model, available: res.ok && (!Array.isArray(endpoints) || endpoints.length > 0), status: res.status };
+  } catch {
+    return { model, available: false, status: 0 };
+  }
+}
+
+/** /api/health, and with ?check also whether OpenRouter accepts the server key and serves the models. */
 export async function handleHealth(serverKey = nodeServerKey(), check = false): Promise<HandlerResult> {
   const key = (serverKey || '').trim();
   const body: Record<string, unknown> = { status: 'ok', hasServerKey: Boolean(key) };
-  if (check && key) body.openrouter = await checkOpenRouterKey(key);
+  if (check && key) {
+    body.openrouter = await checkOpenRouterKey(key);
+    body.models = await Promise.all(OPENROUTER_MODELS.map((m) => checkOpenRouterModel(key, m)));
+  }
   return { status: 200, body };
 }
 
@@ -114,7 +147,7 @@ export async function handleModels(
   return {
     status: 200,
     body: {
-      models: [{ id: OPENROUTER_MODEL, name: OPENROUTER_MODEL, displayName: 'Gemini 2.0 Flash (OpenRouter)' }],
+      models: [{ id: OPENROUTER_MODEL, name: OPENROUTER_MODEL, displayName: 'Gemini 3.1 Flash Lite (OpenRouter)' }],
     },
   };
 }
