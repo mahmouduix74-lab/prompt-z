@@ -29,7 +29,7 @@ async function readJson(request: Request): Promise<any> {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const { pathname } = new URL(request.url);
+    const { pathname, searchParams } = new URL(request.url);
     if (!pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
 
     const userApiKey = request.headers.get('x-api-key') || '';
@@ -37,7 +37,7 @@ export default {
 
     switch (pathname) {
       case '/api/health':
-        return json(handleHealth(serverKey));
+        return json(await handleHealth(serverKey, searchParams.has('check')));
       case '/api/models':
         return json(await handleModels(userApiKey, serverKey));
       case '/api/generate':

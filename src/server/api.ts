@@ -77,8 +77,30 @@ async function generateWithOpenRouter(
   throw lastError || new Error('OpenRouter request failed.');
 }
 
-export function handleHealth(serverKey = nodeServerKey()): HandlerResult {
-  return { status: 200, body: { status: 'ok', hasServerKey: Boolean((serverKey || '').trim()) } };
+/**
+ * Asks OpenRouter whether the key is accepted, without generating anything (no credits used).
+ * Only the status and OpenRouter's message are returned, never the key or its usage.
+ */
+async function checkOpenRouterKey(apiKey: string): Promise<{ ok: boolean; status: number; message: string }> {
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/key', { headers: { Authorization: `Bearer ${apiKey}` } });
+    const data: any = await res.json().catch(() => null);
+    return {
+      ok: res.ok,
+      status: res.status,
+      message: res.ok ? 'OpenRouter accepted the key.' : data?.error?.message || res.statusText,
+    };
+  } catch (err: any) {
+    return { ok: false, status: 0, message: `Could not reach OpenRouter: ${err?.message || err}` };
+  }
+}
+
+/** /api/health, and with ?check also whether OpenRouter accepts the server key. */
+export async function handleHealth(serverKey = nodeServerKey(), check = false): Promise<HandlerResult> {
+  const key = (serverKey || '').trim();
+  const body: Record<string, unknown> = { status: 'ok', hasServerKey: Boolean(key) };
+  if (check && key) body.openrouter = await checkOpenRouterKey(key);
+  return { status: 200, body };
 }
 
 /** The app always generates with OPENROUTER_MODEL, so that is the one model offered. */
@@ -148,14 +170,15 @@ export async function handleGenerate(
 
     return { status: 200, body: { result: generatedText, modelUsed } };
   } catch (err: any) {
-    console.warn('[Generate Resilience] OpenRouter unavailable/busy, using smart local engine fallback:', err?.message || err);
+    const fallbackReason = String(err?.message || err);
+    console.warn('[Generate Resilience] OpenRouter unavailable/busy, using smart local engine fallback:', fallbackReason);
     const fallbackPrompt = generateLocalStructuredPrompt({
       rawText: rawText.trim(),
       domain: domain || 'general',
       depth: depth || ('medium' as DepthType),
       outputLanguage: outputLanguage || 'match',
     });
-    return { status: 200, body: { result: fallbackPrompt, fallbackUsed: true, modelUsed: 'Local Smart Engine' } };
+    return { status: 200, body: { result: fallbackPrompt, fallbackUsed: true, fallbackReason, modelUsed: 'Local Smart Engine' } };
   }
 }
 
@@ -206,8 +229,9 @@ export async function handleRefine(
 
     return { status: 200, body: { result: refinedText, modelUsed } };
   } catch (err: any) {
-    console.warn('[Refine Resilience] OpenRouter unavailable/busy, using smart local refiner fallback:', err?.message || err);
+    const fallbackReason = String(err?.message || err);
+    console.warn('[Refine Resilience] OpenRouter unavailable/busy, using smart local refiner fallback:', fallbackReason);
     const fallbackResult = refineLocalPromptText({ rawText, domain });
-    return { status: 200, body: { result: fallbackResult, fallbackUsed: true } };
+    return { status: 200, body: { result: fallbackResult, fallbackUsed: true, fallbackReason } };
   }
 }
