@@ -11,7 +11,7 @@ export type DomainType =
 
 export type DepthType = 'short' | 'medium' | 'detailed' | 'ultra';
 
-export interface GeminiModelInfo {
+export interface ModelInfo {
   id: string; // model id returned by models.list, without the "models/" prefix
   name: string; // full resource name, e.g. "models/<id>"
   displayName: string;
@@ -38,9 +38,4 @@ export interface GenerationErrorDetails {
   userGuidance?: string;
   isInvalidKey?: boolean;
   isRateLimitMinute?: boolean;
-  isDailyQuotaExhausted?: boolean;
-  retryDelaySeconds?: number;
-  finishReason?: string;
-  retryAttempt?: number;
-  retryCountdown?: number;
 }

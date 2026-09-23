@@ -35,7 +35,7 @@ function resolveApiKey(userApiKey: string | undefined, serverKey: string | undef
  * Sends one chat completion to OpenRouter and returns the generated text.
  * Retries once on 429/5xx; any other failure is thrown for the caller's fallback.
  */
-export async function generateWithOpenRouter(
+async function generateWithOpenRouter(
   apiKey: string,
   params: { systemInstruction: string; userText: string; temperature: number }
 ): Promise<{ text: string; modelUsed: string }> {

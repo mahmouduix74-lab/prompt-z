@@ -1,6 +1,6 @@
 import React from 'react';
 import { GenerationErrorDetails } from '../types';
-import { AlertTriangle, Clock, X, RefreshCw, ShieldAlert, Zap, HelpCircle } from 'lucide-react';
+import { AlertTriangle, Clock, X, RefreshCw } from 'lucide-react';
 
 interface ErrorBannerProps {
   error: GenerationErrorDetails | null;
@@ -15,9 +15,6 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
 }) => {
   if (!error) return null;
 
-  const isUnclassified429 =
-    error.statusCode === 429 && !error.isRateLimitMinute && !error.isDailyQuotaExhausted;
-
   return (
     <div
       role="alert"
@@ -30,53 +27,23 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
           </div>
 
           <div className="space-y-2">
-            {/* Header: Status Code & Classification Badges */}
+            {/* Header: status code and rate-limit badge */}
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-bold text-rose-300">
                 {error.statusCode
-                  ? `خطأ من Google API (HTTP ${error.statusCode})`
+                  ? `خطأ من السيرفر (HTTP ${error.statusCode})`
                   : 'خطأ أثناء تنفيذ الطلب'}
               </span>
 
-              {/* Per-minute Rate Limit vs Daily Quota Exhaustion tags */}
               {error.isRateLimitMinute && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   <Clock className="w-3 h-3" />
-                  تجاوز حد الطلبات للدقيقة (Per-Minute Rate Limit)
-                </span>
-              )}
-
-              {error.isDailyQuotaExhausted && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                  <Zap className="w-3 h-3" />
-                  استنفاد الحصة اليومية (Daily Quota Exhaustion)
-                </span>
-              )}
-
-              {isUnclassified429 && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
-                  <HelpCircle className="w-3 h-3" />
-                  نوع الحد غير محدد في رد Google
-                </span>
-              )}
-
-              {typeof error.retryDelaySeconds === 'number' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono bg-zinc-800 text-zinc-300 border border-zinc-700">
-                  <Clock className="w-3 h-3 text-amber-400" />
-                  retryDelay: {error.retryDelaySeconds}s
-                </span>
-              )}
-
-              {/* Finish Reason tag if empty response */}
-              {error.finishReason && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono bg-zinc-800 text-zinc-300 border border-zinc-700">
-                  <ShieldAlert className="w-3 h-3 text-amber-400" />
-                  finishReason: {error.finishReason}
+                  تجاوز حد الطلبات (Rate Limit)
                 </span>
               )}
             </div>
 
-            {/* Actual Raw Message from Google */}
+            {/* Raw message from the server */}
             <div className="p-2.5 rounded-lg bg-zinc-950/80 border border-rose-900/40 font-mono text-[11px] text-rose-300/90 whitespace-pre-wrap break-all select-text" dir="ltr">
               {error.rawMessage}
             </div>
@@ -89,9 +56,9 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
                   {error.userGuidance}
                 </>
               ) : error.statusCode === 400 ? (
-                'Google رفض الطلب (HTTP 400). راجع الرسالة أعلاه والنموذج المختار.'
+                'السيرفر رفض الطلب (HTTP 400). راجع الرسالة أعلاه.'
               ) : error.statusCode === 401 || error.statusCode === 403 ? (
-                'OpenRouter رفض مفتاح السيرفر OPENROUTER_API_KEY. راجع إعدادات الاستضافة.'
+                'OpenRouter رفض مفتاح السيرفر OPENROUTER_API_KEY. راجع إعدادات Cloudflare.'
               ) : (
                 'راجع الرسالة أعلاه ثم حاول مرة أخرى.'
               )}

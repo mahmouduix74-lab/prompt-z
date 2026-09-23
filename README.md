@@ -1,51 +1,69 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# PromptZ
 
-# Run and deploy your AI Studio app
+**From first idea to final prompt — in one second.**
 
-This contains everything you need to run your app locally.
+PromptZ turns a rough idea, written in Arabic or English, into a clean, structured prompt that
+another AI can run. Pick a domain and a detail level, choose the output language, and generate.
+Prompts can be copied, downloaded as Markdown, and are kept in a local history.
 
-View your app in AI Studio: https://ai.studio/apps/455259a1-f4ef-4146-a007-329ecd2a694b
+Live: https://prompt-z.mahmouduix74.workers.dev
 
-## Run Locally
+## How it works
 
-**Prerequisites:**  Node.js
+- **Frontend:** React 19 + Vite + Tailwind CSS (`src/`).
+- **API:** `/api/health`, `/api/models`, `/api/generate`, `/api/refine`. All four are handled by
+  [`src/server/api.ts`](src/server/api.ts), which calls OpenRouter
+  (`https://openrouter.ai/api/v1/chat/completions`, model `google/gemini-2.0-flash-001`).
+- **Fallback:** if there is no key or OpenRouter fails, a local engine builds the prompt, so the
+  user is never blocked.
+- **Hosting:** Cloudflare Workers. [`worker/index.ts`](worker/index.ts) serves `/api/*` and the
+  built site in `dist/` (see [`wrangler.jsonc`](wrangler.jsonc)).
 
+`server.ts` is an Express server for running the same API locally with Node. It and the Worker
+share the handlers in `src/server/api.ts`, so **change API behaviour there**, not in one entry point.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `OPENROUTER_API_KEY` in [.env.local](.env.local) to your OpenRouter API key
-   (the app generates with `google/gemini-2.0-flash-001` through OpenRouter)
-3. Run the app:
-   `npm run dev`
+## Run locally
 
-## Deploy on Cloudflare Workers
+Prerequisite: Node.js 20+.
 
-The site is served by a Cloudflare Worker (`worker/index.ts`, configured in `wrangler.jsonc`):
-the Vite build in `dist/` is served as static assets, and `/api/*` runs in the Worker.
+```bash
+npm install
+cp .env.example .env.local   # then put your OpenRouter key in it
+npm run dev                  # http://localhost:3000
+```
 
-1. Add the OpenRouter key as a Worker **secret** (once):
-   `npx wrangler secret put OPENROUTER_API_KEY`
-   — or in the dashboard: Workers & Pages → prompt-z → Settings → Variables and Secrets → Add → type *Secret*.
-   Preview deployments (pull requests, via `wrangler preview`) keep their own secrets:
-   `npx wrangler preview secret put OPENROUTER_API_KEY` — without it a preview still works, using the local engine.
-   Alternatively, put `OPENROUTER_API_KEY` in **Settings → Builds → Variables and secrets** and set the
-   deploy commands to `npm run deploy:ci` / `npm run preview:ci`: every build then uploads it as the
-   runtime secret (`scripts/cf-deploy.mjs`).
-2. Deploy: `npm run deploy` (runs `vite build`, then `wrangler deploy`).
-   With Workers Builds (Git integration), pushes to `main` run `npx wrangler deploy`, and other branches
-   run `npx wrangler preview` (enabled by the `previews` block in `wrangler.jsonc`).
+To run the real Worker locally instead: put the key in `.dev.vars` (see `.dev.vars.example`) and
+run `npm run cf:dev`.
 
-To run the Worker locally, put `OPENROUTER_API_KEY=...` in `.dev.vars` (see `.dev.vars.example`) and run `npm run cf:dev`.
+## Deploy (Cloudflare Workers Builds)
 
-## Both entry points share one backend
+Every push to `main` deploys automatically. Dashboard settings (Workers & Pages → prompt-z →
+Settings → Builds):
 
-- **Cloudflare Workers** (production) runs `worker/index.ts`.
-- **Node** (`npm run dev` locally, or `npm run build && npm start`) runs `server.ts`, an Express server.
+| Setting | Value |
+| --- | --- |
+| Build command | `npm run build` |
+| Deploy command | `npm run deploy:ci` |
+| Non-production deploy command | `npm run preview:ci` |
+| Variables and secrets | `OPENROUTER_API_KEY` (type Secret) |
 
-Both call the same functions from
-[`src/server/geminiApi.ts`](src/server/geminiApi.ts). **If you change how the
-app talks to OpenRouter — a new field, a different fallback, a new
-endpoint — make that change in `src/server/geminiApi.ts`.** Editing only
-one entry point will make them behave differently from each other.
+`deploy:ci` ([`scripts/cf-deploy.mjs`](scripts/cf-deploy.mjs)) runs `wrangler deploy` and uploads
+the build's `OPENROUTER_API_KEY` as the Worker's runtime secret, so the key is entered in one
+place only. Check it with `/api/health` → `"hasServerKey": true`.
+
+Manual deploy from a machine logged in with `npx wrangler login`: `npm run deploy`.
+
+## Scripts
+
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Local Express server with Vite (port 3000) |
+| `npm run build` | Build the site into `dist/` (and the Node server bundle) |
+| `npm run lint` | Type-check with `tsc` |
+| `npm run cf:dev` | Run the Cloudflare Worker locally |
+| `npm run deploy` | Deploy to Cloudflare with `wrangler` |
+
+## Promo video
+
+`promo/` is a separate [Remotion](https://www.remotion.dev) project with the PromptZ promo videos.
+See its `package.json` for the capture and render scripts.

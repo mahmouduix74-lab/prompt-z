@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { DepthType, GeminiModelInfo, OutputLanguage } from '../types';
+import { DepthType, ModelInfo, OutputLanguage } from '../types';
 import { DEPTHS, OUTPUT_LANGUAGES } from '../constants';
 import { AppLang, UI_STRINGS } from '../utils/i18n';
 import { Gauge, Languages, ChevronDown } from 'lucide-react';
@@ -12,7 +12,7 @@ interface ControlsBarProps {
   onChangeOutputLanguage: (language: OutputLanguage) => void;
   selectedModel: string;
   onChangeModel: (model: string) => void;
-  models: GeminiModelInfo[];
+  models: ModelInfo[];
   isLoadingModels: boolean;
   onRefreshModels: () => void;
   disabled?: boolean;

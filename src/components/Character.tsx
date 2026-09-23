@@ -20,7 +20,7 @@ const SOURCES: Record<CharacterName, string> = {
  * differ from the file: the XML declaration is dropped (not valid inside HTML),
  * and every id gets a per-instance prefix so several drawings can share a page.
  */
-export function prepareCharacterMarkup(
+function prepareCharacterMarkup(
   markup: string,
   prefix: string,
   name?: CharacterName,

@@ -1,12 +1,16 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import { handleHealth, handleModels, handleGenerate, handleRefine } from './src/server/geminiApi.js';
+import { handleHealth, handleModels, handleGenerate, handleRefine } from './src/server/api.js';
 
 // This Express server is used for local development and for platforms that
 // run a persistent Node process. In production the site runs on Cloudflare
-// Workers (worker/index.ts); both share the handlers in src/server/geminiApi.ts
+// Workers (worker/index.ts); both share the handlers in src/server/api.ts
 // so the two entry points cannot drift apart.
+
+// Local runs read OPENROUTER_API_KEY from .env.local (or .env).
+dotenv.config({ path: ['.env.local', '.env'], quiet: true });
 
 const app = express();
 const PORT = 3000;

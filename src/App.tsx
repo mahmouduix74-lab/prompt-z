@@ -4,17 +4,17 @@ import {
   DomainType,
   DepthType,
   OutputLanguage,
-  GeminiModelInfo,
+  ModelInfo,
   SavedPromptItem,
   GenerationErrorDetails,
 } from './types';
 import { safeStorage } from './utils/storage';
 import { EXACT_SYSTEM_INSTRUCTION, DEPTHS, OUTPUT_LANGUAGES, OPENROUTER_MODEL } from './constants';
 import {
-  fetchGeminiModels,
+  fetchModels,
   generateStructuredPrompt,
   refinePromptText,
-} from './services/gemini';
+} from './services/api';
 import { refineLocalPromptText } from './services/localRefiner';
 import { generateLocalStructuredPrompt } from './services/localEngine';
 import { Theme, AppLang } from './utils/i18n';
@@ -32,6 +32,7 @@ import { Clock } from 'lucide-react';
 import { CustomCursor } from './components/CustomCursor';
 import { Mascot } from './components/Mascot';
 
+// Keys keep their original "gemini_" names so prompts saved before the move to OpenRouter still load.
 const STORAGE_KEYS = {
   MODELS: 'gemini_available_models',
   SELECTED_MODEL: 'gemini_active_model',
@@ -108,8 +109,8 @@ export default function App() {
   };
 
   // Models fetched dynamically via the backend. No model name is hardcoded.
-  const [models, setModels] = useState<GeminiModelInfo[]>(() => {
-    return safeStorage.getJSON<GeminiModelInfo[]>(STORAGE_KEYS.MODELS, []);
+  const [models, setModels] = useState<ModelInfo[]>(() => {
+    return safeStorage.getJSON<ModelInfo[]>(STORAGE_KEYS.MODELS, []);
   });
 
   const [selectedModel, setSelectedModel] = useState<string>(() => {
@@ -180,7 +181,7 @@ export default function App() {
   const handleFetchModels = useCallback(async () => {
     setIsLoadingModels(true);
     try {
-      const fetchedModels = await fetchGeminiModels();
+      const fetchedModels = await fetchModels();
       setModels(fetchedModels);
       safeStorage.setJSON(STORAGE_KEYS.MODELS, fetchedModels);
 
