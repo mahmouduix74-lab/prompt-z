@@ -1,6 +1,6 @@
 import React from 'react';
 import { AbsoluteFill, Img, interpolate, staticFile } from 'remotion';
-import { LogoIcon } from '../components/Logo';
+import { LogoIcon } from './Logo';
 import { BAR, FPS, LAST_CAPTURED, MACROS, META, REVEALS, TL, VIEW, WIN, clamp01, easeInOut, easeOut, mouseAt, rect, type Rect, type Theme } from './timing';
 import { INTER } from './fonts';
 

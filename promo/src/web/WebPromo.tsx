@@ -46,7 +46,7 @@ const Captions: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 
-/** Music ducks under the voice-over. (Remotion caps volume at 1; `npm run render:web` adds +3.5 dB after the render.) */
+/** Music ducks under the voice-over. (Remotion caps volume at 1; `npm run render` adds +3.5 dB after the render.) */
 const musicVolume = (frame: number) => {
   const t = frame / FPS;
   const inVo = VO.reduce((m, l) => Math.max(m, Math.min(clamp01((t - l.at + 0.25) / 0.25), clamp01((l.at + l.dur + 0.3 - t) / 0.3))), 0);

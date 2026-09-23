@@ -65,5 +65,6 @@ Manual deploy from a machine logged in with `npx wrangler login`: `npm run deplo
 
 ## Promo video
 
-`promo/` is a separate [Remotion](https://www.remotion.dev) project with the PromptZ promo videos.
-See its `package.json` for the capture and render scripts.
+`promo/` is a separate [Remotion](https://www.remotion.dev) project with the 16:9 PromptZ promo
+(composition `PromoWeb`): the real site is captured frame by frame (`npm run capture`), then
+`npm run render` renders it with voice-over and music. See `promo/package.json`.
