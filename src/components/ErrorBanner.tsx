@@ -91,7 +91,7 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
               ) : error.statusCode === 400 ? (
                 'Google رفض الطلب (HTTP 400). راجع الرسالة أعلاه والنموذج المختار.'
               ) : error.statusCode === 401 || error.statusCode === 403 ? (
-                'Google رفض مفتاح السيرفر GEMINI_API_KEY. راجع Secrets في AI Studio.'
+                'OpenRouter رفض مفتاح السيرفر OPENROUTER_API_KEY. راجع إعدادات الاستضافة.'
               ) : (
                 'راجع الرسالة أعلاه ثم حاول مرة أخرى.'
               )}

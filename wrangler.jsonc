@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "prompt-z",
+  "main": "worker/index.ts",
+  "compatibility_date": "2025-09-01",
+  // Builds the site into dist/ before every `wrangler deploy` (also in Workers Builds).
+  "build": { "command": "npm run build:client" },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "observability": { "enabled": true },
+  // Needed by `npx wrangler preview`, which Workers Builds runs for non-production branches (PRs).
+  "previews": {}
+  // OPENROUTER_API_KEY is a secret, not a var: set it with `npx wrangler secret put OPENROUTER_API_KEY`.
+}

@@ -15,20 +15,37 @@ View your app in AI Studio: https://ai.studio/apps/455259a1-f4ef-4146-a007-329ec
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. Set the `OPENROUTER_API_KEY` in [.env.local](.env.local) to your OpenRouter API key
+   (the app generates with `google/gemini-2.0-flash-001` through OpenRouter)
 3. Run the app:
    `npm run dev`
 
-## Two deployment targets share one backend
+## Deploy on Cloudflare Workers
 
-This app runs on two different platforms, and both call the same logic:
+The site is served by a Cloudflare Worker (`worker/index.ts`, configured in `wrangler.jsonc`):
+the Vite build in `dist/` is served as static assets, and `/api/*` runs in the Worker.
 
-- **AI Studio / Cloud Run** (via the Publish button, or `npm run build && npm start`) runs `server.ts`, an Express server.
+1. Add the OpenRouter key as a Worker **secret** (once):
+   `npx wrangler secret put OPENROUTER_API_KEY`
+   — or in the dashboard: Workers & Pages → prompt-z → Settings → Variables and Secrets → Add → type *Secret*.
+   Preview deployments (pull requests, via `wrangler preview`) keep their own secrets:
+   `npx wrangler preview secret put OPENROUTER_API_KEY` — without it a preview still works, using the local engine.
+2. Deploy: `npm run deploy` (runs `vite build`, then `wrangler deploy`).
+   With Workers Builds (Git integration), pushes to `main` run `npx wrangler deploy`, and other branches
+   run `npx wrangler preview` (enabled by the `previews` block in `wrangler.jsonc`).
+
+To run the Worker locally, put `OPENROUTER_API_KEY=...` in `.dev.vars` (see `.dev.vars.example`) and run `npm run cf:dev`.
+
+## Deployment targets share one backend
+
+The app can run on three platforms, and all of them call the same logic:
+
+- **Cloudflare Workers** runs `worker/index.ts`.
+- **Node hosts** (`npm run dev`, or `npm run build && npm start`) run `server.ts`, an Express server.
 - **Vercel** runs the files under `api/` instead — `server.ts` is never executed there.
 
-Both `server.ts` and every file in `api/` call the same functions from
+All of them call the same functions from
 [`src/server/geminiApi.ts`](src/server/geminiApi.ts). **If you change how the
-app talks to the Gemini API — a new field, a different fallback, a new
+app talks to OpenRouter — a new field, a different fallback, a new
 endpoint — make that change in `src/server/geminiApi.ts`.** Editing only
-`server.ts` or only a file in `api/` will make the two platforms behave
-differently from each other.
+one entry point will make the platforms behave differently from each other.

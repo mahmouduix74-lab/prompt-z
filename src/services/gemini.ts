@@ -11,7 +11,7 @@ import { generateLocalStructuredPrompt } from './localEngine';
 
 /**
  * All Gemini calls go through this app's own server (server.ts), which holds
- * the only API key (GEMINI_API_KEY). The browser never talks to Google directly.
+ * the only API key (OPENROUTER_API_KEY). The browser never talks to the AI provider directly.
  */
 
 export class GeminiApiError extends Error {
@@ -96,12 +96,12 @@ export function parseGeminiError(statusCode: number, errorData: any): Generation
     if (lowered.includes('api key not valid') || lowered.includes('api_key_invalid')) {
       result.isInvalidKey = true;
       result.userGuidance =
-        'مفتاح GEMINI_API_KEY على السيرفر غير صالح. عدّله من Secrets في AI Studio (أو من .env.local محليًا).';
+        'مفتاح OPENROUTER_API_KEY على السيرفر غير صالح. عدّله من إعدادات الاستضافة (أو من .env.local محليًا).';
     }
   } else if (statusCode === 401 || statusCode === 403) {
     result.isInvalidKey = true;
     result.userGuidance =
-      'Google رفض مفتاح السيرفر أو لا يسمح له بهذا النموذج. راجع GEMINI_API_KEY في Secrets أو اختر نموذجًا آخر.';
+      'OpenRouter رفض مفتاح السيرفر أو لا يسمح له بهذا النموذج. راجع OPENROUTER_API_KEY في إعدادات الاستضافة.';
   }
 
   if (result.finishReason === 'SAFETY') {

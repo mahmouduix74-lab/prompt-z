@@ -134,6 +134,9 @@ export const STARTER_EXAMPLES: string[] = [
   'عايز أعمل بريزنتيشن للعميل عن الريدايزن',
 ];
 
+/** The OpenRouter model every generation and refine request uses. */
+export const OPENROUTER_MODEL = 'google/gemini-2.0-flash-001';
+
 export const EXACT_SYSTEM_INSTRUCTION = `Act as a Prompt Formatter. Rewrite the user's request as a structured prompt that another AI or tool will execute. Never answer or perform the request yourself.
 
 Output exactly these headers, in English and in this order: # ROLE, # CONTEXT, # OBJECTIVE, one or more # TASK blocks, # OUTPUT RULES. Write the section content in the language of the user's message unless a language line below says otherwise.
