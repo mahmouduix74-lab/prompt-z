@@ -11,6 +11,8 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  // Needed by `npx wrangler preview`, which Workers Builds runs for non-production branches (PRs).
+  "previews": {}
   // OPENROUTER_API_KEY is a secret, not a var: set it with `npx wrangler secret put OPENROUTER_API_KEY`.
 }

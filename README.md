@@ -28,8 +28,11 @@ the Vite build in `dist/` is served as static assets, and `/api/*` runs in the W
 1. Add the OpenRouter key as a Worker **secret** (once):
    `npx wrangler secret put OPENROUTER_API_KEY`
    — or in the dashboard: Workers & Pages → prompt-z → Settings → Variables and Secrets → Add → type *Secret*.
+   Preview deployments (pull requests, via `wrangler preview`) keep their own secrets:
+   `npx wrangler preview secret put OPENROUTER_API_KEY` — without it a preview still works, using the local engine.
 2. Deploy: `npm run deploy` (runs `vite build`, then `wrangler deploy`).
-   With Workers Builds (Git integration), the default deploy command `npx wrangler deploy` does the same on every push.
+   With Workers Builds (Git integration), pushes to `main` run `npx wrangler deploy`, and other branches
+   run `npx wrangler preview` (enabled by the `previews` block in `wrangler.jsonc`).
 
 To run the Worker locally, put `OPENROUTER_API_KEY=...` in `.dev.vars` (see `.dev.vars.example`) and run `npm run cf:dev`.
 
