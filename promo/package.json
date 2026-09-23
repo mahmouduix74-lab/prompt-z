@@ -5,9 +5,8 @@
   "type": "module",
   "scripts": {
     "studio": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts Promo out/promptz-promo.mp4 --codec=h264 --crf=18",
-    "render:web": "remotion render src/index.ts PromoWeb out/promptz-web-raw.mp4 --codec=h264 --crf=18 && remotion ffmpeg -y -loglevel error -i out/promptz-web-raw.mp4 -c:v copy -af volume=1.5 -c:a aac -b:a 192k out/promptz-web-promo.mp4",
-    "still": "remotion still src/index.ts Promo",
+    "render": "remotion render src/index.ts PromoWeb out/promptz-web-raw.mp4 --codec=h264 --crf=18 && remotion ffmpeg -y -loglevel error -i out/promptz-web-raw.mp4 -c:v copy -af volume=1.5 -c:a aac -b:a 192k out/promptz-web-promo.mp4",
+    "still": "remotion still src/index.ts PromoWeb",
     "typecheck": "tsc --noEmit",
     "capture": "node capture/capture.mjs",
     "music": "python3 capture/music.py"
@@ -16,7 +15,6 @@
     "@remotion/cli": "4.0.527",
     "@remotion/fonts": "4.0.527",
     "@remotion/google-fonts": "4.0.527",
-    "@remotion/transitions": "^4.0.527",
     "react": "19.0.1",
     "react-dom": "19.0.1",
     "remotion": "4.0.527"

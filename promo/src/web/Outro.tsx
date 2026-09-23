@@ -1,6 +1,6 @@
 import React from 'react';
 import { AbsoluteFill, Img, interpolate, spring, staticFile } from 'remotion';
-import { LogoIcon } from '../components/Logo';
+import { LogoIcon } from './Logo';
 import { CLASH, INTER, MONTSERRAT } from './fonts';
 import { FPS, TL, clamp01, easeInOut, easeOut } from './timing';
 
