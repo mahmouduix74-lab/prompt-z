@@ -20,7 +20,6 @@ import { SnakeGame } from './SnakeGame';
 interface OutputPanelProps {
   output: string;
   isLoading: boolean;
-  modelUsed?: string;
   timestamp?: number;
   lang: AppLang;
   theme?: 'light' | 'dark';
@@ -35,7 +34,6 @@ type ViewMode = 'formatted' | 'raw' | 'sections';
 export const OutputPanel: React.FC<OutputPanelProps> = ({
   output,
   isLoading,
-  modelUsed,
   timestamp,
   lang,
   theme,
@@ -502,12 +500,6 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
               <span>{charCount} {t.charCount}</span>
               <span>•</span>
               <span>{wordCount} {t.wordCount}</span>
-              {modelUsed && (
-                <>
-                  <span>•</span>
-                  <span className="text-indigo-600 dark:text-indigo-400 font-semibold">{modelUsed}</span>
-                </>
-              )}
             </>
           ) : (
             <span className="text-zinc-400 dark:text-zinc-500 font-sans">
