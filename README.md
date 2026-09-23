@@ -39,16 +39,13 @@ the Vite build in `dist/` is served as static assets, and `/api/*` runs in the W
 
 To run the Worker locally, put `OPENROUTER_API_KEY=...` in `.dev.vars` (see `.dev.vars.example`) and run `npm run cf:dev`.
 
-## Deployment targets share one backend
+## Both entry points share one backend
 
-The app can run on three platforms, and all of them call the same logic:
+- **Cloudflare Workers** (production) runs `worker/index.ts`.
+- **Node** (`npm run dev` locally, or `npm run build && npm start`) runs `server.ts`, an Express server.
 
-- **Cloudflare Workers** runs `worker/index.ts`.
-- **Node hosts** (`npm run dev`, or `npm run build && npm start`) run `server.ts`, an Express server.
-- **Vercel** runs the files under `api/` instead — `server.ts` is never executed there.
-
-All of them call the same functions from
+Both call the same functions from
 [`src/server/geminiApi.ts`](src/server/geminiApi.ts). **If you change how the
 app talks to OpenRouter — a new field, a different fallback, a new
 endpoint — make that change in `src/server/geminiApi.ts`.** Editing only
-one entry point will make the platforms behave differently from each other.
+one entry point will make them behave differently from each other.
