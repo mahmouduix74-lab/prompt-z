@@ -41,7 +41,7 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
     ],
     standards: [
       { en: 'Be accurate, specific and actionable', ar: 'كن دقيقًا ومحددًا وقابلًا للتنفيذ' },
-      { en: 'Use clear structure and plain language', ar: 'استخدم هيكلًا واضحًا ولغة بسيطة' },
+      { en: 'Use a clear structure and plain language', ar: 'استخدم هيكلًا واضحًا ولغة بسيطة' },
     ],
     outputFormat: [{ en: 'Markdown with short headings and bullet points', ar: 'Markdown بعناوين قصيرة ونقاط' }],
   },
@@ -64,14 +64,14 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
       { en: 'Do not write specification documents instead of designing', ar: 'لا تكتب وثائق مواصفات بدلًا من التصميم' },
     ],
     standards: [
-      { en: 'Clear visual hierarchy and a consistent 8-point spacing grid', ar: 'تسلسل بصري واضح وشبكة مسافات ثابتة من مضاعفات 8' },
-      { en: 'Text contrast that meets WCAG AA', ar: 'تباين نصوص يحقق معيار WCAG AA' },
-      { en: 'Touch targets of at least 44 px on mobile', ar: 'مساحات لمس لا تقل عن 44 بكسل على الموبايل' },
+      { en: 'Use a clear visual hierarchy and a consistent 8-point spacing grid', ar: 'استخدم تسلسلًا بصريًا واضحًا وشبكة مسافات ثابتة من مضاعفات 8' },
+      { en: 'Keep text contrast at WCAG AA or better', ar: 'اجعل تباين النصوص يحقق معيار WCAG AA على الأقل' },
+      { en: 'Make touch targets at least 44 px on mobile', ar: 'اجعل مساحات اللمس 44 بكسل على الأقل على الموبايل' },
       {
-        en: 'Default, hover, focus, empty, loading and error states where the element has them',
-        ar: 'الحالات الافتراضية والتمرير والتركيز والفارغة والتحميل والخطأ حيث يلزم العنصر',
+        en: 'Show the default, hover, focus, empty, loading and error states of the requested elements where they apply',
+        ar: 'اعرض الحالات الافتراضية والتمرير والتركيز والفارغة والتحميل والخطأ للعناصر المطلوبة حيث تنطبق',
       },
-      { en: 'Realistic placeholder content, never lorem ipsum', ar: 'محتوى مبدئي واقعي وليس نص lorem ipsum' },
+      { en: 'Use realistic placeholder content, never lorem ipsum', ar: 'استخدم محتوى مبدئيًا واقعيًا وليس نص lorem ipsum' },
     ],
     outputFormat: [
       { en: 'One frame per requested screen, named clearly', ar: 'إطار لكل شاشة مطلوبة باسم واضح' },
@@ -100,10 +100,10 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
       { en: 'Do not add pages or features that were not requested', ar: 'لا تضف صفحات أو ميزات غير مطلوبة' },
     ],
     standards: [
-      { en: 'Semantic HTML and accessible controls (labels, keyboard, focus)', ar: 'HTML دلالي وعناصر تحكم قابلة للوصول (تسميات ولوحة مفاتيح وتركيز)' },
-      { en: 'Responsive layout, mobile first', ar: 'تصميم متجاوب يبدأ بالموبايل' },
-      { en: 'Loading, empty and error states for anything that fetches data', ar: 'حالات التحميل والفراغ والخطأ لأي جزء يجلب بيانات' },
-      { en: 'Small, reusable components and no secrets in client code', ar: 'مكونات صغيرة قابلة لإعادة الاستخدام وبدون أسرار داخل كود المتصفح' },
+      { en: 'Use semantic HTML and accessible controls (labels, keyboard, focus)', ar: 'استخدم HTML دلاليًا وعناصر تحكم قابلة للوصول (تسميات ولوحة مفاتيح وتركيز)' },
+      { en: 'Make the layout responsive, mobile first', ar: 'اجعل التصميم متجاوبًا يبدأ بالموبايل' },
+      { en: 'Handle loading, empty and error states for anything that fetches data', ar: 'تعامل مع حالات التحميل والفراغ والخطأ لأي جزء يجلب بيانات' },
+      { en: 'Keep components small and reusable, with no secrets in client code', ar: 'اجعل المكونات صغيرة وقابلة لإعادة الاستخدام، بدون أسرار داخل كود المتصفح' },
     ],
     outputFormat: [
       { en: 'Complete code in fenced blocks, one per file, with the file path', ar: 'كود كامل داخل كتل كود، ملف لكل كتلة مع مسار الملف' },
@@ -179,7 +179,7 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
     ],
     standards: [
       { en: 'Match the audience and tone the user gave', ar: 'التزم بالجمهور والنبرة اللذين حددهما المستخدم' },
-      { en: 'One clear message per piece, concise and scannable', ar: 'رسالة واحدة واضحة لكل قطعة، مختصرة وسهلة القراءة' },
+      { en: 'Keep one clear message per piece, concise and scannable', ar: 'اجعل لكل قطعة رسالة واحدة واضحة، مختصرة وسهلة القراءة' },
       { en: 'Respect any length or format limits', ar: 'احترم أي حدود للطول أو الشكل' },
     ],
     outputFormat: [{ en: 'The copy formatted exactly as it will be published', ar: 'النص بالشكل الذي سيُنشر به تمامًا' }],
@@ -201,9 +201,9 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
       },
     ],
     standards: [
-      { en: 'Concrete visual nouns and adjectives, one clear main subject', ar: 'أسماء وصفات بصرية محددة وعنصر رئيسي واحد واضح' },
-      { en: 'State style, lighting and aspect ratio when given', ar: 'اذكر الأسلوب والإضاءة ونسبة الأبعاد عند تحديدها' },
-      { en: 'A short negative prompt of what to avoid', ar: 'برومبت سلبي قصير بما يجب تجنبه' },
+      { en: 'Use concrete visual nouns and adjectives and one clear main subject', ar: 'استخدم أسماء وصفات بصرية محددة وعنصرًا رئيسيًا واحدًا واضحًا' },
+      { en: 'State the style, lighting and aspect ratio the user gave', ar: 'اذكر الأسلوب والإضاءة ونسبة الأبعاد التي حددها المستخدم' },
+      { en: 'Add a short negative prompt of what to avoid', ar: 'أضف برومبت سلبيًا قصيرًا بما يجب تجنبه' },
     ],
     outputFormat: [
       { en: 'The final prompt as one paragraph', ar: 'البرومبت النهائي في فقرة واحدة' },
@@ -249,7 +249,7 @@ export const DEPTH_SPECS: Record<DepthType, DepthSpec> = {
     constraints: [6, 9],
     standards: 4,
     guidance:
-      'Give every task 2–4 sub-points covering its inherent parts; ACCEPTANCE CRITERIA lists 4–6 checkable conditions the result must meet.',
+      'Give every task 2–4 sub-points covering only its inherent parts; ACCEPTANCE CRITERIA lists 4–6 checkable conditions tied to the tasks. More detail means explaining the requested work more fully, never adding to it.',
   },
   ultra: {
     sections: [
@@ -269,16 +269,19 @@ export const DEPTH_SPECS: Record<DepthType, DepthSpec> = {
     constraints: [8, 12],
     standards: 5,
     guidance:
-      'Everything in Detailed, plus: APPROACH as ordered steps to do the work; EDGE CASES & STATES only those inherent to the requested deliverable; ASSUMPTIONS & OPEN QUESTIONS lists what the request leaves open (as questions, never as invented answers).',
+      'Everything in Detailed, plus APPROACH, EDGE CASES & STATES and ASSUMPTIONS & OPEN QUESTIONS as defined in FORMAT. More detail means explaining the requested work more fully, never adding to it.',
   },
 };
 
 export const EXACT_SYSTEM_INSTRUCTION = `You are PromptZ, a prompt engineer. Turn the user's request into one clear, professional, structured prompt that another AI will execute. Never answer, perform or comment on the request yourself.
 
-SCOPE (most important):
-- Everything in the prompt comes from the request. Rephrase it precisely and professionally.
-- Never add deliverables, features, screens, pages, topics, numbers, names or audiences the user did not mention.
+SCOPE (most important, applies to every section):
+- Everything in the prompt comes from the request. Rephrase it precisely and professionally; do not decide anything on the user's behalf.
+- Never add deliverables, features, screens, pages, fields, controls, options, policies, limits, integrations, topics, numbers, names or audiences the user did not mention. Examples of additions that are NOT allowed unless the user asked: a password-visibility toggle, "remember me", account lockout, rate limiting, MFA, dark mode, analytics.
+- Never assume a technology, platform, database, framework, protocol or format the user did not name (for example SQL, JWT, React, REST). Keep the wording neutral instead.
 - Parts that are inherent to the exact thing requested may appear as sub-points (a login screen has credential fields, a sign-in button and a forgot-password link). They are never separate deliverables.
+- Stay inside the domain: TASKS contain only work that belongs to the DOMAIN PROFILE. If part of the request belongs to another domain (for example, navigating to another screen is not backend work), leave it out of TASKS.
+- If an addition seems useful, you may only ask about it, as a question under ASSUMPTIONS & OPEN QUESTIONS when that section exists; otherwise leave it out.
 - The DOMAIN PROFILE below sets the ROLE, the boundaries and the professional standards. Standards describe HOW to do the requested work; include only those that apply to this request. Boundaries become explicit "Do not ..." lines in CONSTRAINTS so the executing AI stays inside the domain.
 
 FORMAT:
@@ -287,8 +290,12 @@ FORMAT:
 - CONTEXT: what the user said about background, audience, platform, tools and current state. If they said nothing, one sentence restating the situation. No filler about why the work matters.
 - OBJECTIVE: one sentence with the concrete outcome. No vague words such as "best-in-class" or "high-quality".
 - TASKS: a numbered list, one item per thing the user asked for, each starting with an action verb that names the deliverable. Never split one request into several tasks and never add empty tasks.
-- CONSTRAINTS: bullet lines. First the domain boundaries (Do not ...), then the relevant standards, then everything the user said they do not want.
+- APPROACH: ordered steps for carrying out the TASKS above. No new work.
+- CONSTRAINTS: bullet lines, each an instruction starting with a verb. First the domain boundaries (Do not ...), then the relevant standards, then everything the user said they do not want.
+- EDGE CASES & STATES: only the states and failure cases of elements the request itself names (empty, invalid, loading, error, success). Never introduce new elements or behaviour.
 - OUTPUT FORMAT: bullet lines from the domain profile, adapted to the request.
+- ACCEPTANCE CRITERIA: checkable conditions, each tied to a TASK or a CONSTRAINT above. Nothing new, no assumed technology.
+- ASSUMPTIONS & OPEN QUESTIONS: questions about what the request leaves open. Never answer them yourself.
 - Never write placeholders such as [MISSING] or [TBD]. When something important is unknown, write it under ASSUMPTIONS & OPEN QUESTIONS if that section is present; otherwise leave it out.
 
 OTHER RULES:
@@ -372,4 +379,28 @@ export function buildSystemInstruction(params: {
     parts.push(`THE USER DOES NOT WANT (add each as its own CONSTRAINTS line):\n${exclusions.trim()}`);
   }
   return parts.join('\n\n');
+}
+
+/**
+ * Instruction for "Enhance": copy-edit the raw request before it is structured.
+ * It may only make the user's own words clearer, never add to them.
+ */
+export function buildRefineInstruction(domain?: DomainType): string {
+  const role = (DOMAIN_PROFILES[domain ?? 'general'] ?? DOMAIN_PROFILES.general).role.en;
+  return `You are a careful copy editor. Rewrite the user's request so it is clear, precise and well written, ready to be turned into a prompt. Never answer or perform the request.
+
+RULES:
+- Keep every requirement the user wrote and add nothing: no new features, screens, fields, steps, sections, examples, numbers, technologies, audiences, quality criteria or explanations.
+- Do not remove or change any requirement. Keep names, numbers, product names and technical terms exactly as written.
+- Fix grammar, spelling and word order; remove filler, hesitation and repetition; put related points together.
+- Keep the user's language. For Arabic (including dialect), write clear Modern Standard Arabic and keep technical terms as the user wrote them.
+- Keep about the same length (at most a third longer). Keep a list as a list; otherwise write one short paragraph.
+- Use the vocabulary of this field only to choose precise words, never to add scope: ${role}.
+- Output only the rewritten request: no title, headings, quotes, preface or closing.`;
+}
+
+/** An "Enhance" result much longer than the request probably added content; the caller rejects it. */
+export function refineAddsContent(original: string, refined: string): boolean {
+  const a = original.trim().length;
+  return refined.trim().length > Math.max(a * 2, a + 300);
 }

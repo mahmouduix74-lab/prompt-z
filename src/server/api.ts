@@ -7,6 +7,7 @@
  * actually handled — only the thin req/res adapter at each entry point differs.
  */
 import { EXACT_SYSTEM_INSTRUCTION, OPENROUTER_MODEL, OPENROUTER_MODELS, buildSystemInstruction } from '../constants.js';
+import { buildRefineInstruction, refineAddsContent } from '../prompting.js';
 import { refineLocalPromptText } from '../services/localRefiner.js';
 import { generateLocalStructuredPrompt } from '../services/localEngine.js';
 import { DomainType, DepthType, OutputLanguage } from '../types.js';
@@ -241,24 +242,21 @@ export async function handleRefine(
   }
 
   try {
-    const domainHint = domain ? `المجال المستهدف المختار هو: (${domain}).` : '';
-    const refineSystemInstruction = `أنت خبير صياغة وهندسة برومبتات ومحرر تقني رفيع المستوى.
-مهمتك: إعادة صياغة النص المدخل من المستخدم لجعله أكثر دقة ووضوحاً واحترافية قبل تحويله إلى الهيكل النهائي، دون إضافة أي متطلب جديد.
-
-تعليمات الصياغة الدقيقة:
-1. حافظ تماماً على نفس لغة المستخدم الأصلية (إذا كان باللغة العربية أجب بالعربية الفصحى الواضحة، وإذا كان بالإنجليزية أجب بالإنجليزية).
-2. ${domainHint}
-3. احتفظ بكل متطلب ذكره المستخدم دون حذف أو تغيير في المعنى، ووضّح المصطلحات الغامضة ورتّب الأفكار منطقياً فقط.
-4. لا تضف أي ميزة أو شاشة أو قسم أو معيار أو حالة استخدام أو رقم لم يذكرها المستخدم صراحةً. لا تحوّل الطلب إلى مواصفات أو وثائق إذا كان الطلب تنفيذ عمل.
-5. تخلص من الحشو اللغوي والتكرار أو التردد، واجعل التعبير مباشراً، متماسكاً، وقوياً.
-6. أخرج فقط النص المُعاد صياغته والمحسّن مباشرة دون أي مقدمات (مثل: "إليك النص المحسن:" أو "Sure")، ودون علامات اقتباس، ودون أي خاتمة أو عروض مساعدة.
-7. لا تقم بتحويله إلى هيكل البرومبت النهائي الآن (لا تستخدم # ROLE أو # CONTEXT حالياً)، بل اجعله نصاً واضحاً يراجعه المستخدم أولاً، بنفس نطاق طلبه الأصلي.`;
+    const refineSystemInstruction = buildRefineInstruction(domain as DomainType | undefined);
 
     const { text: refinedText, modelUsed } = await generateWithOpenRouter(activeKey, {
       systemInstruction: refineSystemInstruction,
       userText: rawText.trim(),
-      temperature: 0.35,
+      temperature: 0.2,
     });
+
+    // A much longer rewrite has added content; keep the user's words, only tidied.
+    if (refineAddsContent(rawText, refinedText)) {
+      return {
+        status: 200,
+        body: { result: refineLocalPromptText({ rawText }), fallbackUsed: true, fallbackReason: 'Rewrite added content' },
+      };
+    }
 
     return { status: 200, body: { result: refinedText, modelUsed } };
   } catch (err: any) {
