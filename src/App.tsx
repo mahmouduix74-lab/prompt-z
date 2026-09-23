@@ -523,7 +523,6 @@ export default function App() {
                 <OutputPanel
                   output={output}
                   isLoading={isLoading}
-                  modelUsed={selectedModel}
                   timestamp={currentResultTimestamp}
                   lang={lang}
                   theme={theme}

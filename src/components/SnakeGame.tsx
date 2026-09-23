@@ -511,8 +511,8 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ lang, isAr, theme }) => {
         <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600 dark:text-purple-400 shrink-0" />
         <span>
           {isAr
-            ? 'جاري صياغة وهيكلة البرومبت مع Gemini...'
-            : 'Gemini AI is crafting your prompt...'}
+            ? 'جاري صياغة وهيكلة البرومبت...'
+            : 'AI is crafting your prompt...'}
         </span>
       </div>
     </div>
