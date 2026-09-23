@@ -1,5 +1,5 @@
 import { DomainType, DepthType, OutputLanguage } from '../types.js';
-import { Bilingual, DEPTH_SPECS, DOMAIN_PROFILES } from '../prompting.js';
+import { Bilingual, DEPTH_SPECS, DOMAIN_PROFILES, resolveOutputLanguage } from '../prompting.js';
 
 /**
  * Offline prompt builder, used when no API key is set or the model is unavailable.
@@ -13,8 +13,7 @@ export function generateLocalStructuredPrompt(params: {
   outputLanguage: OutputLanguage;
 }): string {
   const request = params.rawText.trim();
-  const ar =
-    params.outputLanguage === 'ar' || (params.outputLanguage === 'match' && /[؀-ۿ]/.test(request));
+  const ar = resolveOutputLanguage(params.outputLanguage, request) === 'ar';
   const t = (text: Bilingual) => (ar ? text.ar : text.en);
   const list = (items: Bilingual[]) => items.map((i) => `- ${t(i)}`).join('\n');
 
