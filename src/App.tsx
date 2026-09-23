@@ -9,7 +9,7 @@ import {
   GenerationErrorDetails,
 } from './types';
 import { safeStorage } from './utils/storage';
-import { EXACT_SYSTEM_INSTRUCTION, DEPTHS, OUTPUT_LANGUAGES } from './constants';
+import { EXACT_SYSTEM_INSTRUCTION, DEPTHS, OUTPUT_LANGUAGES, OPENROUTER_MODEL } from './constants';
 import {
   fetchGeminiModels,
   generateStructuredPrompt,
@@ -114,10 +114,8 @@ export default function App() {
 
   const [selectedModel, setSelectedModel] = useState<string>(() => {
     const saved = safeStorage.getItem(STORAGE_KEYS.SELECTED_MODEL) || '';
-    if (!saved || saved.includes('2.5') || saved.includes('2.0') || saved.includes('1.5')) {
-      return 'gemini-3.8-flash';
-    }
-    return saved;
+    // Ids saved before the move to OpenRouter (e.g. "gemini-3.8-flash") have no provider prefix.
+    return saved.includes('/') ? saved : OPENROUTER_MODEL;
   });
 
   // Prompt configuration state
@@ -187,21 +185,8 @@ export default function App() {
       safeStorage.setJSON(STORAGE_KEYS.MODELS, fetchedModels);
 
       setSelectedModel((current) => {
-        const isDeprecated = !current || current.includes('2.5') || current.includes('2.0') || current.includes('1.5');
-        if (!isDeprecated && fetchedModels.some((m) => m.id === current)) return current;
-        // Prefer modern flash models: gemini-3.8-flash, then gemini-3.6-flash, then active models
-        const preferred =
-          fetchedModels.find((m) => m.id === 'gemini-3.8-flash') ||
-          fetchedModels.find((m) => m.id === 'gemini-3.6-flash') ||
-          fetchedModels.find(
-            (m) =>
-              m.id.includes('flash') &&
-              !m.id.includes('2.5') &&
-              !m.id.includes('2.0') &&
-              !m.id.includes('1.5')
-          ) ||
-          fetchedModels[0];
-        const chosenId = preferred ? preferred.id : 'gemini-3.8-flash';
+        if (current && fetchedModels.some((m) => m.id === current)) return current;
+        const chosenId = fetchedModels[0]?.id || OPENROUTER_MODEL;
         safeStorage.setItem(STORAGE_KEYS.SELECTED_MODEL, chosenId);
         return chosenId;
       });
@@ -219,14 +204,7 @@ export default function App() {
 
   /** The model to send, or null (with an error shown) when none is available. */
   const resolveModel = (): string | null => {
-    let model = selectedModel.trim() || models[0]?.id || 'gemini-3.8-flash';
-    if (model.includes('2.5') || model.includes('2.0') || model.includes('1.5')) {
-      const fallback =
-        models.find((m) => m.id === 'gemini-3.8-flash' || m.id === 'gemini-3.6-flash')?.id ||
-        'gemini-3.8-flash';
-      model = fallback;
-      handleSelectModel(model);
-    }
+    const model = selectedModel.trim() || models[0]?.id || OPENROUTER_MODEL;
     if (!model) {
       setGenerationError({
         statusCode: 400,
@@ -248,7 +226,7 @@ export default function App() {
     if (!rawText.trim() || isEnhancing) return;
 
     setGenerationError(null);
-    const model = resolveModel() || 'gemini-3.8-flash';
+    const model = resolveModel() || OPENROUTER_MODEL;
 
     setIsEnhancing(true);
     try {
