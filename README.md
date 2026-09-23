@@ -13,7 +13,9 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
 - **Frontend:** React 19 + Vite + Tailwind CSS (`src/`).
 - **API:** `/api/health`, `/api/models`, `/api/generate`, `/api/refine`. All four are handled by
   [`src/server/api.ts`](src/server/api.ts), which calls OpenRouter
-  (`https://openrouter.ai/api/v1/chat/completions`, model `google/gemini-2.0-flash-001`).
+  (`https://openrouter.ai/api/v1/chat/completions`) with `google/gemini-3.1-flash-lite`, falling back to
+  `google/gemini-3.8-flash` if it is unavailable (`OPENROUTER_MODELS` in `src/constants.ts`).
+  `/api/health?check` shows whether OpenRouter accepts the key and serves each model.
 - **Fallback:** if there is no key or OpenRouter fails, a local engine builds the prompt, so the
   user is never blocked.
 - **Hosting:** Cloudflare Workers. [`worker/index.ts`](worker/index.ts) serves `/api/*` and the
