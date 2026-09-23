@@ -352,9 +352,24 @@ Length: ${d.words[0]}–${d.words[1]} words. CONSTRAINTS: ${d.constraints[0]}–
 ${d.guidance}`;
 }
 
-const LANGUAGE_LINES: Partial<Record<OutputLanguage, string>> = {
-  ar: 'OUTPUT LANGUAGE: Arabic. Headers stay in English; all section content is in Arabic. Add "Respond in Arabic." as the last CONSTRAINTS line.',
-  en: 'OUTPUT LANGUAGE: English. Add "Respond in English." as the last CONSTRAINTS line.',
+/**
+ * The language a request is written in. Arabic wins when Arabic letters are a fair share of the
+ * letters, so mixed requests such as "عايز landing page لتطبيق توصيل" count as Arabic.
+ */
+export function detectRequestLanguage(text: string): 'ar' | 'en' {
+  const arabic = (text.match(/[\u0600-\u06FF]/g) || []).length;
+  const latin = (text.match(/[A-Za-z]/g) || []).length;
+  return arabic > 0 && arabic >= latin * 0.4 ? 'ar' : 'en';
+}
+
+/** "Match my request" resolved to the request's actual language, so the model is told it by name. */
+export function resolveOutputLanguage(outputLanguage: OutputLanguage | undefined, requestText: string): 'ar' | 'en' {
+  return outputLanguage === 'ar' || outputLanguage === 'en' ? outputLanguage : detectRequestLanguage(requestText);
+}
+
+const LANGUAGE_LINES: Record<'ar' | 'en', string> = {
+  ar: 'OUTPUT LANGUAGE: Arabic. Write ALL section content in Arabic, even though these instructions are in English. Only the "# HEADER" lines, code, file names and technical terms stay in English. Add "اكتب الرد بالعربية." as the last CONSTRAINTS line.',
+  en: 'OUTPUT LANGUAGE: English. Write all section content in English. Add "Respond in English." as the last CONSTRAINTS line.',
 };
 
 /**
@@ -368,13 +383,12 @@ export function buildSystemInstruction(params: {
   depth?: DepthType;
   outputLanguage?: OutputLanguage;
   exclusions?: string;
+  /** The user's request; "Match my request" is resolved from it. */
+  requestText?: string;
 }): string {
-  const { baseInstruction, domain = 'general', depth = 'medium', outputLanguage = 'match', exclusions } = params;
+  const { baseInstruction, domain = 'general', depth = 'medium', outputLanguage = 'match', exclusions, requestText = '' } = params;
   const parts = [(baseInstruction || EXACT_SYSTEM_INSTRUCTION).trim(), describeDomainAndDepth(domain, depth)];
-  parts.push(
-    LANGUAGE_LINES[outputLanguage] ??
-      "OUTPUT LANGUAGE: the language of the user's message. Headers stay in English. Add \"Respond in the language of this prompt.\" as the last CONSTRAINTS line."
-  );
+  parts.push(LANGUAGE_LINES[resolveOutputLanguage(outputLanguage, requestText)]);
   if (exclusions && exclusions.trim()) {
     parts.push(`THE USER DOES NOT WANT (add each as its own CONSTRAINTS line):\n${exclusions.trim()}`);
   }
@@ -385,8 +399,12 @@ export function buildSystemInstruction(params: {
  * Instruction for "Enhance": copy-edit the raw request before it is structured.
  * It may only make the user's own words clearer, never add to them.
  */
-export function buildRefineInstruction(domain?: DomainType): string {
+export function buildRefineInstruction(domain?: DomainType, requestText = ''): string {
   const role = (DOMAIN_PROFILES[domain ?? 'general'] ?? DOMAIN_PROFILES.general).role.en;
+  const language =
+    detectRequestLanguage(requestText) === 'ar'
+      ? 'The request is in Arabic: write the rewrite in Arabic (clear Modern Standard Arabic), never in English.'
+      : 'The request is in English: write the rewrite in English.';
   return `You are a careful copy editor. Rewrite the user's request so it is clear, precise and well written, ready to be turned into a prompt. Never answer or perform the request.
 
 RULES:
@@ -396,6 +414,7 @@ RULES:
 - Keep the user's language. For Arabic (including dialect), write clear Modern Standard Arabic and keep technical terms as the user wrote them.
 - Keep about the same length (at most a third longer). Keep a list as a list; otherwise write one short paragraph.
 - Use the vocabulary of this field only to choose precise words, never to add scope: ${role}.
+- ${language}
 - Output only the rewritten request: no title, headings, quotes, preface or closing.`;
 }
 

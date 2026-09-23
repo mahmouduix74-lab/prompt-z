@@ -194,6 +194,7 @@ export async function handleGenerate(
       depth,
       outputLanguage,
       exclusions,
+      requestText: rawText,
     });
 
     const { text: generatedText, modelUsed } = await generateWithOpenRouter(activeKey, {
@@ -242,7 +243,7 @@ export async function handleRefine(
   }
 
   try {
-    const refineSystemInstruction = buildRefineInstruction(domain as DomainType | undefined);
+    const refineSystemInstruction = buildRefineInstruction(domain as DomainType | undefined, rawText);
 
     const { text: refinedText, modelUsed } = await generateWithOpenRouter(activeKey, {
       systemInstruction: refineSystemInstruction,
