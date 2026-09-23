@@ -1,8 +1,8 @@
 /**
  * Shared AI request handling (OpenRouter), decoupled from any HTTP framework.
  *
- * Both server.ts (the Express server AI Studio / Cloud Run run) and the
- * files under /api (Vercel Serverless Functions) call these same functions,
+ * The Cloudflare Worker (worker/index.ts), server.ts (the Express server for
+ * local dev / Node hosts) and the files under /api (Vercel) call these same functions,
  * so the two deployment targets can never drift apart on how a request is
  * actually handled — only the thin req/res adapter at each entry point differs.
  */
@@ -18,9 +18,17 @@ export interface HandlerResult {
 
 const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 
-/** The server key, or the key the user supplied in the x-api-key header. */
-function resolveApiKey(userApiKey: string | undefined): string | undefined {
-  return (userApiKey || '').trim() || process.env.OPENROUTER_API_KEY;
+/**
+ * OPENROUTER_API_KEY from process.env on Node hosts. The Cloudflare Worker has no
+ * process.env and passes the key from its own env binding instead.
+ */
+function nodeServerKey(): string | undefined {
+  return typeof process !== 'undefined' ? process.env?.OPENROUTER_API_KEY : undefined;
+}
+
+/** The key the user supplied in the x-api-key header, or the server key. */
+function resolveApiKey(userApiKey: string | undefined, serverKey: string | undefined): string | undefined {
+  return (userApiKey || '').trim() || (serverKey || '').trim() || undefined;
 }
 
 /**
@@ -69,13 +77,16 @@ export async function generateWithOpenRouter(
   throw lastError || new Error('OpenRouter request failed.');
 }
 
-export function handleHealth(): HandlerResult {
-  return { status: 200, body: { status: 'ok', hasServerKey: Boolean(process.env.OPENROUTER_API_KEY) } };
+export function handleHealth(serverKey = nodeServerKey()): HandlerResult {
+  return { status: 200, body: { status: 'ok', hasServerKey: Boolean((serverKey || '').trim()) } };
 }
 
 /** The app always generates with OPENROUTER_MODEL, so that is the one model offered. */
-export async function handleModels(userApiKey: string | undefined): Promise<HandlerResult> {
-  if (!resolveApiKey(userApiKey)) {
+export async function handleModels(
+  userApiKey: string | undefined,
+  serverKey = nodeServerKey()
+): Promise<HandlerResult> {
+  if (!resolveApiKey(userApiKey, serverKey)) {
     return { status: 400, body: { error: { code: 400, message: 'No API key provided and no server key configured.' } } };
   }
   return {
@@ -97,14 +108,18 @@ export interface GenerateInput {
   outputLanguage?: OutputLanguage;
 }
 
-export async function handleGenerate(input: GenerateInput, userApiKey: string | undefined): Promise<HandlerResult> {
+export async function handleGenerate(
+  input: GenerateInput,
+  userApiKey: string | undefined,
+  serverKey = nodeServerKey()
+): Promise<HandlerResult> {
   const { rawText, exclusions, domain, depth, systemInstruction, outputLanguage } = input || ({} as GenerateInput);
 
   if (!rawText || !rawText.trim()) {
     return { status: 400, body: { error: { code: 400, message: 'Text input is required.' } } };
   }
 
-  const activeKey = resolveApiKey(userApiKey);
+  const activeKey = resolveApiKey(userApiKey, serverKey);
 
   if (!activeKey) {
     const fallbackPrompt = generateLocalStructuredPrompt({
@@ -151,14 +166,18 @@ export interface RefineInput {
   domain?: string;
 }
 
-export async function handleRefine(input: RefineInput, userApiKey: string | undefined): Promise<HandlerResult> {
+export async function handleRefine(
+  input: RefineInput,
+  userApiKey: string | undefined,
+  serverKey = nodeServerKey()
+): Promise<HandlerResult> {
   const { rawText, domain } = input || ({} as RefineInput);
 
   if (!rawText || !rawText.trim()) {
     return { status: 400, body: { error: { code: 400, message: 'Raw text is required to refine.' } } };
   }
 
-  const activeKey = resolveApiKey(userApiKey);
+  const activeKey = resolveApiKey(userApiKey, serverKey);
 
   if (!activeKey) {
     const localResult = refineLocalPromptText({ rawText, domain });
