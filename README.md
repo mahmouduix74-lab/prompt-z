@@ -6,7 +6,7 @@ PromptZ turns a rough idea, written in Arabic or English, into a clean, structur
 another AI can run. Pick a domain and a detail level, choose the output language, and generate.
 Prompts can be copied, downloaded as Markdown, and are kept in a local history.
 
-Live: https://prompt-z.mahmouduix74.workers.dev
+Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
 
 ## How it works
 
