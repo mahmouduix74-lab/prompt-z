@@ -1,12 +1,12 @@
 /**
  * Cloudflare Worker entry. /api/* runs the shared handlers from
- * src/server/geminiApi.ts (the same ones server.ts uses);
+ * src/server/api.ts (the same ones server.ts uses);
  * everything else is the Vite build in dist/, served as static assets.
  *
  * OPENROUTER_API_KEY is a Worker secret: `npx wrangler secret put OPENROUTER_API_KEY`,
  * or Settings → Variables and Secrets in the Cloudflare dashboard.
  */
-import { handleGenerate, handleHealth, handleModels, handleRefine, type HandlerResult } from '../src/server/geminiApi';
+import { handleGenerate, handleHealth, handleModels, handleRefine, type HandlerResult } from '../src/server/api';
 
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };

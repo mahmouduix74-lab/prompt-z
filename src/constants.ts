@@ -127,13 +127,6 @@ export const OUTPUT_LANGUAGES: OutputLanguageOption[] = [
   },
 ];
 
-// Requests used while tuning the formatter; clicking one fills the textarea.
-export const STARTER_EXAMPLES: string[] = [
-  'التقرير طويل أوي، عايزه أبسط وبالذات جزء تحليل المنافسين',
-  'عايز أعرف مين المنافسين وإيه الحلو وإيه الوحش في كل موقع وإيه اللي ينفع عندنا وإزاي أنفذه',
-  'عايز أعمل بريزنتيشن للعميل عن الريدايزن',
-];
-
 /** The OpenRouter model every generation and refine request uses. */
 export const OPENROUTER_MODEL = 'google/gemini-2.0-flash-001';
 
