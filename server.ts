@@ -17,8 +17,8 @@ const PORT = 3000;
 
 app.use(express.json({ limit: '10mb' }));
 
-app.get('/api/health', (req, res) => {
-  const { status, body } = handleHealth();
+app.get('/api/health', async (req, res) => {
+  const { status, body } = await handleHealth(undefined, 'check' in req.query);
   res.status(status).json(body);
 });
 
