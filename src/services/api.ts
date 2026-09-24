@@ -8,6 +8,7 @@ import {
 import { EXACT_SYSTEM_INSTRUCTION } from '../constants';
 import { refineLocalPromptText } from './localRefiner';
 import { generateLocalStructuredPrompt } from './localEngine';
+import { dailyLimitError } from './account';
 
 /**
  * All AI calls go through this app's own /api endpoints (the Cloudflare Worker, or
@@ -122,6 +123,7 @@ const BACKOFF_DELAYS_MS = [1000, 2000, 4000];
  * Sends the request to /api/generate, where the system instruction and the
  * user's text go to the model as separate messages.
  * On 429 it retries after 1s, 2s and 4s; any other failure falls back to the local engine.
+ * A used-up daily limit throws DailyLimitError instead.
  */
 export async function generateStructuredPrompt(params: {
   model: string;
@@ -171,6 +173,10 @@ export async function generateStructuredPrompt(params: {
       }
     }
 
+    // Out of prompts for today: the UI explains it (and offers sign-in), no local fallback.
+    const limitError = dailyLimitError(res.status, data);
+    if (limitError) throw limitError;
+
     const parsed = parseApiError(res.status, data);
     if (res.status !== 429 || attempt >= BACKOFF_DELAYS_MS.length) {
       // Never block the user: any other failure, or an empty reply, gets the local engine's prompt.
@@ -210,10 +216,14 @@ export async function refinePromptText(params: {
       domain,
     });
 
+    const limitError = dailyLimitError(res.status, data);
+    if (limitError) throw limitError;
+
     if (res.ok && data?.result && String(data.result).trim()) {
       return String(data.result).trim();
     }
   } catch (err) {
+    if (err instanceof Error && err.name === 'DailyLimitError') throw err;
     console.warn('Backend refine request threw an error, using local refiner fallback:', err);
   }
 

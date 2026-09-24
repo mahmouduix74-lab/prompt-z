@@ -15,6 +15,11 @@
   // Keep variables added in the dashboard (Settings → Variables and Secrets) across deploys.
   "keep_vars": true,
   // Needed by `npx wrangler preview`, which Workers Builds runs for non-production branches (PRs).
-  "previews": {}
-  // OPENROUTER_API_KEY is a secret, not a var: set it with `npx wrangler secret put OPENROUTER_API_KEY`.
+  "previews": {},
+  // Users and daily prompt counts (src/server/account.ts). Tables are created on first use.
+  "d1_databases": [{ "binding": "DB", "database_name": "promptz", "database_id": "686f48fb-d8a4-4fc1-9e8c-f92f57e4c3b7" }],
+  // The origin registered with Google for sign-in (redirect URI: <SITE_ORIGIN>/api/auth/callback).
+  "vars": { "SITE_ORIGIN": "https://prpmtz.online" }
+  // OPENROUTER_API_KEY, GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are uploaded from the build
+  // variables by scripts/cf-deploy.mjs; locally put them in .dev.vars.
 }

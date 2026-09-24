@@ -3,13 +3,26 @@
  * src/server/api.ts (the same ones server.ts uses);
  * everything else is the Vite build in dist/, served as static assets.
  *
- * OPENROUTER_API_KEY is a Worker secret: `npx wrangler secret put OPENROUTER_API_KEY`,
- * or Settings → Variables and Secrets in the Cloudflare dashboard.
+ * Google sign-in and the daily prompt limits (src/server/account.ts) run only here,
+ * since they need the D1 database; the local Express server has no limits.
+ *
+ * Secrets: OPENROUTER_API_KEY and GOOGLE_CLIENT_SECRET (plus GOOGLE_CLIENT_ID) are uploaded
+ * from the build variables by scripts/cf-deploy.mjs.
  */
-import { renderEvalPage, runEval } from '../src/server/eval';
 import { handleGenerate, handleHealth, handleModels, handleRefine, type HandlerResult } from '../src/server/api';
+import { renderEvalPage, runEval } from '../src/server/eval';
+import {
+  authEnabled,
+  consumeQuota,
+  handleCallback,
+  handleLogin,
+  handleLogout,
+  readSession,
+  readUsage,
+  type AccountEnv,
+} from '../src/server/account';
 
-interface Env {
+interface Env extends AccountEnv {
   ASSETS: { fetch(request: Request): Promise<Response> };
   OPENROUTER_API_KEY?: string;
 }
@@ -28,6 +41,44 @@ async function readJson(request: Request): Promise<any> {
   }
 }
 
+/**
+ * Runs a model call (generate or refine) within the caller's daily limit. Requests with their own
+ * key (x-api-key) or with no text are not counted: they cost the site nothing.
+ */
+async function withinLimit(
+  request: Request,
+  env: Env,
+  body: any,
+  userApiKey: string,
+  run: () => Promise<HandlerResult>
+): Promise<Response> {
+  if (userApiKey || !String(body?.rawText || '').trim()) return json(await run());
+
+  const user = await readSession(request, env);
+  const usage = await consumeQuota(request, env, user);
+  if (usage && !usage.allowed) {
+    return json({
+      status: 429,
+      body: {
+        error: {
+          code: 429,
+          reason: 'daily_limit',
+          message: 'Daily prompt limit reached.',
+          signedIn: Boolean(user),
+          canSignIn: !user && authEnabled(env),
+        },
+        usage,
+      },
+    });
+  }
+
+  const result = await run();
+  if (usage && result.status === 200 && result.body && typeof result.body === 'object') {
+    (result.body as Record<string, unknown>).usage = usage;
+  }
+  return json(result);
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const { pathname, searchParams } = new URL(request.url);
@@ -41,13 +92,38 @@ export default {
         return json(await handleHealth(serverKey, searchParams.has('check')));
       case '/api/models':
         return json(await handleModels(userApiKey, serverKey));
-      case '/api/generate':
+      case '/api/me': {
+        const user = await readSession(request, env);
+        const usage = await readUsage(request, env, user);
+        return json({
+          status: 200,
+          body: { authEnabled: authEnabled(env), user: user && { name: user.name, email: user.email }, usage },
+        });
+      }
+      case '/api/auth/login':
+        return handleLogin(request, env);
+      case '/api/auth/callback':
+        return handleCallback(request, env);
+      case '/api/auth/logout':
+        return handleLogout(request, env);
+      case '/api/generate': {
         if (request.method !== 'POST') return methodNotAllowed('POST');
-        return json(await handleGenerate(await readJson(request), userApiKey, serverKey));
-      case '/api/refine':
+        const body = await readJson(request);
+        return withinLimit(request, env, body, userApiKey, () => handleGenerate(body, userApiKey, serverKey));
+      }
+      case '/api/refine': {
         if (request.method !== 'POST') return methodNotAllowed('POST');
-        return json(await handleRefine(await readJson(request), userApiKey, serverKey));
+        const body = await readJson(request);
+        return withinLimit(request, env, body, userApiKey, () => handleRefine(body, userApiKey, serverKey));
+      }
       case '/api/eval': {
+        const quota = await consumeQuota(request, env, null, 'eval');
+        if (quota && !quota.allowed) {
+          return new Response('The eval already ran 3 times today. Try again tomorrow (UTC).', {
+            status: 429,
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+          });
+        }
         const run = await runEval(serverKey);
         if (searchParams.has('json')) return json({ status: 200, body: run });
         return new Response(renderEvalPage(run), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });

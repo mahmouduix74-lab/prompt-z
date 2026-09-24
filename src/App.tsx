@@ -31,6 +31,8 @@ import { SettingsModal } from './components/SettingsModal';
 import { Clock } from 'lucide-react';
 import { CustomCursor } from './components/CustomCursor';
 import { Mascot } from './components/Mascot';
+import { LimitNotice } from './components/AccountMenu';
+import { AccountState, DailyLimitError, fetchAccount } from './services/account';
 
 // Keys keep their original "gemini_" names so prompts saved before the move to OpenRouter still load.
 const STORAGE_KEYS = {
@@ -143,6 +145,34 @@ export default function App() {
   const [generationError, setGenerationError] = useState<GenerationErrorDetails | null>(null);
   const [retryNotice, setRetryNotice] = useState<string | null>(null);
 
+  // Sign-in state and today's prompt count (null without the account API, e.g. local dev).
+  const [account, setAccount] = useState<AccountState | null>(null);
+  const [limitNotice, setLimitNotice] = useState<{ canSignIn: boolean; limit?: number } | null>(null);
+  const [signInFailed, setSignInFailed] = useState<boolean>(false);
+
+  const refreshAccount = useCallback(async () => {
+    setAccount(await fetchAccount());
+  }, []);
+
+  useEffect(() => {
+    refreshAccount();
+    // Back from Google: ?signin=ok|error. Read it, then clean the address bar.
+    const params = new URLSearchParams(window.location.search);
+    const signin = params.get('signin');
+    if (signin) {
+      if (signin === 'error') setSignInFailed(true);
+      params.delete('signin');
+      const query = params.toString();
+      window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
+    }
+  }, [refreshAccount]);
+
+  /** Today's prompts are used up: explain it instead of producing a prompt. */
+  const handleDailyLimit = (err: DailyLimitError) => {
+    setLimitNotice({ canSignIn: err.canSignIn, limit: err.usage?.limit });
+    refreshAccount();
+  };
+
   // Modals & Drawers state
   const [isLibraryOpen, setIsLibraryOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
@@ -237,7 +267,12 @@ export default function App() {
         refined && refined.trim() ? refined.trim() : refineLocalPromptText({ rawText, domain });
       setPreviousRawText(rawText);
       setRawText(finalRefined);
-    } catch {
+      refreshAccount();
+    } catch (err) {
+      if (err instanceof DailyLimitError) {
+        handleDailyLimit(err);
+        return;
+      }
       // Bulletproof fallback: Never block the user with an error dialog!
       const fallbackRefined = refineLocalPromptText({ rawText, domain });
       setPreviousRawText(rawText);
@@ -327,7 +362,12 @@ export default function App() {
         output: finalOutput,
         timestamp: now,
       });
+      refreshAccount();
     } catch (err: any) {
+      if (err instanceof DailyLimitError) {
+        handleDailyLimit(err);
+        return;
+      }
       console.warn('Remote generation issue handled gracefully by local engine:', err);
       const fallbackPrompt = generateLocalStructuredPrompt({
         rawText,
@@ -432,6 +472,7 @@ export default function App() {
         onOpenLibrary={() => setIsLibraryOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onScrollToBuilder={scrollToBuilder}
+        account={account}
       />
 
       {/* Hero Section with Embedded Glassmorphic Prompt Builder */}
@@ -457,6 +498,33 @@ export default function App() {
             <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 backdrop-blur-md border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300 animate-pulse">
               <Clock className="w-4 h-4 text-amber-500 shrink-0" />
               <span>{retryNotice}</span>
+            </div>
+          )}
+
+          {limitNotice && (
+            <LimitNotice
+              lang={lang}
+              canSignIn={limitNotice.canSignIn}
+              limit={limitNotice.limit}
+              onDismiss={() => setLimitNotice(null)}
+            />
+          )}
+
+          {signInFailed && (
+            <div
+              role="status"
+              className="flex items-center justify-between gap-3 p-3 rounded-xl bg-amber-500/10 backdrop-blur-md border border-amber-500/20 text-sm text-amber-800 dark:text-amber-200"
+            >
+              <span>
+                {lang === 'ar' ? 'لم يكتمل تسجيل الدخول بجوجل. حاول مرة أخرى.' : 'Google sign-in did not complete. Please try again.'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSignInFailed(false)}
+                className="px-2.5 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/10 cursor-pointer"
+              >
+                {lang === 'ar' ? 'إغلاق' : 'Dismiss'}
+              </button>
             </div>
           )}
 

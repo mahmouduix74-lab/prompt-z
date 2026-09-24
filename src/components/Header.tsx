@@ -3,6 +3,8 @@ import { motion } from 'motion/react';
 import { History, Sun, Moon, Languages } from 'lucide-react';
 import { Theme, AppLang, UI_STRINGS } from '../utils/i18n';
 import { Logo } from './Logo';
+import { AccountMenu } from './AccountMenu';
+import { AccountState } from '../services/account';
 
 interface HeaderProps {
   activeModel?: string;
@@ -15,6 +17,7 @@ interface HeaderProps {
   onOpenSettings: () => void;
   onScrollToBuilder?: () => void;
   onBookCall?: () => void;
+  account?: AccountState | null;
 }
 
 const iconButtonClassName =
@@ -28,6 +31,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleLang,
   onOpenLibrary,
   onScrollToBuilder,
+  account = null,
 }) => {
   const t = UI_STRINGS[lang];
   const isAr = lang === 'ar';
@@ -39,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="sticky top-0 z-40 bg-transparent text-zinc-900 dark:text-white transition-colors duration-200"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-6 pb-2.5 sm:pt-7 sm:pb-3 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-6 pb-2.5 sm:pt-7 sm:pb-3 flex items-center justify-between gap-2 sm:gap-4">
         {/* Logo & Name: PromptZ */}
         <motion.button
           type="button"
@@ -53,7 +57,8 @@ export const Header: React.FC<HeaderProps> = ({
         </motion.button>
 
         {/* Right Controls: Language, Theme Appearance */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <AccountMenu account={account} lang={lang} />
 
           {/* Language Toggle */}
           <motion.button

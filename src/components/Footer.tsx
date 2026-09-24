@@ -40,6 +40,14 @@ export const Footer: React.FC<FooterProps> = ({
               : '• Precision AI Prompt Engineering Studio'}
           </span>
         </div>
+        <nav className="flex items-center gap-4 text-xs text-zinc-500 dark:text-zinc-400">
+          <a href="/privacy" className="hover:text-purple-600 dark:hover:text-purple-400">
+            {isAr ? 'الخصوصية' : 'Privacy'}
+          </a>
+          <a href="/terms" className="hover:text-purple-600 dark:hover:text-purple-400">
+            {isAr ? 'الشروط' : 'Terms'}
+          </a>
+        </nav>
       </div>
     </motion.footer>
   );

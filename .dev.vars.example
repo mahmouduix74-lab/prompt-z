@@ -1,1 +1,5 @@
 OPENROUTER_API_KEY=
+# Optional: Google sign-in and daily limits (see README). Locally the redirect URI is
+# http://localhost:8787/api/auth/callback, so also set SITE_ORIGIN=http://localhost:8787.
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
