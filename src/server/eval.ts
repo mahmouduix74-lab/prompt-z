@@ -23,6 +23,8 @@ interface EvalCase {
   forbiddenInTasks?: RegExp;
   /** Must appear somewhere in the prompt. */
   expected?: RegExp;
+  /** Everything the user named: each must appear in TASKS, so nothing requested is dropped. */
+  requiredInTasks?: RegExp[];
   maxTasks?: number;
 }
 
@@ -36,6 +38,7 @@ const CASES: EvalCase[] = [
     forbidden: /JWT|OAuth|remember me|تذكرني|rate.?limit|تعقيد|complexity|MFA|قفل الحساب|lockout/i,
     forbiddenInTasks: /register|sign.?up|إنشاء حساب|حساب جديد|تسجيل مستخدم/i,
     expected: /خارج نطاق/,
+    requiredInTasks: [/email|بريد|إيميل|ايميل/i, /password|كلمة المرور|باسورد/i],
     maxTasks: 2,
   },
   {
@@ -45,6 +48,7 @@ const CASES: EvalCase[] = [
     depth: 'medium',
     language: 'en',
     forbidden: /remember me|dark mode|social login|Google|Facebook|MFA|two.?factor|biometric/i,
+    requiredInTasks: [/email/i, /password/i, /sign.?up|register|create an? account/i],
     maxTasks: 2,
   },
   {
@@ -54,6 +58,7 @@ const CASES: EvalCase[] = [
     depth: 'detailed',
     language: 'ar',
     forbidden: /React|Next\.?js|Vue|Angular|Tailwind|Bootstrap|testimonial|آراء العملاء|الأسعار|pricing|FAQ|الأسئلة الشائعة/i,
+    requiredInTasks: [/هيرو|hero|الرئيسي|الافتتاحي/i, /تحميل|تنزيل|download/i],
     maxTasks: 3,
   },
   {
@@ -63,6 +68,7 @@ const CASES: EvalCase[] = [
     depth: 'short',
     language: 'en',
     forbidden: /TikTok|Facebook|email|newsletter|blog|Twitter|LinkedIn/i,
+    requiredInTasks: [/caption/i],
     maxTasks: 1,
   },
   {
@@ -72,6 +78,7 @@ const CASES: EvalCase[] = [
     depth: 'medium',
     language: 'en',
     forbidden: /Evernote|OneNote|Roam|Logseq|Bear/i,
+    requiredInTasks: [/Notion/, /Obsidian/],
     maxTasks: 2,
   },
   {
@@ -81,6 +88,7 @@ const CASES: EvalCase[] = [
     depth: 'ultra',
     language: 'en',
     forbidden: /\bdog\b|logo|watermark|\bperson\b|people/i,
+    requiredInTasks: [/cat/i],
     maxTasks: 2,
   },
   {
@@ -91,6 +99,7 @@ const CASES: EvalCase[] = [
     language: 'en',
     forbiddenInTasks: /create|delete|update|cancel|payment|refund/i,
     forbidden: /JWT|GraphQL|PostgreSQL|MySQL|MongoDB/i,
+    requiredInTasks: [/order/i],
     maxTasks: 1,
   },
   {
@@ -100,6 +109,7 @@ const CASES: EvalCase[] = [
     depth: 'medium',
     language: 'ar',
     forbidden: /كيمياء|رياضيات|أحياء|chemistry|math|biology/i,
+    requiredInTasks: [/فيزياء|الفيزيا/],
     maxTasks: 2,
   },
   {
@@ -110,6 +120,7 @@ const CASES: EvalCase[] = [
     outputLanguage: 'ar',
     language: 'ar',
     forbidden: /noise.?cancell|إلغاء الضوضاء|battery|البطارية|waterproof|مقاوم/i,
+    requiredInTasks: [/سماع|earbuds/i],
     maxTasks: 1,
   },
   {
@@ -121,6 +132,7 @@ const CASES: EvalCase[] = [
     language: 'en',
     forbiddenInTasks: /social|Google|Facebook|Apple/i,
     expected: /does not want: no social login/i,
+    requiredInTasks: [/name/i, /email/i, /password/i],
     maxTasks: 1,
   },
 ];
@@ -137,7 +149,8 @@ export interface EvalResult {
 
 /** The text of one "# SECTION" of a prompt. */
 function section(prompt: string, name: string): string {
-  const match = prompt.match(new RegExp(`^# ${name}\\n([\\s\\S]*?)(?=\\n# |$)`, 'm'));
+  // Up to the next "# HEADER" line or the end of the prompt ($ would stop at the first line end with the m flag).
+  const match = prompt.match(new RegExp(`^# ${name}\\n([\\s\\S]*?)(?=\\n# |(?![\\s\\S]))`, 'm'));
   return match ? match[1] : '';
 }
 
@@ -155,6 +168,9 @@ function check(c: EvalCase, body: any): EvalResult {
   const foundInTasks = c.forbiddenInTasks && tasks.match(c.forbiddenInTasks);
   if (foundInTasks) problems.push(`Task not requested: "${foundInTasks[0]}"`);
   if (c.expected && !c.expected.test(prompt)) problems.push(`Missing: ${c.expected.source}`);
+  for (const required of c.requiredInTasks || []) {
+    if (!required.test(tasks)) problems.push(`Requested but missing from TASKS: ${required.source}`);
+  }
 
   const taskCount = (tasks.match(/^\d+\./gm) || []).length;
   if (c.maxTasks && taskCount > c.maxTasks) problems.push(`Too many tasks: ${taskCount} (max ${c.maxTasks})`);
