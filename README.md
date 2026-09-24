@@ -4,14 +4,15 @@
 
 PromptZ turns a rough idea, written in Arabic or English, into a clean, structured prompt that
 another AI can run. Pick a domain and a detail level, choose the output language, and generate.
-Prompts can be copied, downloaded as Markdown, and are kept in a local history.
+Prompts can be copied, downloaded as Markdown, and are kept in a history (in the browser, or in
+your account once you sign in).
 
 Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
 
 ## How it works
 
 - **Frontend:** React 19 + Vite + Tailwind CSS (`src/`).
-- **API:** `/api/health`, `/api/models`, `/api/generate`, `/api/refine`, `/api/eval`. All are handled by
+- **API:** `/api/generate` and `/api/refine` (Enhance) are handled by
   [`src/server/api.ts`](src/server/api.ts), which calls OpenRouter
   (`https://openrouter.ai/api/v1/chat/completions`) with `google/gemini-3.1-flash-lite`, falling back to
   `google/gemini-3.8-flash` if it is unavailable (`OPENROUTER_MODELS` in `src/constants.ts`).
@@ -35,13 +36,15 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
   emails listed in `ADMIN_EMAILS` (a build variable) can read them at `/api/feedback`.
 - **Eval:** open `/api/eval` to run 13 fixed requests through the live model and check each prompt
   automatically (`/api/eval?json` for JSON). Cases live in [`src/server/eval.ts`](src/server/eval.ts).
-- **Fallback:** if there is no key or OpenRouter fails, a local engine builds the prompt, so the
-  user is never blocked.
 - **Sign-in and daily limits:** sign-in with Google or an emailed one-time link (sent through
   [Resend](https://resend.com), `RESEND_API_KEY`), and a daily prompt limit (3 a day without an
-  account, 6 with one; Generate and Enhance both count) run in the Worker
+  account, 6 a day per account; Generate and Enhance both count) run in the Worker
   ([`src/server/account.ts`](src/server/account.ts)), with users and counts in the D1 database
-  `promptz`. `/api/me` returns the sign-in state and today's usage. Signed-in users' saved prompts
+  `promptz`. Prompts used before signing in count toward the account's 6, and prompts used while
+  signed in count toward the connection's 3, so signing in or out never resets the day. A call
+  that delivers nothing (model down, clarifying questions, Enhance fallback) is not counted. Days
+  reset at 00:00 UTC. `/api/me` returns the sign-in state and today's usage, which the account menu
+  and the sign-in popup show. Signed-in users' saved prompts
   (History) are stored per account through `/api/history` ([`src/server/history.ts`](src/server/history.ts));
   prompts saved in the browser before signing in move into the account. The local Express server has no
   limits.
@@ -74,14 +77,29 @@ Settings → Builds):
 | Build command | `npm run build` |
 | Deploy command | `npm run deploy:ci` |
 | Non-production deploy command | `npm run preview:ci` |
-| Variables and secrets | `OPENROUTER_API_KEY` and `GOOGLE_CLIENT_SECRET` and `RESEND_API_KEY` (type Secret), `GOOGLE_CLIENT_ID` |
+| Variables and secrets | `OPENROUTER_API_KEY` and `GOOGLE_CLIENT_SECRET` and `RESEND_API_KEY` (type Secret), `GOOGLE_CLIENT_ID`, `ADMIN_EMAILS` |
 
 `deploy:ci` ([`scripts/cf-deploy.mjs`](scripts/cf-deploy.mjs)) runs `wrangler deploy` and uploads
-the build's `OPENROUTER_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `RESEND_API_KEY` as the Worker's
+the build's `OPENROUTER_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `RESEND_API_KEY` and `ADMIN_EMAILS` as the Worker's
 runtime secrets, so they are entered in one place only. The Google OAuth client's redirect URI is
 `https://prpmtz.online/api/auth/callback` (`SITE_ORIGIN` in `wrangler.jsonc`). Check it with `/api/health` → `"hasServerKey": true`.
 
 Manual deploy from a machine logged in with `npx wrangler login`: `npm run deploy`.
+
+## API routes
+
+| Route | What it does |
+| --- | --- |
+| `POST /api/generate` | Request → structured prompt (or clarifying questions) |
+| `POST /api/refine` | Enhance: tidies the request text |
+| `GET /api/me` | Sign-in state and today's usage |
+| `/api/auth/login`, `/api/auth/callback` | Google sign-in |
+| `POST /api/auth/email`, `/api/auth/email/verify` | Emailed sign-in link |
+| `/api/auth/logout` | Sign out |
+| `GET/POST/DELETE /api/history` | Signed-in user's saved prompts |
+| `POST /api/feedback`, `GET /api/feedback` | 👍 / 👎, and the admin page to read them |
+| `GET /api/eval` | Runs the eval (3 runs a day) |
+| `GET /api/health`, `/api/models` | Status and the model in use |
 
 ## Scripts
 
@@ -92,6 +110,9 @@ Manual deploy from a machine logged in with `npx wrangler login`: `npm run deplo
 | `npm run lint` | Type-check with `tsc` |
 | `npm run cf:dev` | Run the Cloudflare Worker locally |
 | `npm run deploy` | Deploy to Cloudflare with `wrangler` |
+
+GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs `npm run lint` and
+`npm run build` on every pull request and push to `main`.
 
 ## Promo video
 

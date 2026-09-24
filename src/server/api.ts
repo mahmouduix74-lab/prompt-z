@@ -315,6 +315,6 @@ export async function handleRefine(
     const fallbackReason = String(err?.message || err);
     console.warn('[Refine Resilience] OpenRouter unavailable/busy, using smart local refiner fallback:', fallbackReason);
     const fallbackResult = refineLocalPromptText({ rawText, domain });
-    return { status: 200, body: { result: fallbackResult, fallbackUsed: true, fallbackReason } };
+    return { status: 200, body: { result: fallbackResult, fallbackUsed: true, fallbackReason, modelFailed: true } };
   }
 }

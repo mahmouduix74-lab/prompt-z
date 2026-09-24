@@ -153,7 +153,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 min-h-[48px] border-b border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/40 backdrop-blur-md rounded-t-2xl">
         <div className="flex items-center gap-2 text-xs">
           <PenLine className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-          <label htmlFor="raw-prompt" className="font-semibold text-zinc-900 dark:text-zinc-100 cursor-pointer">
+          <label htmlFor="raw-prompt" className="text-sm font-bold text-zinc-900 dark:text-zinc-50 cursor-pointer">
             {lang === 'ar' ? 'فكرة أو متطلبات البرومبت' : 'Raw Prompt / Idea'}
           </label>
 

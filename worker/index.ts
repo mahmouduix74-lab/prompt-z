@@ -35,7 +35,11 @@ interface Env extends AccountEnv {
 }
 
 const json = ({ status, body }: HandlerResult) =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
+  new Response(JSON.stringify(body), {
+    status,
+    // Usage and sign-in state change with every call; never serve a cached copy.
+    headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
+  });
 
 const methodNotAllowed = (allowed: string) =>
   json({ status: 405, body: { error: { code: 405, message: `Method not allowed. Use ${allowed}.` } } });
@@ -81,8 +85,9 @@ async function withinLimit(
 
   const result = await run();
   const resultBody = result.body as Record<string, unknown> | null;
-  // Nothing was delivered (the model was down, or it asked clarifying questions): not counted.
-  if (usage && (result.status >= 500 || resultBody?.clarify)) {
+  // The model delivered nothing (it was down, it asked clarifying questions, or Enhance fell back
+  // to the local tidy-up): not counted.
+  if (usage && (result.status >= 500 || resultBody?.clarify || resultBody?.modelFailed)) {
     await refundQuota(request, env, user);
   } else if (usage && result.status === 200 && resultBody && typeof resultBody === 'object') {
     resultBody.usage = usage;
