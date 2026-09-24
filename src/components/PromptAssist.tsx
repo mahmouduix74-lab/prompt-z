@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { HelpCircle, RefreshCw, ThumbsDown, ThumbsUp } from 'lucide-react';
-import { Modal } from './Modal';
+import { AnimatePresence, motion } from 'motion/react';
+import { CheckCircle2, HelpCircle, RefreshCw, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { EASE, Modal } from './Modal';
 import { AppLang } from '../utils/i18n';
 import type { ClarifyingQuestion } from '../prompting';
 
@@ -146,69 +147,124 @@ interface FeedbackBarProps {
 /** 👍 / 👎 under a generated prompt, with an optional note on 👎. Remount it for each new prompt. */
 export const FeedbackBar: React.FC<FeedbackBarProps> = ({ lang, onSend }) => {
   const isAr = lang === 'ar';
+  const [choice, setChoice] = useState<'up' | 'down' | null>(null);
   const [state, setState] = useState<'ask' | 'comment' | 'sending' | 'done'>('ask');
   const [comment, setComment] = useState('');
 
   const send = async (rating: 'up' | 'down', note = '') => {
+    setChoice(rating);
     setState('sending');
     await onSend(rating, note);
     setState('done');
   };
 
-  if (state === 'done') {
-    return (
-      <p role="status" className={`text-sm text-zinc-600 dark:text-zinc-400 ${isAr ? 'font-arabic' : ''}`}>
-        {isAr ? 'شكرًا، رأيك يساعدنا نحسّن البرومبتات.' : 'Thanks, your feedback helps us improve.'}
-      </p>
-    );
-  }
-
-  const thumb =
-    'inline-flex items-center justify-center w-9 h-9 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-purple-400 hover:text-purple-600 dark:hover:text-purple-400 cursor-pointer disabled:opacity-50 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400';
+  const pill = (kind: 'up' | 'down') => {
+    const active = choice === kind;
+    const tone =
+      kind === 'up'
+        ? active
+          ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-600/25'
+          : 'border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:text-emerald-300 dark:hover:bg-emerald-500/10'
+        : active
+          ? 'bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-600/25'
+          : 'border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:border-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:text-rose-300 dark:hover:bg-rose-500/10';
+    return `inline-flex items-center gap-2 h-10 px-4 rounded-full border text-sm font-semibold transition-colors duration-150 cursor-pointer disabled:cursor-default focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 ${tone}`;
+  };
 
   return (
-    <div className={`flex flex-col gap-3 ${isAr ? 'font-arabic' : ''}`}>
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-zinc-600 dark:text-zinc-400">{isAr ? 'هل البرومبت مفيد؟' : 'Was this prompt useful?'}</span>
-        <button type="button" className={thumb} disabled={state === 'sending'} onClick={() => send('up')} aria-label={isAr ? 'مفيد' : 'Useful'}>
-          <ThumbsUp className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          className={`${thumb} ${state === 'comment' ? 'border-purple-500 text-purple-600' : ''}`}
-          disabled={state === 'sending'}
-          onClick={() => setState('comment')}
-          aria-label={isAr ? 'غير مفيد' : 'Not useful'}
-          aria-expanded={state === 'comment'}
-        >
-          <ThumbsDown className="w-4 h-4" />
-        </button>
+    <div
+      className={`flex flex-col gap-3 p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 ${isAr ? 'font-arabic' : ''}`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <AnimatePresence mode="wait" initial={false}>
+          {state === 'done' ? (
+            <motion.p
+              key="thanks"
+              role="status"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: EASE }}
+              className="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-zinc-100"
+            >
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              {isAr ? 'شكرًا، رأيك يساعدنا نحسّن البرومبتات.' : 'Thanks, your feedback helps us improve.'}
+            </motion.p>
+          ) : (
+            <motion.p key="ask" exit={{ opacity: 0 }} className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+              {isAr ? 'هل البرومبت مفيد؟' : 'Was this prompt useful?'}
+            </motion.p>
+          )}
+        </AnimatePresence>
+
+        <div className="flex items-center gap-2">
+          <motion.button
+            type="button"
+            whileHover={{ scale: choice ? 1 : 1.05 }}
+            whileTap={{ scale: 0.9 }}
+            animate={choice === 'up' ? { scale: [1, 1.18, 1] } : { scale: 1 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className={pill('up')}
+            disabled={state !== 'ask' && state !== 'comment'}
+            onClick={() => send('up')}
+            aria-pressed={choice === 'up'}
+          >
+            <ThumbsUp className="w-4 h-4" />
+            {isAr ? 'مفيد' : 'Useful'}
+          </motion.button>
+          <motion.button
+            type="button"
+            whileHover={{ scale: choice ? 1 : 1.05 }}
+            whileTap={{ scale: 0.9 }}
+            animate={choice === 'down' || state === 'comment' ? { scale: [1, 1.18, 1] } : { scale: 1 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className={pill('down')}
+            disabled={state === 'sending' || state === 'done'}
+            onClick={() => {
+              setChoice('down');
+              setState('comment');
+            }}
+            aria-pressed={choice === 'down'}
+            aria-expanded={state === 'comment'}
+          >
+            <ThumbsDown className="w-4 h-4" />
+            {isAr ? 'غير مفيد' : 'Not useful'}
+          </motion.button>
+        </div>
       </div>
-      {(state === 'comment' || (state === 'sending' && comment)) && (
-        <form
-          className="flex flex-col sm:flex-row gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            send('down', comment);
-          }}
-        >
-          <label htmlFor="feedback-comment" className="sr-only">
-            {isAr ? 'ما الذي لم يعجبك؟' : 'What was wrong?'}
-          </label>
-          <input
-            id="feedback-comment"
-            autoFocus
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            maxLength={1000}
-            placeholder={isAr ? 'ما الذي لم يعجبك؟ (اختياري)' : 'What was wrong? (optional)'}
-            className="flex-1 h-9 px-3 rounded-xl text-sm border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:outline-hidden focus:ring-2 focus:ring-purple-500/60"
-          />
-          <button type="submit" disabled={state === 'sending'} className={primaryButton}>
-            {isAr ? 'إرسال' : 'Send'}
-          </button>
-        </form>
-      )}
+
+      <AnimatePresence initial={false}>
+        {(state === 'comment' || (state === 'sending' && choice === 'down')) && (
+          <motion.form
+            key="comment"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: EASE }}
+            className="flex flex-col sm:flex-row gap-2 overflow-hidden"
+            onSubmit={(e) => {
+              e.preventDefault();
+              send('down', comment);
+            }}
+          >
+            <label htmlFor="feedback-comment" className="sr-only">
+              {isAr ? 'ما الذي لم يعجبك؟' : 'What was wrong?'}
+            </label>
+            <input
+              id="feedback-comment"
+              autoFocus
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              maxLength={1000}
+              placeholder={isAr ? 'ما الذي لم يعجبك؟ (اختياري)' : 'What was wrong? (optional)'}
+              className="w-full sm:flex-1 h-10 shrink-0 px-4 rounded-xl text-sm border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:outline-hidden focus:ring-2 focus:ring-purple-500/60 focus:border-purple-500"
+            />
+            <button type="submit" disabled={state === 'sending'} className={`${primaryButton} h-10`}>
+              {state === 'sending' ? (isAr ? 'جاري الإرسال...' : 'Sending...') : isAr ? 'إرسال' : 'Send'}
+            </button>
+          </motion.form>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

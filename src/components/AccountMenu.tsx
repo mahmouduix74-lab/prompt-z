@@ -11,7 +11,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 /** Same height as the language and theme controls next to it (32px). */
 const signInButtonClassName =
-  'inline-flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-xl text-sm font-semibold leading-none text-white bg-purple-600 hover:bg-purple-700 shadow-sm shadow-purple-600/20 transition-colors duration-150 whitespace-nowrap cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950';
+  'inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-xl text-sm font-semibold leading-none text-white bg-purple-600 hover:bg-purple-700 shadow-sm shadow-purple-600/20 transition-colors duration-150 whitespace-nowrap cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950';
 
 const menuItemClassName =
   'flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm text-start text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 focus:outline-hidden focus-visible:bg-zinc-100 dark:focus-visible:bg-zinc-800/70 cursor-pointer';
@@ -102,7 +102,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({ account, lang, onSignI
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={isAr ? `حساب ${displayName}` : `${displayName}'s account`}
-        className="inline-flex items-center gap-2 h-8 ps-1 pe-2 rounded-full text-sm font-semibold leading-none text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+        className="inline-flex items-center gap-2 h-9 ps-1 pe-2.5 rounded-xl text-sm font-semibold leading-none text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
       >
         <Avatar name={displayName} picture={user.picture} />
         <span className="hidden sm:inline max-w-[8rem] truncate">{firstName}</span>

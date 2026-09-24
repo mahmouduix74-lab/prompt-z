@@ -7,7 +7,16 @@ export type DomainType =
   | 'backend'
   | 'research'
   | 'content'
-  | 'media';
+  | 'media'
+  | 'mobile'
+  | 'devops'
+  | 'data'
+  | 'ai_ml'
+  | 'product'
+  | 'marketing'
+  | 'graphic'
+  | 'education'
+  | 'business';
 
 export type DepthType = 'short' | 'medium' | 'detailed' | 'ultra';
 

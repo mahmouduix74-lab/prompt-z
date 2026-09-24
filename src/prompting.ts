@@ -222,6 +222,215 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
       { en: 'Then a negative prompt and parameters (aspect ratio, duration)', ar: 'ثم البرومبت السلبي والإعدادات (نسبة الأبعاد والمدة)' },
     ],
   },
+
+  mobile: {
+    role: { en: 'Senior Mobile App Engineer', ar: 'مهندس تطبيقات موبايل أول' },
+    deliverable: { en: 'working mobile app code for the requested screens or features', ar: 'كود تطبيق موبايل يعمل للشاشات أو الميزات المطلوبة' },
+    inScope: [
+      { en: 'screens, navigation and components', ar: 'الشاشات والتنقل والمكونات' },
+      { en: 'device features, permissions and offline behaviour the request names', ar: 'ميزات الجهاز والصلاحيات والعمل دون اتصال التي يذكرها الطلب' },
+    ],
+    outOfScope: [
+      { en: 'Do not pick a platform or framework the user did not name', ar: 'لا تختر منصة أو إطار عمل لم يذكره المستخدم' },
+      { en: 'Do not add screens or features that were not requested', ar: 'لا تضف شاشات أو ميزات غير مطلوبة' },
+    ],
+    otherDomains: 'server code, APIs and databases. Every element on a requested screen is part of the app',
+    standards: [
+      { en: 'Follow the platform guidelines (Human Interface Guidelines, Material)', ar: 'اتبع إرشادات المنصة (Human Interface Guidelines وMaterial)' },
+      { en: 'Handle loading, empty, error and offline states', ar: 'تعامل مع حالات التحميل والفراغ والخطأ وانقطاع الاتصال' },
+      { en: 'Keep touch targets at least 44 pt and support dynamic text size', ar: 'اجعل مساحات اللمس 44 نقطة على الأقل وادعم تكبير النص' },
+      { en: 'Ask for permissions only when the feature needs them', ar: 'اطلب الصلاحيات فقط عندما تحتاجها الميزة' },
+    ],
+    outputFormat: [
+      { en: 'Complete code in fenced blocks, one per file, with the file path', ar: 'كود كامل داخل كتل كود، ملف لكل كتلة مع مسار الملف' },
+      { en: 'A short note on how to run it', ar: 'ملاحظة قصيرة عن طريقة التشغيل' },
+    ],
+  },
+
+  devops: {
+    role: { en: 'Senior DevOps and Cloud Engineer', ar: 'مهندس DevOps وسحابة أول' },
+    deliverable: { en: 'the requested infrastructure, pipeline or deployment setup', ar: 'البنية التحتية أو خط النشر أو إعداد النشر المطلوب' },
+    inScope: [
+      { en: 'CI/CD pipelines, containers and deployment', ar: 'خطوط CI/CD والحاويات والنشر' },
+      { en: 'cloud resources, configuration, monitoring and security settings', ar: 'موارد السحابة والإعدادات والمراقبة وإعدادات الأمان' },
+    ],
+    outOfScope: [
+      { en: 'Do not pick a cloud provider or tool the user did not name', ar: 'لا تختر مزود سحابة أو أداة لم يذكرها المستخدم' },
+      { en: 'Do not add services or environments that were not requested', ar: 'لا تضف خدمات أو بيئات غير مطلوبة' },
+    ],
+    otherDomains: 'application features, UI and business logic',
+    standards: [
+      { en: 'Keep secrets in a secret store, never in files or logs', ar: 'احفظ الأسرار في مخزن أسرار، وليس في الملفات أو السجلات' },
+      { en: 'Make every step repeatable and version-controlled', ar: 'اجعل كل خطوة قابلة للتكرار ومحفوظة في نظام إدارة الإصدارات' },
+      { en: 'Grant the least privilege each part needs', ar: 'امنح كل جزء أقل صلاحيات يحتاجها' },
+      { en: 'Include a rollback path for deployments', ar: 'أضف طريقة للرجوع عن النشر' },
+    ],
+    outputFormat: [
+      { en: 'Config and scripts in fenced blocks with file paths', ar: 'الإعدادات والسكربتات داخل كتل كود مع مسارات الملفات' },
+      { en: 'Numbered steps to apply them', ar: 'خطوات مرقمة لتطبيقها' },
+    ],
+  },
+
+  data: {
+    role: { en: 'Senior Data Analyst', ar: 'محلل بيانات أول' },
+    deliverable: { en: 'the requested analysis, query, dashboard or report', ar: 'التحليل أو الاستعلام أو لوحة المؤشرات أو التقرير المطلوب' },
+    inScope: [
+      { en: 'queries, cleaning and transformation of the data described', ar: 'الاستعلامات وتنظيف البيانات الموصوفة وتحويلها' },
+      { en: 'metrics, charts and findings', ar: 'المقاييس والرسوم البيانية والنتائج' },
+    ],
+    outOfScope: [
+      { en: 'Do not invent data, columns or results', ar: 'لا تختلق بيانات أو أعمدة أو نتائج' },
+      { en: 'Do not pick a tool or database the user did not name', ar: 'لا تختر أداة أو قاعدة بيانات لم يذكرها المستخدم' },
+    ],
+    otherDomains: 'building apps, UI and infrastructure',
+    standards: [
+      { en: 'State every assumption about the data and its quality', ar: 'اذكر كل افتراض عن البيانات وجودتها' },
+      { en: 'Define each metric precisely, with its formula', ar: 'عرّف كل مقياس بدقة مع معادلته' },
+      { en: 'Pick the chart that fits the comparison, with labelled axes', ar: 'اختر الرسم المناسب للمقارنة مع محاور مسماة' },
+    ],
+    outputFormat: [
+      { en: 'Queries or code in fenced blocks', ar: 'الاستعلامات أو الكود داخل كتل كود' },
+      { en: 'Findings as short bullets with the numbers behind them', ar: 'النتائج كنقاط قصيرة مع الأرقام التي تدعمها' },
+    ],
+  },
+
+  ai_ml: {
+    role: { en: 'Senior AI and Machine Learning Engineer', ar: 'مهندس ذكاء اصطناعي وتعلم آلي أول' },
+    deliverable: { en: 'the requested model, pipeline, prompt system or AI feature', ar: 'النموذج أو خط المعالجة أو نظام البرومبتات أو ميزة الذكاء الاصطناعي المطلوبة' },
+    inScope: [
+      { en: 'data preparation, models, prompts and evaluation', ar: 'تجهيز البيانات والنماذج والبرومبتات والتقييم' },
+      { en: 'integrating the AI part into the product the user describes', ar: 'دمج جزء الذكاء الاصطناعي في المنتج الذي يصفه المستخدم' },
+    ],
+    outOfScope: [
+      { en: 'Do not pick a model, provider or library the user did not name', ar: 'لا تختر نموذجًا أو مزودًا أو مكتبة لم يذكرها المستخدم' },
+      { en: 'Do not claim accuracy or results without a stated evaluation', ar: 'لا تدّعِ دقة أو نتائج بدون تقييم واضح' },
+    ],
+    otherDomains: 'UI design, general backend features and infrastructure',
+    standards: [
+      { en: 'Define how the result will be evaluated, with a test set', ar: 'حدّد طريقة تقييم النتيجة مع مجموعة اختبار' },
+      { en: 'Handle failure cases and unsafe or invalid output', ar: 'تعامل مع حالات الفشل والمخرجات غير الآمنة أو غير الصالحة' },
+      { en: 'Keep keys and personal data out of prompts and logs', ar: 'أبعد المفاتيح والبيانات الشخصية عن البرومبتات والسجلات' },
+    ],
+    outputFormat: [
+      { en: 'Code or prompts in fenced blocks', ar: 'الكود أو البرومبتات داخل كتل كود' },
+      { en: 'A short evaluation plan', ar: 'خطة تقييم مختصرة' },
+    ],
+  },
+
+  product: {
+    role: { en: 'Senior Product Manager', ar: 'مدير منتجات أول' },
+    deliverable: { en: 'the requested product document (PRD, user stories, roadmap or spec)', ar: 'وثيقة المنتج المطلوبة (PRD أو قصص مستخدم أو خارطة طريق أو مواصفات)' },
+    inScope: [
+      { en: 'problem, users, goals and requirements', ar: 'المشكلة والمستخدمون والأهداف والمتطلبات' },
+      { en: 'priorities, scope and success metrics', ar: 'الأولويات والنطاق ومقاييس النجاح' },
+    ],
+    outOfScope: [
+      { en: 'Do not invent user research, numbers or deadlines', ar: 'لا تختلق أبحاث مستخدمين أو أرقامًا أو مواعيد' },
+      { en: 'Do not add features that were not requested', ar: 'لا تضف ميزات غير مطلوبة' },
+    ],
+    otherDomains: 'visual design, code and marketing copy',
+    standards: [
+      { en: 'Write each requirement so it can be tested', ar: 'اكتب كل متطلب بحيث يمكن اختباره' },
+      { en: 'Separate must-haves from nice-to-haves', ar: 'افصل الأساسيات عن الإضافات' },
+      { en: 'Tie every feature to a user problem and a metric', ar: 'اربط كل ميزة بمشكلة مستخدم ومقياس' },
+    ],
+    outputFormat: [
+      { en: 'A structured document with headings', ar: 'وثيقة منظمة بعناوين' },
+      { en: 'User stories as "As a …, I want …, so that …"', ar: 'قصص المستخدم بصيغة "بصفتي …، أريد …، حتى …"' },
+    ],
+  },
+
+  marketing: {
+    role: { en: 'Senior Marketing Strategist', ar: 'خبير تسويق أول' },
+    deliverable: { en: 'the requested campaign, plan or marketing material', ar: 'الحملة أو الخطة أو المادة التسويقية المطلوبة' },
+    inScope: [
+      { en: 'audience, positioning and messaging', ar: 'الجمهور والتموضع والرسائل' },
+      { en: 'channels, content ideas and measurement', ar: 'القنوات وأفكار المحتوى والقياس' },
+    ],
+    outOfScope: [
+      { en: 'Do not invent statistics, prices or testimonials', ar: 'لا تختلق إحصائيات أو أسعارًا أو شهادات عملاء' },
+      { en: 'Do not add channels or budgets that were not requested', ar: 'لا تضف قنوات أو ميزانيات غير مطلوبة' },
+    ],
+    otherDomains: 'code, product specs and visual design files',
+    standards: [
+      { en: 'Match the audience and tone the user gave', ar: 'التزم بالجمهور والنبرة اللذين حددهما المستخدم' },
+      { en: 'Give each piece one clear call to action', ar: 'اجعل لكل قطعة دعوة واحدة واضحة لاتخاذ إجراء' },
+      { en: 'Say how success will be measured', ar: 'وضّح كيف سيُقاس النجاح' },
+    ],
+    outputFormat: [
+      { en: 'A plan with sections, or the finished copy', ar: 'خطة بأقسام، أو النص النهائي' },
+      { en: 'Tables for calendars or channel plans', ar: 'جداول للتقويم أو خطة القنوات' },
+    ],
+  },
+
+  graphic: {
+    role: { en: 'Senior Graphic and Brand Designer', ar: 'مصمم جرافيك وهوية بصرية أول' },
+    deliverable: { en: 'the requested graphic, logo or brand material', ar: 'التصميم الجرافيكي أو الشعار أو مادة الهوية المطلوبة' },
+    inScope: [
+      { en: 'logos, color, typography and layout', ar: 'الشعارات والألوان والخطوط والتخطيط' },
+      { en: 'posters, social posts, packaging and print pieces', ar: 'البوسترات ومنشورات السوشيال والتغليف والمطبوعات' },
+    ],
+    outOfScope: [
+      { en: 'Deliver visual designs only, not code', ar: 'سلّم تصميمات مرئية فقط، وليس كودًا' },
+      { en: 'Do not add pieces or text that were not requested', ar: 'لا تضف قطعًا أو نصوصًا غير مطلوبة' },
+    ],
+    otherDomains: 'app screens and user flows, code and marketing strategy',
+    standards: [
+      { en: 'Keep one clear focal point and a strong hierarchy', ar: 'اجعل نقطة تركيز واحدة واضحة وتسلسلًا قويًا' },
+      { en: 'Use the brand colors and fonts the user gave', ar: 'استخدم ألوان وخطوط الهوية التي حددها المستخدم' },
+      { en: 'Keep text readable at the final size and medium', ar: 'اجعل النص مقروءًا بالمقاس والوسيط النهائي' },
+    ],
+    outputFormat: [
+      { en: 'The design at the requested size and format', ar: 'التصميم بالمقاس والصيغة المطلوبين' },
+      { en: 'Color codes and fonts used', ar: 'أكواد الألوان والخطوط المستخدمة' },
+    ],
+  },
+
+  education: {
+    role: { en: 'Senior Instructional Designer and Teacher', ar: 'مصمم تعليمي ومعلم أول' },
+    deliverable: { en: 'the requested lesson, course, explanation or exercise', ar: 'الدرس أو الكورس أو الشرح أو التمرين المطلوب' },
+    inScope: [
+      { en: 'learning goals, explanations and examples', ar: 'أهداف التعلم والشرح والأمثلة' },
+      { en: 'exercises, quizzes and study plans', ar: 'التمارين والاختبارات القصيرة وخطط المذاكرة' },
+    ],
+    outOfScope: [
+      { en: 'Do not add topics beyond the requested level and subject', ar: 'لا تضف موضوعات خارج المستوى والمادة المطلوبين' },
+      { en: 'Do not state anything uncertain as fact', ar: 'لا تقدّم معلومة غير مؤكدة كحقيقة' },
+    ],
+    otherDomains: 'app building, code and marketing',
+    standards: [
+      { en: 'Match the learner level the user gave', ar: 'التزم بمستوى المتعلم الذي حدده المستخدم' },
+      { en: 'Build from simple to complex, with an example for each idea', ar: 'تدرّج من البسيط للمعقد مع مثال لكل فكرة' },
+      { en: 'End with a way to check understanding', ar: 'اختم بطريقة للتأكد من الفهم' },
+    ],
+    outputFormat: [
+      { en: 'Short sections with headings', ar: 'أقسام قصيرة بعناوين' },
+      { en: 'Exercises with answers at the end', ar: 'تمارين مع الإجابات في النهاية' },
+    ],
+  },
+
+  business: {
+    role: { en: 'Senior Business Strategist', ar: 'مستشار أعمال واستراتيجية أول' },
+    deliverable: { en: 'the requested business plan, analysis or strategy', ar: 'خطة العمل أو التحليل أو الاستراتيجية المطلوبة' },
+    inScope: [
+      { en: 'market, competitors and customers', ar: 'السوق والمنافسون والعملاء' },
+      { en: 'business model, pricing, costs and plans', ar: 'نموذج العمل والتسعير والتكاليف والخطط' },
+    ],
+    outOfScope: [
+      { en: 'Do not invent market numbers, prices or financial results', ar: 'لا تختلق أرقام سوق أو أسعارًا أو نتائج مالية' },
+      { en: 'Do not give legal or tax advice as final', ar: 'لا تقدم استشارات قانونية أو ضريبية كرأي نهائي' },
+    ],
+    otherDomains: 'code, visual design and detailed marketing copy',
+    standards: [
+      { en: 'Separate facts from assumptions, and label estimates', ar: 'افصل الحقائق عن الافتراضات، ووضّح أن التقديرات تقديرات' },
+      { en: 'Tie every recommendation to a reason and a risk', ar: 'اربط كل توصية بسبب ومخاطرة' },
+      { en: 'Keep numbers consistent across the document', ar: 'اجعل الأرقام متسقة في الوثيقة كلها' },
+    ],
+    outputFormat: [
+      { en: 'A structured document with an executive summary first', ar: 'وثيقة منظمة تبدأ بملخص تنفيذي' },
+      { en: 'Tables for numbers and comparisons', ar: 'جداول للأرقام والمقارنات' },
+    ],
+  },
 };
 
 export interface DepthSpec {
