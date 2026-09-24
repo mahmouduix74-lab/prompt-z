@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { History, Sun, Moon, Languages, Sparkles } from 'lucide-react';
+import { History, Sun, Moon, Languages } from 'lucide-react';
 import { Theme, AppLang, UI_STRINGS } from '../utils/i18n';
 import { Logo } from './Logo';
 import { AccountMenu } from './AccountMenu';
@@ -33,7 +33,7 @@ function CreditsBadge({
   onSignIn,
 }: {
   usage: NonNullable<AccountState['usage']>;
-  /** What an account gets a day; the badge always shows this number. */
+  /** What an account gets a day (mentioned to visitors in the tooltip). */
   dailyCredits: number;
   lang: AppLang;
   signedIn: boolean;
@@ -61,9 +61,8 @@ function CreditsBadge({
         aria-describedby="credits-tooltip"
         className="inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm font-medium leading-none text-zinc-900 dark:text-white hover:border-purple-400 dark:hover:border-purple-500 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
       >
-        <Sparkles className="hidden sm:block w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
         <span className="tabular-nums">
-          {dailyCredits} {isAr ? 'كريدت' : 'credits'}
+          {usage.remaining} {isAr ? 'كريدت' : 'credits'}
         </span>
       </button>
       <div

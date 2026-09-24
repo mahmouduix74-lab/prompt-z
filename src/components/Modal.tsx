@@ -15,7 +15,7 @@ interface ModalProps {
   onClose: () => void;
   /** Wider dialogs for forms. */
   size?: 'sm' | 'md' | 'lg';
-  /** 'solid' hides the page behind completely instead of dimming it. */
+  /** 'solid' blurs the page behind more strongly than the default dim. */
   backdrop?: 'dim' | 'solid';
   children: React.ReactNode;
 }
@@ -54,7 +54,7 @@ export const Modal: React.FC<ModalProps> = ({ open, lang, labelledBy, onClose, s
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2, ease: EASE }}
           className={`fixed inset-0 z-[100] flex items-center justify-center p-4 ${
-            backdrop === 'solid' ? 'bg-zinc-50/95 dark:bg-zinc-950/95 backdrop-blur-2xl' : 'bg-zinc-950/50 backdrop-blur-sm'
+            backdrop === 'solid' ? 'bg-zinc-950/40 backdrop-blur-md' : 'bg-zinc-950/50 backdrop-blur-sm'
           }`}
           onMouseDown={(e) => e.target === e.currentTarget && onClose()}
         >
