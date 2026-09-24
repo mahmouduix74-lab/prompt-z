@@ -23,6 +23,18 @@ const STEPS = {
   ],
 };
 
+/** The label twice, stacked: hover slides the first up and out and the second into its place. */
+function RollLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="xhero-button__roll">
+      <span className="xhero-button__face">{children}</span>
+      <span className="xhero-button__face" aria-hidden="true">
+        {children}
+      </span>
+    </span>
+  );
+}
+
 interface HowItWorksProps {
   lang: AppLang;
   onStart?: () => void;
@@ -37,22 +49,19 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ lang, onStart }) => {
   return (
     <>
       {/* Primary: start now; secondary: how it works (opens the steps and the video). */}
-      <div className={`mt-6 sm:mt-7 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 ${isAr ? 'font-arabic' : ''}`}>
-        <button
-          type="button"
-          onClick={onStart}
-          className="group inline-flex items-center gap-2 h-11 sm:h-12 px-5 sm:px-6 rounded-2xl text-sm sm:text-base font-semibold text-white bg-purple-600 hover:bg-purple-700 shadow-[0_6px_20px_rgba(124,58,237,0.3)] transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950"
-        >
-          {isAr ? 'ابدأ الآن' : 'Start now'}
-          <ArrowRight className="w-4 h-4 rtl:-scale-x-100 transition-transform duration-200 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
+      {/* Xtract-style buttons: the label rolls up on hover and the same label rolls in from below. */}
+      <div className="xhero__actions mt-6 sm:mt-7">
+        <button type="button" onClick={onStart} className="xhero-button xhero-button--primary">
+          <RollLabel>
+            {isAr ? 'ابدأ الآن' : 'Start now'}
+            <ArrowRight className="xhero-button__icon" strokeWidth={2} />
+          </RollLabel>
         </button>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="group inline-flex items-center gap-2 h-11 sm:h-12 px-5 rounded-2xl text-sm sm:text-base font-semibold text-zinc-800 dark:text-zinc-100 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700/70 hover:border-purple-400 dark:hover:border-purple-500 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
-        >
-          <Play className="w-3.5 h-3.5 fill-current text-purple-600 dark:text-purple-400 transition-transform duration-200 group-hover:scale-110" />
-          {isAr ? 'كيف يعمل؟' : 'How it works'}
+        <button type="button" onClick={() => setOpen(true)} className="xhero-button xhero-button--secondary">
+          <RollLabel>
+            <Play className="w-3.5 h-3.5 fill-current text-purple-600 dark:text-purple-400" />
+            {isAr ? 'كيف يعمل؟' : 'How it works'}
+          </RollLabel>
         </button>
       </div>
 
