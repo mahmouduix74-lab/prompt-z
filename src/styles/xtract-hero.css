@@ -277,7 +277,6 @@
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: var(--xhero-button-shadow);
   -webkit-tap-highlight-color: transparent;
 }
 

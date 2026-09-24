@@ -250,7 +250,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 onClick={() => setViewMode('formatted')}
                 className={`h-full px-2.5 rounded-lg transition-all cursor-pointer ${
                   viewMode === 'formatted'
-                    ? 'bg-white dark:bg-zinc-900 text-purple-600 dark:text-purple-400 font-semibold shadow-2xs'
+                    ? 'bg-white dark:bg-zinc-900 text-purple-600 dark:text-purple-400 font-semibold'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
               >
@@ -261,7 +261,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 onClick={() => setViewMode('raw')}
                 className={`h-full px-2.5 rounded-lg transition-all cursor-pointer ${
                   viewMode === 'raw'
-                    ? 'bg-white dark:bg-zinc-900 text-purple-600 dark:text-purple-400 font-semibold shadow-2xs'
+                    ? 'bg-white dark:bg-zinc-900 text-purple-600 dark:text-purple-400 font-semibold'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
               >
@@ -272,7 +272,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 onClick={() => setViewMode('sections')}
                 className={`h-full px-2.5 rounded-lg transition-all cursor-pointer ${
                   viewMode === 'sections'
-                    ? 'bg-white dark:bg-zinc-900 text-purple-600 dark:text-purple-400 font-semibold shadow-2xs'
+                    ? 'bg-white dark:bg-zinc-900 text-purple-600 dark:text-purple-400 font-semibold'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
               >
@@ -295,7 +295,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                   hasResult && !isLoading
                     ? isSaved
                       ? 'bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20'
-                      : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 cursor-pointer shadow-2xs'
+                      : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 cursor-pointer'
                     : 'bg-zinc-100/50 dark:bg-zinc-900/50 text-zinc-400 dark:text-zinc-600 cursor-not-allowed border border-zinc-200/60 dark:border-zinc-800/40 opacity-50'
                 }`}
                 title={isAr ? 'حفظ في المكتبة' : 'Save to Library'}
@@ -315,8 +315,8 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
               className={`flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-semibold transition-all ${
                 hasResult && !isLoading
                   ? copied
-                    ? 'bg-emerald-600 dark:bg-emerald-500 text-white shadow-xs cursor-pointer'
-                    : 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white cursor-pointer shadow-xs'
+                    ? 'bg-emerald-600 dark:bg-emerald-500 text-white cursor-pointer'
+                    : 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white cursor-pointer'
                   : 'bg-zinc-100/50 dark:bg-zinc-900/50 text-zinc-400 dark:text-zinc-600 cursor-not-allowed border border-zinc-200/60 dark:border-zinc-800/40 opacity-50'
               }`}
               title={t.copy}
@@ -356,7 +356,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
               disabled={!hasResult || isLoading}
               className={`flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-medium transition-all ${
                 hasResult && !isLoading
-                  ? 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 cursor-pointer shadow-2xs'
+                  ? 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 cursor-pointer'
                   : 'bg-zinc-100/50 dark:bg-zinc-900/50 text-zinc-400 dark:text-zinc-600 cursor-not-allowed border border-zinc-200/60 dark:border-zinc-800/40 opacity-50'
               }`}
               title={t.downloadMd}
@@ -372,7 +372,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={onOpenLibrary}
-                className="relative flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-medium bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 cursor-pointer shadow-2xs transition-all border border-zinc-200/60 dark:border-zinc-800/60"
+                className="relative flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-medium bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 cursor-pointer transition-all border border-zinc-200/60 dark:border-zinc-800/60"
                 title={t.library || (isAr ? 'السجل والمكتبة' : 'History & Saved')}
                 aria-label={t.library || (isAr ? 'السجل والمكتبة' : 'History & Saved')}
               >
