@@ -41,7 +41,7 @@ export interface AccountEnv {
   ADMIN_EMAILS?: string;
 }
 
-export const LIMITS = { anonymous: 3, signedIn: 6 };
+export const LIMITS = { anonymous: 3, signedIn: 10 };
 /** /api/eval runs 10 model calls, so it is limited as a whole, for everyone together. */
 const EVAL_RUNS_PER_DAY = 3;
 
