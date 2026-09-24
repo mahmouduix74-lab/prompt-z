@@ -49,6 +49,29 @@ const CASES: EvalCase[] = [
     language: 'en',
     forbidden: /remember me|dark mode|social login|Google|Facebook|MFA|two.?factor|biometric/i,
     requiredInTasks: [/email/i, /password/i, /sign.?up|register|create an? account/i],
+    // Creating a design: design standards belong in the prompt.
+    expected: /hover|focus|error state|contrast|spacing|hierarchy/i,
+    maxTasks: 2,
+  },
+  {
+    name: 'UI inspiration list: names only, no design rules',
+    rawText: 'عايز ليستة بأسماء تطبيقات أكل أخد منها إنسبيريشن للتصميم',
+    domain: 'ui_ux',
+    depth: 'medium',
+    language: 'ar',
+    // Asking for names is not asking for a design: no design standards, frames or states.
+    forbidden: /8.?(point|نقاط)|مضاعفات 8|WCAG|التباين|إطار لكل|frames?\b|hover|التمرير|Figma|touch target|مساحات اللمس|lorem/i,
+    requiredInTasks: [/تطبيق|app/i],
+    maxTasks: 2,
+  },
+  {
+    name: 'Backend question: an explanation, not code',
+    rawText: 'Explain the difference between REST and GraphQL',
+    domain: 'backend',
+    depth: 'detailed',
+    language: 'en',
+    forbidden: /fenced|code blocks?|HTTP status|idempoten|environment variable|endpoint list|file paths?/i,
+    requiredInTasks: [/REST/, /GraphQL/],
     maxTasks: 2,
   },
   {

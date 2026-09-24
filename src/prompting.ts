@@ -2,8 +2,10 @@ import { DepthType, DomainType, OutputLanguage } from './types.js';
 
 /*
  * How a request becomes a structured prompt, in two steps:
- * 1. The model extracts what the user asked for as a JSON brief (buildSystemInstruction, parseBrief).
- * 2. Code composes the prompt from the brief and the domain and depth rules (composePrompt).
+ * 1. The model reads the request and plans the prompt as a JSON brief (buildSystemInstruction,
+ *    parseBrief): the kind of answer, the role, tasks, constraints, format and the rest, all taken
+ *    from the request. The domain only says whose expertise answers it.
+ * 2. Code lays the brief out in the sections of the chosen depth (composePrompt).
  * The offline engine (services/localEngine.ts) uses the same composer with a brief built from the
  * raw request, so both paths always have the same structure.
  */
@@ -14,23 +16,24 @@ export interface Bilingual {
   ar: string;
 }
 
+/**
+ * A domain is expertise, not a template: the model uses it to pick the role and, only when the
+ * request asks for something to be created, as a source of candidate standards and formats.
+ */
 export interface DomainProfile {
   /** Who the executing AI should be. */
   role: Bilingual;
-  /** What the executing AI hands back. */
+  /** What the executing AI hands back when it creates something. */
   deliverable: Bilingual;
   /** What the work may cover. */
   inScope: Bilingual[];
-  /**
-   * Boundaries the executing AI could really cross (becoming CONSTRAINTS lines). Obvious ones
-   * a specialist would never cross (a designer writing backend code) are left out as noise.
-   */
+  /** Boundaries worth stating when creating (candidates only, never added to every prompt). */
   outOfScope: Bilingual[];
   /** For the extractor: work that belongs to other domains, so it goes to outOfDomain. */
   otherDomains: string;
-  /** Professional standards for doing the requested work well. Never new deliverables. */
+  /** Professional standards for creating the domain's work (candidates, used only where they apply). */
   standards: Bilingual[];
-  /** How the executing AI should format its answer. */
+  /** Typical formats when creating (candidates). */
   outputFormat: Bilingual[];
 }
 
@@ -221,81 +224,30 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
   },
 };
 
-/** The steps of the APPROACH section (Ultra). They order the requested work and never add to it. */
-export const DOMAIN_APPROACH: Record<DomainType, Bilingual[]> = {
-  general: [
-    { en: 'Pin down exactly what the request asks for', ar: 'حدّد بالضبط ما يطلبه الطلب' },
-    { en: 'Carry out the tasks in order', ar: 'نفّذ المهام بالترتيب' },
-    { en: 'Check the result against the constraints and acceptance criteria', ar: 'راجع الناتج مقابل القيود ومعايير القبول' },
-  ],
-  ui_ux: [
-    { en: 'List the requested screens and the elements on each', ar: 'حدّد الشاشات المطلوبة والعناصر في كل شاشة' },
-    { en: 'Set the layout and visual hierarchy', ar: 'ضع التخطيط والتسلسل البصري' },
-    { en: 'Apply typography, color, spacing and components', ar: 'طبّق الخطوط والألوان والمسافات والمكونات' },
-    { en: 'Design the states of the requested elements', ar: 'صمّم حالات العناصر المطلوبة' },
-    { en: 'Review the frames against the acceptance criteria', ar: 'راجع الإطارات مقابل معايير القبول' },
-  ],
-  frontend: [
-    { en: 'List the requested pages or components and the data they use', ar: 'حدّد الصفحات أو المكونات المطلوبة والبيانات التي تستخدمها' },
-    { en: 'Build the markup and component structure', ar: 'ابنِ البنية (Markup) وهيكل المكونات' },
-    { en: 'Add the styling and responsive layout', ar: 'أضف التنسيق والتخطيط المتجاوب' },
-    { en: 'Wire up the interactions and data states', ar: 'اربط التفاعلات وحالات البيانات' },
-    { en: 'Test in the browser against the acceptance criteria', ar: 'اختبر في المتصفح مقابل معايير القبول' },
-  ],
-  backend: [
-    { en: 'Define the data the requested features need', ar: 'حدّد البيانات التي تحتاجها الميزات المطلوبة' },
-    { en: 'Specify the requested endpoints: input, output and errors', ar: 'حدّد نقاط API المطلوبة: المدخلات والمخرجات والأخطاء' },
-    { en: 'Implement validation and business logic', ar: 'نفّذ التحقق من المدخلات ومنطق العمل' },
-    { en: 'Apply the authorization checks the requested features need', ar: 'طبّق فحوص الصلاحيات التي تحتاجها الميزات المطلوبة' },
-    { en: 'Test the success and error paths', ar: 'اختبر مسارات النجاح والخطأ' },
-  ],
-  research: [
-    { en: 'Pin down the research question and its limits', ar: 'حدّد سؤال البحث وحدوده' },
-    { en: 'Collect and vet sources', ar: 'اجمع المصادر وتحقق منها' },
-    { en: 'Compare the findings', ar: 'قارن النتائج' },
-    { en: 'Write the conclusion with its limitations and confidence', ar: 'اكتب الخلاصة مع حدودها ودرجة الثقة' },
-  ],
-  content: [
-    { en: 'Confirm the audience, tone and length', ar: 'تأكد من الجمهور والنبرة والطول' },
-    { en: 'Draft the requested pieces', ar: 'اكتب مسودة القطع المطلوبة' },
-    { en: 'Edit for clarity and brevity', ar: 'حرّر النص ليكون واضحًا ومختصرًا' },
-    { en: 'Check the copy against the constraints', ar: 'راجع النص مقابل القيود' },
-  ],
-  media: [
-    { en: 'Fix the main subject', ar: 'حدّد العنصر الرئيسي' },
-    { en: 'Set the composition and camera or shot', ar: 'حدّد التكوين وزاوية الكاميرا أو اللقطة' },
-    { en: 'Describe lighting, style, palette and mood', ar: 'صف الإضاءة والأسلوب والألوان والحالة' },
-    { en: 'Add the parameters and the negative prompt', ar: 'أضف الإعدادات والبرومبت السلبي' },
-  ],
-};
-
 export interface DepthSpec {
-  /** Section headers, in order. */
+  /** Section headers, in order. Sections the brief leaves empty are left out. */
   sections: string[];
-  /**
-   * Most parts per task beyond the ones the user named: pieces the deliverable cannot exist without.
-   * Parts the user named are never capped by depth, so nothing requested is dropped.
-   */
+  /** Most parts per task beyond the ones the user named: pieces the deliverable cannot exist without. */
   inherentParts: number;
-  /** How many professional standards go into CONSTRAINTS, after the domain boundaries. */
-  standards: number;
+  /** Most CONSTRAINTS lines the model writes (the user's exclusions and the language line come on top). */
+  constraints: number;
 }
 
 export const DEPTH_SPECS: Record<DepthType, DepthSpec> = {
   short: {
     sections: ['ROLE', 'OBJECTIVE', 'TASKS', 'CONSTRAINTS'],
     inherentParts: 0,
-    standards: 1,
+    constraints: 3,
   },
   medium: {
     sections: ['ROLE', 'CONTEXT', 'OBJECTIVE', 'TASKS', 'CONSTRAINTS', 'OUTPUT FORMAT'],
     inherentParts: 2,
-    standards: 2,
+    constraints: 5,
   },
   detailed: {
     sections: ['ROLE', 'CONTEXT', 'OBJECTIVE', 'TASKS', 'CONSTRAINTS', 'OUTPUT FORMAT', 'ACCEPTANCE CRITERIA'],
     inherentParts: 4,
-    standards: 4,
+    constraints: 7,
   },
   ultra: {
     sections: [
@@ -311,59 +263,87 @@ export const DEPTH_SPECS: Record<DepthType, DepthSpec> = {
       'ASSUMPTIONS & OPEN QUESTIONS',
     ],
     inherentParts: 5,
-    standards: 5,
+    constraints: 9,
   },
 };
 
+/** What kind of answer the user wants; it decides which constraints and format make sense. */
+export type RequestKind = 'create' | 'information' | 'review' | 'edit' | 'other';
+
 /**
- * What the model extracts from a request. Only the user's own content lives here; the role,
- * boundaries, standards, format and acceptance criteria are added by composePrompt.
+ * What the model extracts from a request. Everything in the final prompt apart from the section
+ * structure, the user's exclusions and the language line comes from here, so the prompt follows
+ * the request rather than fixed domain rules.
  */
 export interface PromptBrief {
-  focus: string;
+  kind: RequestKind;
+  role: string;
   context: string;
   objective: string;
   tasks: { task: string; parts: string[] }[];
-  outOfDomain: string[];
-  userConstraints: string[];
+  constraints: string[];
+  outputFormat: string[];
+  approach: string[];
   edgeCases: string[];
+  acceptanceCriteria: string[];
   openQuestions: string[];
+  outOfDomain: string[];
 }
 
 /**
  * Step 1 of generation: the model reads the request and returns a PromptBrief as JSON.
- * Step 2 (composePrompt) is code, so the structure, boundaries and standards never vary.
+ * Step 2 (composePrompt) is code: it lays the brief out in the sections of the chosen depth.
  */
-export const EXACT_SYSTEM_INSTRUCTION = `You are PromptZ's request analyst. Read the user's request and extract, as JSON, exactly what they asked for. PromptZ's code turns your JSON into the final prompt and adds the role, domain boundaries, professional standards and output format itself, so never write those. Never answer, perform or comment on the request.
+export const EXACT_SYSTEM_INSTRUCTION = `You are PromptZ's prompt analyst. Read the user's request and plan, as JSON, the prompt another AI will execute. PromptZ's code lays your JSON out as the final prompt. Never answer, perform or comment on the request yourself.
 
-Return one JSON object and nothing else (no code fence, no text before or after it), with these keys:
+Return one JSON object and nothing else (no code fence, no text before or after it):
 {
-  "focus": "the specific subject in 2-6 words",
-  "context": "background the user gave (audience, platform, tools, current state), or \\"\\" if none",
+  "kind": "create | information | review | edit | other",
+  "role": "one line: who should answer, as seniority plus specialty",
+  "context": "background the user gave (audience, platform, tools, current state), or \\"\\"",
   "objective": "one sentence: the concrete outcome the user wants",
-  "tasks": [{ "task": "an action verb plus one deliverable the user asked for", "parts": ["a part of that deliverable"] }],
-  "outOfDomain": ["a part of the request that belongs to another domain"],
-  "userConstraints": ["a requirement or limit the user stated"],
-  "edgeCases": ["a state or failure case of an element the user named"],
-  "openQuestions": ["a question about something the request leaves open"]
+  "tasks": [{ "task": "an action verb plus one thing the user asked for", "parts": ["a part of it"] }],
+  "constraints": ["a rule the executing AI must follow for this request"],
+  "outputFormat": ["how the answer should be delivered"],
+  "approach": ["a step for carrying out the tasks"],
+  "edgeCases": ["a state or failure case of something the user asked to create"],
+  "acceptanceCriteria": ["a checkable condition the answer must meet"],
+  "openQuestions": ["a question about something the request leaves open"],
+  "outOfDomain": ["a part of the request that belongs to another domain"]
 }
 
-RULES:
-- Use only what the user wrote. Rephrase it precisely and professionally, but never add features, fields, screens, endpoints, options, policies, rules, limits, numbers, names, technologies or audiences they did not mention, and never decide anything for them.
-- tasks: one per deliverable the user asked for that belongs to the DOMAIN below. Never split one deliverable into several tasks. Quality work (validation, security, accessibility, performance, testing) is never a task; the code adds it as standards.
-- parts: every element the user named for that deliverable (never drop one), plus, only where LIMITS allows, pieces the deliverable cannot exist without (a login screen needs a sign-in button). Never optional extras.
-- outOfDomain: only parts of the request that the DOMAIN below says belong to other domains. They never become tasks. Everything else the user named stays in tasks or parts; never drop it.
-- userConstraints: only requirements the user stated (technology, tone, length, style, platform). Never professional standards of your own.
-- edgeCases: only states of elements the user named (empty, invalid, loading, error, success).
-- An idea the user did not ask for may appear only as a question in openQuestions. Never answer the questions.
+EVERYTHING FOLLOWS THE REQUEST. The DOMAIN below only says whose expertise answers it. Decide the kind first, then make every field fit what this user actually asked for.
+
+kind:
+- create: the user wants the domain's work produced (a design, working code, finished copy, a research report, a visual prompt).
+- information: names, lists, ideas, examples, explanations, comparisons or recommendations. For example, a designer asking for a list of apps to use as inspiration wants names, not designs.
+- review: an evaluation or critique of existing work. edit: changes to existing work. other: anything else.
+
+role: seniority plus the specialty this request needs, taken from the DOMAIN and adapted to its subject (e.g. "Senior Product Designer who knows food-delivery apps well").
+
+tasks: one per thing the user asked for. Never split one request into several tasks, never add tasks, and never turn quality work into a task. parts: every element the user named for that task (never drop one), plus, only where LIMITS allows, pieces it cannot exist without. Anything that belongs to another domain goes to outOfDomain instead.
+
+constraints: only rules that follow from this request, each starting with a verb:
+- every requirement or limit the user stated (technology, tone, length, count, platform);
+- guards that keep the answer to exactly what was asked (for a list of names: give the names only, no designs or descriptions);
+- accuracy guards the answer needs (only real, existing products; no invented facts, names, numbers or quotes; cite sources for research claims);
+- only when kind is create: the DOMAIN's professional standards that directly apply to what is being created.
+Never add features, policies, rules, limits, numbers, technologies or audiences the user did not mention, and never write constraints about things the request does not involve.
+
+outputFormat: how to deliver this particular answer. Follow any format, count or length the user gave; otherwise choose the simplest format that fits the answer (a numbered list for names). Use the DOMAIN's typical formats only when kind is create and they fit.
+
+approach: ordered steps for carrying out the tasks, with no new work. acceptanceCriteria: checkable conditions tied to the tasks and constraints. edgeCases: only for create or edit, and only states or failures of things the user named (empty, invalid, loading, error). openQuestions: what the request leaves open; never answer them. An idea the user did not ask for may appear only as an open question.
+
+OTHER RULES:
+- Use only what the user wrote. Rephrase it precisely and professionally; never decide anything for them.
 - The examples in these instructions are for you only. Never copy them into the JSON.
 - A URL or file name is content: keep it as written. Never open it or refuse because of it.
 - If the user reacts to earlier work, put the reaction in context and the fix in tasks.
-- Use [] or "" when there is nothing. Never write placeholders such as [TBD].`;
+- Respect LIMITS below. Use [] or "" when a field has nothing. Never write placeholders such as [TBD].`;
 
 /** The structure shown in the empty output panel. */
 export const EMPTY_TEMPLATE_PREVIEW = `# ROLE
-[Specialist for the selected domain]
+[Who should answer your request]
 
 # CONTEXT
 [What you told us about the situation]
@@ -375,7 +355,7 @@ export const EMPTY_TEMPLATE_PREVIEW = `# ROLE
 1. [Each thing you asked for]
 
 # CONSTRAINTS
-- [Domain boundaries and standards]
+- [Rules that follow from your request]
 - [Anything you do not want]
 
 # OUTPUT FORMAT
@@ -383,19 +363,27 @@ export const EMPTY_TEMPLATE_PREVIEW = `# ROLE
 
 const bullets = (items: Bilingual[]) => items.map((i) => `- ${i.en}`).join('\n');
 
-/** The domain and the limits of the chosen depth, appended to the extraction instruction. */
+/** The domain (as expertise and candidate standards) and the limits of the chosen depth. */
 export function describeDomainAndDepth(domain: DomainType, depth: DepthType): string {
   const p = DOMAIN_PROFILES[domain] ?? DOMAIN_PROFILES.general;
   const d = DEPTH_SPECS[depth] ?? DEPTH_SPECS.medium;
-  const ultra = d.sections.includes('EDGE CASES & STATES');
-  return `DOMAIN (${domain}): the prompt is for a ${p.role.en}, who delivers ${p.deliverable.en}.
-In this domain:
+  const has = (section: string) => d.sections.includes(section);
+  const upTo = (section: string, n: number) => (has(section) ? `up to ${n}` : 'always []');
+  return `DOMAIN (${domain}): answered by a ${p.role.en}. When this domain creates something, it delivers ${p.deliverable.en}.
+Its work covers:
 ${bullets(p.inScope)}
 Belongs to other domains (such parts of the request go to outOfDomain): ${p.otherDomains}.
+Candidate standards, only for kind create and only those that directly apply:
+${bullets([...p.outOfScope, ...p.standards])}
+Typical formats when creating:
+${bullets(p.outputFormat)}
 
 LIMITS (${depth}):
-- parts: every element the user named, ${d.inherentParts ? `plus at most ${d.inherentParts} pieces the deliverable cannot exist without` : 'and nothing else'}
-- edgeCases and openQuestions: ${ultra ? 'at most 5 each' : 'always []'}`;
+- parts: every element the user named, ${d.inherentParts ? `plus at most ${d.inherentParts} pieces it cannot exist without` : 'and nothing else'}
+- constraints: up to ${d.constraints}
+- outputFormat: ${upTo('OUTPUT FORMAT', 3)}; context: ${has('CONTEXT') ? 'one or two sentences' : 'always ""'}
+- approach: ${upTo('APPROACH', 6)}; acceptanceCriteria: ${upTo('ACCEPTANCE CRITERIA', 6)}
+- edgeCases: ${upTo('EDGE CASES & STATES', 5)}; openQuestions: ${upTo('ASSUMPTIONS & OPEN QUESTIONS', 5)}`;
 }
 
 /**
@@ -427,8 +415,8 @@ function exclusionLines(exclusions?: string): string[] {
 }
 
 /**
- * The extraction instruction actually sent: the base (or the version edited in Settings), then
- * the domain, the depth limits, the language of the values and the user's exclusions.
+ * The instruction actually sent: the base (or the version edited in Settings), then the domain,
+ * the depth limits, the language of the values and the user's exclusions.
  * Built only on the server for requests, so blocks are never added twice.
  */
 export function buildSystemInstruction(params: {
@@ -445,15 +433,16 @@ export function buildSystemInstruction(params: {
   parts.push(LANGUAGE_LINES[resolveOutputLanguage(outputLanguage, requestText)]);
   const excluded = exclusionLines(exclusions);
   if (excluded.length) {
-    parts.push(`THE USER DOES NOT WANT (keep these out of tasks and parts):\n${excluded.map((e) => `- ${e}`).join('\n')}`);
+    parts.push(`THE USER DOES NOT WANT (keep these out of tasks, parts and outputFormat):\n${excluded.map((e) => `- ${e}`).join('\n')}`);
   }
   return parts.join('\n\n');
 }
 
 const MAX_TASKS = 8;
-const MAX_ITEMS = 6;
+const MAX_ITEMS = 12;
 const MAX_PARTS = 10;
 const MAX_TEXT = 400;
+const KINDS: RequestKind[] = ['create', 'information', 'review', 'edit', 'other'];
 
 /**
  * Reads the model's JSON brief. Tolerates a code fence or stray text around the object and caps
@@ -481,51 +470,59 @@ export function parseBrief(text: string): PromptBrief | null {
     .slice(0, MAX_TASKS);
   if (!tasks.length) return null;
 
+  const kind = KINDS.includes(data.kind) ? (data.kind as RequestKind) : 'other';
   return {
-    focus: str(data.focus),
+    kind,
+    role: str(data.role),
     context: str(data.context),
     objective: str(data.objective),
     tasks,
-    outOfDomain: strs(data.outOfDomain),
-    userConstraints: strs(data.userConstraints),
+    constraints: strs(data.constraints),
+    outputFormat: strs(data.outputFormat),
+    approach: strs(data.approach),
     edgeCases: strs(data.edgeCases),
+    acceptanceCriteria: strs(data.acceptanceCriteria),
     openQuestions: strs(data.openQuestions),
-  };
-}
-
-/** A brief built from the raw request alone, for the offline engine. */
-export function localBrief(rawText: string, domain: DomainType, language: 'ar' | 'en', depth: DepthType = 'medium'): PromptBrief {
-  const ar = language === 'ar';
-  const profile = DOMAIN_PROFILES[domain] ?? DOMAIN_PROFILES.general;
-  const t = (text: Bilingual) => (ar ? text.ar : text.en);
-  const quoted = `"${rawText.trim()}"`;
-  return {
-    focus: '',
-    context: ar ? `طلب المستخدم كما كتبه: ${quoted}.` : `The user's request, as written: ${quoted}.`,
-    objective: ar
-      ? `تسليم ${t(profile.deliverable)} بما يحقق الطلب بالضبط، دون أي إضافات.`
-      : `Deliver ${t(profile.deliverable)} that fulfils the request exactly, with nothing added.`,
-    tasks: [
-      {
-        task: ar ? `سلّم ${t(profile.deliverable)} للطلب: ${quoted}` : `Deliver ${t(profile.deliverable)} for: ${quoted}`,
-        parts: profile.inScope.slice(0, (DEPTH_SPECS[depth] ?? DEPTH_SPECS.medium).inherentParts).map(t),
-      },
-    ],
-    outOfDomain: [],
-    userConstraints: [],
-    edgeCases: ar
-      ? ['المدخلات الناقصة أو غير الصحيحة', 'الحالات الفارغة وحالات الخطأ حيث ينطبق ذلك']
-      : ['Missing or invalid input', 'Empty and error states where they apply'],
-    openQuestions: ar
-      ? ['ما المنصة أو الأداة المستهدفة؟', 'من الجمهور المستهدف؟', 'هل توجد أمثلة أو مراجع يجب الالتزام بها؟']
-      : ['Which platform or tool is this for?', 'Who is the audience?', 'Are there examples or references to follow?'],
+    outOfDomain: strs(data.outOfDomain),
   };
 }
 
 /**
- * Step 2 of generation: builds the final prompt from a brief. The sections come from the depth;
- * the role, boundaries, standards, approach and output format from the domain profile; the rest
- * only from the brief, so nothing the user did not ask for can appear as work.
+ * A brief built from the raw request alone, for the offline engine. With no model to read the
+ * request, it only restates it and adds the guards that hold for any request.
+ */
+export function localBrief(rawText: string, domain: DomainType, language: 'ar' | 'en'): PromptBrief {
+  const ar = language === 'ar';
+  const profile = DOMAIN_PROFILES[domain] ?? DOMAIN_PROFILES.general;
+  const quoted = `"${rawText.trim()}"`;
+  return {
+    kind: 'other',
+    role: ar ? profile.role.ar : profile.role.en,
+    context: ar ? `طلب المستخدم كما كتبه: ${quoted}.` : `The user's request, as written: ${quoted}.`,
+    objective: ar ? 'تنفيذ الطلب أدناه كما هو بالضبط.' : 'Fulfil the request below exactly as written.',
+    tasks: [{ task: ar ? `نفّذ الطلب: ${quoted}` : `Carry out the request: ${quoted}`, parts: [] }],
+    constraints: ar
+      ? ['نفّذ ما يطلبه الطلب فقط، ولا تضف شيئًا لم يُطلب', 'لا تختلق حقائق أو أسماء أو أرقامًا']
+      : ['Do only what the request asks, and add nothing it does not ask for', 'Do not invent facts, names or numbers'],
+    outputFormat: ar
+      ? ['استخدم الشكل الذي يطلبه الطلب؛ وإن لم يحدد شكلًا فاجعل الرد مختصرًا ومنظمًا']
+      : ['Use the format the request asks for; if it names none, keep the answer short and structured'],
+    approach: ar
+      ? ['افهم الطلب وحدّد المطلوب بالضبط', 'نفّذه', 'راجع الناتج مقابل الطلب والقيود']
+      : ['Pin down exactly what the request asks for', 'Carry it out', 'Check the result against the request and the constraints'],
+    edgeCases: [],
+    acceptanceCriteria: ar
+      ? ['الناتج يحقق الطلب بالضبط', 'لا يوجد في الناتج شيء لم يُطلب']
+      : ['The answer fulfils the request exactly', 'Nothing the request did not ask for was added'],
+    openQuestions: [],
+    outOfDomain: [],
+  };
+}
+
+/**
+ * Step 2 of generation: lays a brief out in the sections of the chosen depth. The content comes
+ * from the brief; code adds only the user's exclusions and the language line, and leaves out
+ * sections the brief has nothing for.
  */
 export function composePrompt(params: {
   brief: PromptBrief;
@@ -536,25 +533,15 @@ export function composePrompt(params: {
 }): string {
   const { brief, domain = 'general', depth = 'medium', language } = params;
   const ar = language === 'ar';
-  const t = (text: Bilingual) => (ar ? text.ar : text.en);
   const list = (items: string[]) => items.map((i) => `- ${i}`).join('\n');
+  const numbered = (items: string[]) => items.map((i, n) => `${n + 1}. ${i}`).join('\n');
   const profile = DOMAIN_PROFILES[domain] ?? DOMAIN_PROFILES.general;
   const spec = DEPTH_SPECS[depth] ?? DEPTH_SPECS.medium;
   const plain = (s: string) => s.replace(/[.،؛;:!?؟]+$/u, '');
 
-  let role = t(profile.role);
-  if (brief.focus) {
-    role = domain === 'general' ? (ar ? `متخصص أول في ${brief.focus}` : `Senior specialist in ${brief.focus}`) : `${role} — ${brief.focus}`;
-  }
-
   const outOfDomain = brief.outOfDomain.length
-    ? `\n${ar ? 'خارج نطاق هذه المهمة' : 'Outside the scope of this task'}: ${brief.outOfDomain.map(plain).join(ar ? '، ' : '; ')}.`
+    ? `${ar ? 'خارج نطاق هذه المهمة' : 'Outside the scope of this task'}: ${brief.outOfDomain.map(plain).join(ar ? '، ' : '; ')}.`
     : '';
-  const context =
-    (brief.context ||
-      (ar
-        ? 'لم يذكر المستخدم تفاصيل إضافية عن الجمهور أو المنصة أو الأدوات.'
-        : 'The user gave no further details about audience, platform or tools.')) + outOfDomain;
 
   const tasks = brief.tasks
     .map((task, i) => {
@@ -564,34 +551,25 @@ export function composePrompt(params: {
     .join('\n');
 
   const constraints = [
-    ...[...profile.outOfScope, ...profile.standards.slice(0, spec.standards)].map(t),
-    ...brief.userConstraints,
+    ...brief.constraints.slice(0, spec.constraints),
     ...exclusionLines(params.exclusions).map((e) => (ar ? `المستخدم لا يريد: ${plain(e)}` : `The user does not want: ${plain(e)}`)),
     ar ? 'اكتب الرد بالعربية.' : 'Respond in English.',
   ];
 
-  const acceptance = [
-    ...brief.tasks.map((task, i) => (ar ? `المهمة ${i + 1} مكتملة: ${plain(task.task)}` : `Task ${i + 1} is complete: ${plain(task.task)}`)),
-    ar ? 'لا يوجد في الناتج شيء خارج المهام أعلاه' : 'Nothing outside the tasks above was added',
-    ar ? 'كل القيود أعلاه محترمة' : 'Every constraint above is respected',
-  ];
-
   const sections: Record<string, string> = {
-    ROLE: role,
-    CONTEXT: context,
-    OBJECTIVE:
-      brief.objective ||
-      (ar ? `تسليم ${t(profile.deliverable)} بما يحقق الطلب بالضبط.` : `Deliver ${t(profile.deliverable)} that fulfils the request exactly.`),
+    ROLE: brief.role || (ar ? profile.role.ar : profile.role.en),
+    CONTEXT: [brief.context, outOfDomain].filter(Boolean).join('\n'),
+    OBJECTIVE: brief.objective,
     TASKS: tasks,
-    APPROACH: (DOMAIN_APPROACH[domain] ?? DOMAIN_APPROACH.general).map((step, i) => `${i + 1}. ${t(step)}`).join('\n'),
+    APPROACH: numbered(brief.approach),
     CONSTRAINTS: list(constraints),
     'EDGE CASES & STATES': list(brief.edgeCases),
-    'OUTPUT FORMAT': list(profile.outputFormat.map(t)),
-    'ACCEPTANCE CRITERIA': list(acceptance),
+    'OUTPUT FORMAT': list(brief.outputFormat),
+    'ACCEPTANCE CRITERIA': list(brief.acceptanceCriteria),
     'ASSUMPTIONS & OPEN QUESTIONS': list(brief.openQuestions),
   };
 
-  // Sections the brief left empty (no edge cases, no open questions) are left out, never padded.
+  // Sections the brief has nothing for are left out, never padded.
   return spec.sections
     .filter((name) => sections[name])
     .map((name) => `# ${name}\n${sections[name]}`)

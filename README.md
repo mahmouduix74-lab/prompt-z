@@ -16,10 +16,13 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
   (`https://openrouter.ai/api/v1/chat/completions`) with `google/gemini-3.1-flash-lite`, falling back to
   `google/gemini-3.8-flash` if it is unavailable (`OPENROUTER_MODELS` in `src/constants.ts`).
   `/api/health?check` shows whether OpenRouter accepts the key and serves each model.
-- **Prompt pipeline:** the model only extracts what the user asked for as a JSON brief; code
-  (`composePrompt` in [`src/prompting.ts`](src/prompting.ts)) builds the prompt from it and the
-  domain and depth rules.
-- **Eval:** open `/api/eval` to run 10 fixed requests through the live model and check each prompt
+- **Prompt pipeline:** the model reads the request and plans the prompt as a JSON brief: the kind
+  of answer (create, information, review, edit), role, tasks, constraints, output format and, by
+  depth, approach, acceptance criteria and open questions, all from the request. The domain only
+  says whose expertise answers it (its standards are candidates for requests that create
+  something). Code (`composePrompt` in [`src/prompting.ts`](src/prompting.ts)) lays the brief out in
+  the depth's sections.
+- **Eval:** open `/api/eval` to run 12 fixed requests through the live model and check each prompt
   automatically (`/api/eval?json` for JSON). Cases live in [`src/server/eval.ts`](src/server/eval.ts).
 - **Fallback:** if there is no key or OpenRouter fails, a local engine builds the prompt, so the
   user is never blocked.
