@@ -23,6 +23,11 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
   automatically (`/api/eval?json` for JSON). Cases live in [`src/server/eval.ts`](src/server/eval.ts).
 - **Fallback:** if there is no key or OpenRouter fails, a local engine builds the prompt, so the
   user is never blocked.
+- **Sign-in and daily limits:** Google sign-in and a daily prompt limit (3 a day without an
+  account, 6 with one; Generate and Enhance both count) run in the Worker
+  ([`src/server/account.ts`](src/server/account.ts)), with users and counts in the D1 database
+  `promptz`. `/api/me` returns the sign-in state and today's usage. The local Express server has no
+  limits.
 - **Hosting:** Cloudflare Workers. [`worker/index.ts`](worker/index.ts) serves `/api/*` and the
   built site in `dist/` (see [`wrangler.jsonc`](wrangler.jsonc)).
 
@@ -52,11 +57,12 @@ Settings → Builds):
 | Build command | `npm run build` |
 | Deploy command | `npm run deploy:ci` |
 | Non-production deploy command | `npm run preview:ci` |
-| Variables and secrets | `OPENROUTER_API_KEY` (type Secret) |
+| Variables and secrets | `OPENROUTER_API_KEY` and `GOOGLE_CLIENT_SECRET` (type Secret), `GOOGLE_CLIENT_ID` (Text) |
 
 `deploy:ci` ([`scripts/cf-deploy.mjs`](scripts/cf-deploy.mjs)) runs `wrangler deploy` and uploads
-the build's `OPENROUTER_API_KEY` as the Worker's runtime secret, so the key is entered in one
-place only. Check it with `/api/health` → `"hasServerKey": true`.
+the build's `OPENROUTER_API_KEY`, `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` as the Worker's
+runtime secrets, so they are entered in one place only. The Google OAuth client's redirect URI is
+`https://prpmtz.online/api/auth/callback` (`SITE_ORIGIN` in `wrangler.jsonc`). Check it with `/api/health` → `"hasServerKey": true`.
 
 Manual deploy from a machine logged in with `npx wrangler login`: `npm run deploy`.
 
