@@ -6,6 +6,8 @@ interface LogoProps {
   showBadge?: boolean;
   lang?: 'ar' | 'en';
   showWordmark?: boolean;
+  /** Display classes for the wordmark, e.g. to hide it on the narrowest screens. */
+  wordmarkClassName?: string;
 }
 
 /**
@@ -97,6 +99,7 @@ export const Logo: React.FC<LogoProps> = ({
   size = 'sm',
   showBadge = false,
   showWordmark = true,
+  wordmarkClassName = 'flex',
 }) => {
   const iconSizes = {
     xs: 'w-6 h-6',
@@ -121,7 +124,7 @@ export const Logo: React.FC<LogoProps> = ({
 
       {/* PromptZ Wordmark - Rendered with exact Montserrat 800 letterforms matching the logo */}
       {showWordmark && (
-        <div className="flex items-center leading-none">
+        <div className={`${wordmarkClassName} items-center leading-none`}>
           <span
             className={`font-[800] tracking-[-0.025em] text-[#181622] dark:text-white ${textSizes[size]}`}
             style={{
