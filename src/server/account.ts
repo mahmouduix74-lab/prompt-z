@@ -53,6 +53,8 @@ export interface SessionUser {
   sub: string;
   email: string;
   name: string;
+  /** Profile photo URL (Google accounts only). */
+  picture?: string;
 }
 
 export interface Usage {
@@ -141,7 +143,8 @@ export async function readSession(request: Request, env: AccountEnv): Promise<Se
   try {
     const data = JSON.parse(fromBase64url(payload));
     if (typeof data?.exp !== 'number' || data.exp < Date.now() / 1000 || typeof data.sub !== 'string') return null;
-    return { sub: data.sub, email: String(data.email || ''), name: String(data.name || '') };
+    const picture = typeof data.picture === 'string' && data.picture.startsWith('https://') ? data.picture : undefined;
+    return { sub: data.sub, email: String(data.email || ''), name: String(data.name || ''), picture };
   } catch {
     return null;
   }
@@ -209,7 +212,8 @@ export async function handleCallback(request: Request, env: AccountEnv): Promise
   }
   if (!claims?.sub || claims.aud !== env.GOOGLE_CLIENT_ID) return back('?signin=error');
 
-  const user: SessionUser = { sub: String(claims.sub), email: String(claims.email || ''), name: String(claims.name || '') };
+  const picture = typeof claims.picture === 'string' && claims.picture.startsWith('https://') ? claims.picture : undefined;
+  const user: SessionUser = { sub: String(claims.sub), email: String(claims.email || ''), name: String(claims.name || ''), picture };
   return back('?signin=ok', [await startSession(env, user)]);
 }
 

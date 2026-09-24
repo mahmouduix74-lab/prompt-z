@@ -1,21 +1,78 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { LogIn, LogOut, Mail, X, CheckCircle2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { ChevronDown, History, LogIn, LogOut, Mail, X, CheckCircle2 } from 'lucide-react';
 import { AppLang } from '../utils/i18n';
 import { AccountState, requestEmailLink } from '../services/account';
+import { PromptZIcon } from './Logo';
 
+/** Soft ease-out used for menus and dialogs. */
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+/** Same height as the language and theme controls next to it (32px). */
 const signInButtonClassName =
-  'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold leading-none text-white bg-purple-600 hover:bg-purple-700 transition-colors duration-150 whitespace-nowrap cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400';
+  'inline-flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-xl text-sm font-semibold leading-none text-white bg-purple-600 hover:bg-purple-700 shadow-sm shadow-purple-600/20 transition-colors duration-150 whitespace-nowrap cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950';
+
+const menuItemClassName =
+  'flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm text-start text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 focus:outline-hidden focus-visible:bg-zinc-100 dark:focus-visible:bg-zinc-800/70 cursor-pointer';
+
+function Avatar({ name, picture, size = 'sm' }: { name: string; picture?: string; size?: 'sm' | 'md' }) {
+  const [broken, setBroken] = useState(false);
+  const box = size === 'md' ? 'w-10 h-10 text-base' : 'w-7 h-7 text-xs';
+  if (picture && !broken) {
+    return (
+      <img
+        src={picture}
+        alt=""
+        referrerPolicy="no-referrer"
+        onError={() => setBroken(true)}
+        className={`${box} rounded-full object-cover shrink-0 ring-1 ring-black/5 dark:ring-white/10`}
+      />
+    );
+  }
+  return (
+    <span
+      aria-hidden="true"
+      className={`${box} rounded-full shrink-0 inline-flex items-center justify-center font-bold text-white bg-gradient-to-br from-purple-500 to-violet-600`}
+    >
+      {(name.trim()[0] || '?').toUpperCase()}
+    </span>
+  );
+}
 
 interface AccountMenuProps {
   account: AccountState | null;
   lang: AppLang;
   onSignIn: () => void;
+  onOpenLibrary: () => void;
 }
 
-/** Header control: "Sign in" (opens SignInDialog), or the signed-in name with sign-out. */
-export const AccountMenu: React.FC<AccountMenuProps> = ({ account, lang, onSignIn }) => {
-  if (!account || !account.authEnabled) return null;
+/** Header control: "Sign in" (opens SignInDialog), or the user's avatar, name and a menu. */
+export const AccountMenu: React.FC<AccountMenuProps> = ({ account, lang, onSignIn, onOpenLibrary }) => {
   const isAr = lang === 'ar';
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  if (!account || !account.authEnabled) return null;
   const { user } = account;
 
   if (!user) {
@@ -27,22 +84,70 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({ account, lang, onSignI
         className={`${signInButtonClassName} ${isAr ? 'font-arabic' : ''}`}
       >
         <LogIn className="w-4 h-4" />
-        <span className="hidden min-[360px]:inline sm:hidden">{isAr ? 'دخول' : 'Sign in'}</span>
-        <span className="hidden sm:inline">{isAr ? 'تسجيل الدخول' : 'Sign in'}</span>
+        <span className="hidden min-[360px]:inline">{isAr ? 'تسجيل الدخول' : 'Sign in'}</span>
       </button>
     );
   }
 
-  const label = user.name?.split(' ')[0] || user.email.split('@')[0];
+  const displayName = user.name || user.email.split('@')[0];
+  const firstName = displayName.split(' ')[0];
+
   return (
-    <a
-      href="/api/auth/logout"
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-semibold leading-none text-zinc-700 dark:text-zinc-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-all duration-150 max-w-[7rem] sm:max-w-[11rem] ${isAr ? 'font-arabic' : ''}`}
-      title={isAr ? `تسجيل الخروج (${user.email})` : `Sign out (${user.email})`}
-    >
-      <span className="truncate">{label}</span>
-      <LogOut className="w-4 h-4 shrink-0" />
-    </a>
+    <div ref={rootRef} className={`relative ${isAr ? 'font-arabic' : ''}`}>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={isAr ? `حساب ${displayName}` : `${displayName}'s account`}
+        className="inline-flex items-center gap-2 h-8 ps-1 pe-2 rounded-full text-sm font-semibold leading-none text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+      >
+        <Avatar name={displayName} picture={user.picture} />
+        <span className="hidden sm:inline max-w-[8rem] truncate">{firstName}</span>
+        <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="menu"
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: EASE }}
+            className="absolute top-full mt-2 end-0 z-50 w-64 p-1.5 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-black/10 origin-top"
+          >
+            <div className="flex items-center gap-3 px-3 py-3">
+              <Avatar name={displayName} picture={user.picture} size="md" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">{displayName}</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate" dir="ltr">
+                  {user.email}
+                </p>
+              </div>
+            </div>
+            <div className="h-px bg-zinc-200 dark:bg-zinc-800 mx-2 my-1" />
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                onOpenLibrary();
+              }}
+              className={menuItemClassName}
+            >
+              <History className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              {isAr ? 'السجل' : 'History'}
+            </button>
+            <a role="menuitem" href="/api/auth/logout" className={menuItemClassName}>
+              <LogOut className="w-4 h-4 text-zinc-500" />
+              {isAr ? 'تسجيل الخروج' : 'Sign out'}
+            </a>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
@@ -74,13 +179,14 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ open, lang, account,
     if (!open) return;
     setStatus('idle');
     setError(null);
-    firstFieldRef.current?.focus();
+    const focusTimer = window.setTimeout(() => firstFieldRef.current?.focus(), 50);
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener('keydown', onKey);
+    };
   }, [open, onClose]);
-
-  if (!open || !account) return null;
 
   const errors: Record<string, string> = isAr
     ? {
@@ -108,112 +214,152 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ open, lang, account,
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="signin-title"
-        dir={isAr ? 'rtl' : 'ltr'}
-        className={`relative w-full max-w-sm rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl p-6 text-zinc-900 dark:text-zinc-100 ${isAr ? 'font-arabic' : ''}`}
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={isAr ? 'إغلاق' : 'Close'}
-          className="absolute top-3 end-3 p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+    <AnimatePresence>
+      {open && account && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: EASE }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/50 backdrop-blur-sm"
+          onMouseDown={(e) => e.target === e.currentTarget && onClose()}
         >
-          <X className="w-4 h-4" />
-        </button>
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="signin-title"
+            dir={isAr ? 'rtl' : 'ltr'}
+            initial={{ opacity: 0, y: 12, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.97 }}
+            transition={{ duration: 0.28, ease: EASE }}
+            className={`relative w-full max-w-[400px] rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl shadow-purple-950/20 p-7 sm:p-8 text-zinc-900 dark:text-zinc-100 ${isAr ? 'font-arabic' : ''}`}
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={isAr ? 'إغلاق' : 'Close'}
+              className="absolute top-4 end-4 p-2 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+            >
+              <X className="w-4 h-4" />
+            </button>
 
-        <h2 id="signin-title" className="text-lg font-bold mb-1">
-          {isAr ? 'تسجيل الدخول' : 'Sign in'}
-        </h2>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-5">
-          {isAr ? 'سجّل الدخول لتحصل على برومبتات إضافية كل يوم.' : 'Sign in to get more prompts every day.'}
-        </p>
+            <div className="flex flex-col items-center text-center mb-7">
+              <PromptZIcon sizeClass="w-12 h-12" />
+              <h2 id="signin-title" className="mt-4 text-xl font-bold">
+                {isAr ? 'تسجيل الدخول إلى PromptZ' : 'Sign in to PromptZ'}
+              </h2>
+              <p className="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+                {isAr ? 'سجّل الدخول لتحصل على برومبتات إضافية كل يوم.' : 'Sign in to get more prompts every day.'}
+              </p>
+            </div>
 
-        {status === 'sent' ? (
-          <div role="status" className="flex flex-col items-center text-center gap-2 py-4">
-            <CheckCircle2 className="w-10 h-10 text-purple-600" />
-            <p className="font-semibold">{isAr ? 'راجع بريدك الإلكتروني' : 'Check your email'}</p>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              {isAr
-                ? `أرسلنا رابط الدخول إلى ${email.trim()}. الرابط صالح 15 دقيقة ولمرة واحدة.`
-                : `We sent a sign-in link to ${email.trim()}. It works once, for 15 minutes.`}
-            </p>
-          </div>
-        ) : (
-          <>
-            {account.google && (
-              <a
-                ref={(el) => {
-                  firstFieldRef.current = el;
-                }}
-                href="/api/auth/login"
-                className="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors duration-150"
-              >
-                <GoogleIcon />
-                {isAr ? 'المتابعة باستخدام Google' : 'Continue with Google'}
-              </a>
-            )}
-
-            {account.google && account.email && (
-              <div className="flex items-center gap-3 my-4 text-xs text-zinc-500">
-                <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
-                {isAr ? 'أو' : 'or'}
-                <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
-              </div>
-            )}
-
-            {account.email && (
-              <form onSubmit={submit} className="flex flex-col gap-3" noValidate>
-                <label htmlFor="signin-email" className="text-sm font-semibold">
-                  {isAr ? 'البريد الإلكتروني' : 'Email'}
-                </label>
-                <input
-                  ref={(el) => {
-                    if (!account.google) firstFieldRef.current = el;
-                  }}
-                  id="signin-email"
-                  type="email"
-                  dir="ltr"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  aria-invalid={Boolean(error)}
-                  aria-describedby={error ? 'signin-error' : undefined}
-                  className="w-full px-4 py-3 rounded-xl text-sm border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:outline-hidden focus:ring-2 focus:ring-purple-500"
-                />
-                {error && (
-                  <p id="signin-error" className="text-sm text-rose-600 dark:text-rose-400">
-                    {error}
-                  </p>
-                )}
+            {status === 'sent' ? (
+              <div role="status" className="flex flex-col items-center text-center gap-2 py-2">
+                <span className="w-12 h-12 rounded-full bg-purple-500/10 inline-flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </span>
+                <p className="mt-2 font-semibold">{isAr ? 'راجع بريدك الإلكتروني' : 'Check your email'}</p>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  {isAr ? 'أرسلنا رابط الدخول إلى' : 'We sent a sign-in link to'}{' '}
+                  <span dir="ltr" className="font-semibold text-zinc-900 dark:text-zinc-100">
+                    {email.trim()}
+                  </span>
+                  {isAr ? '. الرابط صالح 15 دقيقة ولمرة واحدة.' : '. It works once, for 15 minutes.'}
+                </p>
                 <button
-                  type="submit"
-                  disabled={status === 'sending' || !email.trim()}
-                  className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  type="button"
+                  onClick={() => setStatus('idle')}
+                  className="mt-3 text-sm font-semibold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
                 >
-                  <Mail className="w-4 h-4" />
-                  {status === 'sending'
-                    ? isAr
-                      ? 'جاري الإرسال...'
-                      : 'Sending...'
-                    : isAr
-                      ? 'أرسل رابط الدخول'
-                      : 'Email me a sign-in link'}
+                  {isAr ? 'استخدام بريد آخر' : 'Use a different email'}
                 </button>
-              </form>
+              </div>
+            ) : (
+              <>
+                {account.google && (
+                  <a
+                    ref={(el) => {
+                      firstFieldRef.current = el;
+                    }}
+                    href="/api/auth/login"
+                    className="flex items-center justify-center gap-3 w-full h-12 px-4 rounded-2xl text-sm font-semibold border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+                  >
+                    <GoogleIcon />
+                    {isAr ? 'المتابعة باستخدام Google' : 'Continue with Google'}
+                  </a>
+                )}
+
+                {account.google && account.email && (
+                  <div className="flex items-center gap-3 my-5 text-xs text-zinc-500 dark:text-zinc-400">
+                    <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+                    {isAr ? 'أو بالبريد الإلكتروني' : 'or with email'}
+                    <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+                  </div>
+                )}
+
+                {account.email && (
+                  <form onSubmit={submit} className="flex flex-col gap-2.5" noValidate>
+                    <label htmlFor="signin-email" className="sr-only">
+                      {isAr ? 'البريد الإلكتروني' : 'Email'}
+                    </label>
+                    <input
+                      ref={(el) => {
+                        if (!account.google) firstFieldRef.current = el;
+                      }}
+                      id="signin-email"
+                      type="email"
+                      dir="ltr"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="name@example.com"
+                      aria-invalid={Boolean(error)}
+                      aria-describedby={error ? 'signin-error' : undefined}
+                      className={`w-full h-12 px-4 rounded-2xl text-sm border bg-white dark:bg-zinc-950 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500/60 focus:border-purple-500 ${
+                        error ? 'border-rose-400' : 'border-zinc-300 dark:border-zinc-700'
+                      }`}
+                    />
+                    {error && (
+                      <p id="signin-error" className="text-sm text-rose-600 dark:text-rose-400">
+                        {error}
+                      </p>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={status === 'sending' || !email.trim()}
+                      className="flex items-center justify-center gap-2 w-full h-12 px-4 rounded-2xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+                    >
+                      <Mail className="w-4 h-4" />
+                      {status === 'sending'
+                        ? isAr
+                          ? 'جاري الإرسال...'
+                          : 'Sending...'
+                        : isAr
+                          ? 'أرسل رابط الدخول'
+                          : 'Email me a sign-in link'}
+                    </button>
+                  </form>
+                )}
+
+                <p className="mt-6 text-xs text-center text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  {isAr ? 'بتسجيل الدخول أنت توافق على ' : 'By signing in you agree to the '}
+                  <a href="/terms" className="underline hover:text-purple-600 dark:hover:text-purple-400">
+                    {isAr ? 'الشروط' : 'Terms'}
+                  </a>
+                  {isAr ? ' و' : ' and '}
+                  <a href="/privacy" className="underline hover:text-purple-600 dark:hover:text-purple-400">
+                    {isAr ? 'سياسة الخصوصية' : 'Privacy Policy'}
+                  </a>
+                  .
+                </p>
+              </>
             )}
-          </>
-        )}
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
