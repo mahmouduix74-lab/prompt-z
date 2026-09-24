@@ -27,7 +27,9 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
   [Resend](https://resend.com), `RESEND_API_KEY`), and a daily prompt limit (3 a day without an
   account, 6 with one; Generate and Enhance both count) run in the Worker
   ([`src/server/account.ts`](src/server/account.ts)), with users and counts in the D1 database
-  `promptz`. `/api/me` returns the sign-in state and today's usage. The local Express server has no
+  `promptz`. `/api/me` returns the sign-in state and today's usage. Signed-in users' saved prompts
+  (History) are stored per account through `/api/history` ([`src/server/history.ts`](src/server/history.ts));
+  prompts saved in the browser before signing in move into the account. The local Express server has no
   limits.
 - **Hosting:** Cloudflare Workers. [`worker/index.ts`](worker/index.ts) serves `/api/*` and the
   built site in `dist/` (see [`wrangler.jsonc`](wrangler.jsonc)).

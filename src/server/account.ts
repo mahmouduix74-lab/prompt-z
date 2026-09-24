@@ -21,6 +21,7 @@ export interface D1Database {
   prepare(query: string): {
     bind(...values: unknown[]): {
       first<T = Record<string, unknown>>(): Promise<T | null>;
+      all<T = Record<string, unknown>>(): Promise<{ results?: T[] }>;
       run(): Promise<unknown>;
     };
   };
@@ -329,7 +330,7 @@ export function handleLogout(request: Request, env: AccountEnv): Response {
 
 let schemaReady = false;
 
-async function ensureSchema(db: D1Database): Promise<void> {
+export async function ensureSchema(db: D1Database): Promise<void> {
   if (schemaReady) return;
   await db.prepare('CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT, name TEXT, created_at TEXT)').bind().run();
   await db
@@ -347,10 +348,15 @@ async function ensureSchema(db: D1Database): Promise<void> {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+/** The account a user's data belongs to: the email address, so every sign-in method shares it. */
+export function accountKey(user: SessionUser): string {
+  return user.email.toLowerCase() || user.sub;
+}
+
 /** Who the request counts against, and their daily limit. */
 async function quotaSubject(request: Request, env: AccountEnv, user: SessionUser | null) {
   // An account is its email, so Google and email sign-in for the same address share one count.
-  if (user) return { subject: `user:${user.email.toLowerCase() || user.sub}`, limit: LIMITS.signedIn };
+  if (user) return { subject: `user:${accountKey(user)}`, limit: LIMITS.signedIn };
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
   // Stored hashed (with the site's secret) so the database never holds raw IP addresses.
   const subject = `ip:${await sha256(`${siteSecret(env) || 'promptz'}:${ip}`)}`;
