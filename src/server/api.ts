@@ -206,7 +206,7 @@ export async function handleGenerate(
       temperature: 0.1,
     });
 
-    const brief = parseBrief(text, depth);
+    const brief = parseBrief(text);
     if (!brief) throw new Error(`${modelUsed} did not return a readable brief.`);
 
     // Step 2: code builds the prompt from the brief, so structure and boundaries never vary.

@@ -16,7 +16,7 @@ export function generateLocalStructuredPrompt(params: {
   const request = params.rawText.trim();
   const language = resolveOutputLanguage(params.outputLanguage, request);
   return composePrompt({
-    brief: localBrief(request, params.domain, language),
+    brief: localBrief(request, params.domain, language, params.depth),
     domain: params.domain,
     depth: params.depth,
     language,

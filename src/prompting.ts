@@ -21,8 +21,13 @@ export interface DomainProfile {
   deliverable: Bilingual;
   /** What the work may cover. */
   inScope: Bilingual[];
-  /** Hard boundaries: things this domain must not produce. Become "Do not …" constraints. */
+  /**
+   * Boundaries the executing AI could really cross (becoming CONSTRAINTS lines). Obvious ones
+   * a specialist would never cross (a designer writing backend code) are left out as noise.
+   */
   outOfScope: Bilingual[];
+  /** For the extractor: work that belongs to other domains, so it goes to outOfDomain. */
+  otherDomains: string;
   /** Professional standards for doing the requested work well. Never new deliverables. */
   standards: Bilingual[];
   /** How the executing AI should format its answer. */
@@ -41,6 +46,7 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
       { en: 'Do not add topics, sections or deliverables that were not requested', ar: 'لا تضف موضوعات أو أقسامًا أو مخرجات غير مطلوبة' },
       { en: 'Do not invent facts, numbers or names', ar: 'لا تختلق حقائق أو أرقامًا أو أسماء' },
     ],
+    otherDomains: 'none: every part of the request belongs here',
     standards: [
       { en: 'Be accurate, specific and actionable', ar: 'كن دقيقًا ومحددًا وقابلًا للتنفيذ' },
       { en: 'Use a clear structure and plain language', ar: 'استخدم هيكلًا واضحًا ولغة بسيطة' },
@@ -60,19 +66,18 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
       { en: 'interaction states of the requested elements', ar: 'حالات التفاعل للعناصر المطلوبة' },
     ],
     outOfScope: [
-      { en: 'Do not write code (HTML, CSS or JavaScript)', ar: 'لا تكتب أي كود (HTML أو CSS أو JavaScript)' },
-      { en: 'Do not design backend logic, APIs or databases', ar: 'لا تصمم منطق الخادم أو واجهات API أو قواعد البيانات' },
+      { en: 'Deliver visual designs only, not code or written specifications', ar: 'سلّم تصميمات مرئية فقط، وليس كودًا أو مواصفات مكتوبة' },
       { en: 'Do not add screens, flows or features that were not requested', ar: 'لا تضف شاشات أو مسارات أو ميزات غير مطلوبة' },
-      { en: 'Do not write specification documents instead of designing', ar: 'لا تكتب وثائق مواصفات بدلًا من التصميم' },
     ],
+    otherDomains: 'server logic, APIs, databases and code. Every element shown on a requested screen (fields, buttons, links) is part of the design, not another domain',
     standards: [
       { en: 'Use a clear visual hierarchy and a consistent 8-point spacing grid', ar: 'استخدم تسلسلًا بصريًا واضحًا وشبكة مسافات ثابتة من مضاعفات 8' },
-      { en: 'Keep text contrast at WCAG AA or better', ar: 'اجعل تباين النصوص يحقق معيار WCAG AA على الأقل' },
-      { en: 'Make touch targets at least 44 px on mobile', ar: 'اجعل مساحات اللمس 44 بكسل على الأقل على الموبايل' },
       {
         en: 'Show the default, hover, focus, empty, loading and error states of the requested elements where they apply',
         ar: 'اعرض الحالات الافتراضية والتمرير والتركيز والفارغة والتحميل والخطأ للعناصر المطلوبة حيث تنطبق',
       },
+      { en: 'Keep text contrast at WCAG AA or better', ar: 'اجعل تباين النصوص يحقق معيار WCAG AA على الأقل' },
+      { en: 'Make touch targets at least 44 px on mobile', ar: 'اجعل مساحات اللمس 44 بكسل على الأقل على الموبايل' },
       { en: 'Use realistic placeholder content, never lorem ipsum', ar: 'استخدم محتوى مبدئيًا واقعيًا وليس نص lorem ipsum' },
     ],
     outputFormat: [
@@ -101,6 +106,7 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
       },
       { en: 'Do not add pages or features that were not requested', ar: 'لا تضف صفحات أو ميزات غير مطلوبة' },
     ],
+    otherDomains: 'server code, APIs and databases. Every element shown on a requested page (fields, buttons, links) is part of the page',
     standards: [
       { en: 'Use semantic HTML and accessible controls (labels, keyboard, focus)', ar: 'استخدم HTML دلاليًا وعناصر تحكم قابلة للوصول (تسميات ولوحة مفاتيح وتركيز)' },
       { en: 'Make the layout responsive, mobile first', ar: 'اجعل التصميم متجاوبًا يبدأ بالموبايل' },
@@ -132,6 +138,7 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
         ar: 'لا تختر لغة أو إطار عمل أو قاعدة بيانات لم يذكرها المستخدم؛ التزم بالمذكور أو ابقَ محايدًا',
       },
     ],
+    otherDomains: 'screens, layout, styling, and links or navigation between pages (a "sign-up link" is frontend navigation, not a registration endpoint)',
     standards: [
       { en: 'Validate every input and return consistent errors with correct HTTP status codes', ar: 'تحقق من كل مدخل وأعد أخطاء موحدة بأكواد HTTP صحيحة' },
       { en: 'Enforce authorization on user-specific data', ar: 'افرض الصلاحيات على البيانات الخاصة بكل مستخدم' },
@@ -154,8 +161,8 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
     outOfScope: [
       { en: 'Do not fabricate data, quotes or sources', ar: 'لا تختلق بيانات أو اقتباسات أو مصادر' },
       { en: 'Do not present opinions as facts', ar: 'لا تقدّم الآراء على أنها حقائق' },
-      { en: 'Do not design or build anything; research only', ar: 'لا تصمم ولا تنفذ شيئًا؛ البحث فقط' },
     ],
+    otherDomains: 'designing or building anything',
     standards: [
       { en: 'Cite a source link for every external claim', ar: 'أرفق رابط مصدر لكل معلومة خارجية' },
       { en: 'Separate sourced facts from your own inference', ar: 'افصل الحقائق الموثقة عن استنتاجاتك' },
@@ -175,10 +182,10 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
       { en: 'tone and structure', ar: 'النبرة والبناء' },
     ],
     outOfScope: [
-      { en: 'Do not design visuals or write code', ar: 'لا تصمم مرئيات ولا تكتب كودًا' },
       { en: 'Do not invent facts, statistics or testimonials', ar: 'لا تختلق حقائق أو إحصائيات أو شهادات عملاء' },
       { en: 'Do not add channels or pieces that were not requested', ar: 'لا تضف قنوات أو قطع محتوى غير مطلوبة' },
     ],
+    otherDomains: 'visual design and code',
     standards: [
       { en: 'Match the audience and tone the user gave', ar: 'التزم بالجمهور والنبرة اللذين حددهما المستخدم' },
       { en: 'Keep one clear message per piece, concise and scannable', ar: 'اجعل لكل قطعة رسالة واحدة واضحة، مختصرة وسهلة القراءة' },
@@ -196,12 +203,12 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
       { en: 'aspect ratio, and motion and duration for video', ar: 'نسبة الأبعاد، والحركة والمدة للفيديو' },
     ],
     outOfScope: [
-      { en: 'Do not write articles, captions or code', ar: 'لا تكتب مقالات أو تعليقات أو كودًا' },
       {
         en: 'Do not add subjects, brands or on-image text that were not requested',
         ar: 'لا تضف عناصر أو علامات تجارية أو نصوصًا على الصورة غير مطلوبة',
       },
     ],
+    otherDomains: 'articles, captions and code',
     standards: [
       { en: 'Use concrete visual nouns and adjectives and one clear main subject', ar: 'استخدم أسماء وصفات بصرية محددة وعنصرًا رئيسيًا واحدًا واضحًا' },
       { en: 'State the style, lighting and aspect ratio the user gave', ar: 'اذكر الأسلوب والإضاءة ونسبة الأبعاد التي حددها المستخدم' },
@@ -265,31 +272,29 @@ export const DOMAIN_APPROACH: Record<DomainType, Bilingual[]> = {
 export interface DepthSpec {
   /** Section headers, in order. */
   sections: string[];
-  /** Most parts listed under one task (0 = task titles only). */
-  subPoints: number;
-  /** Most CONSTRAINTS lines taken from the domain profile (boundaries first, then standards). */
-  profileConstraints: number;
-  /** Most professional standards among them. */
+  /**
+   * Most parts per task beyond the ones the user named: pieces the deliverable cannot exist without.
+   * Parts the user named are never capped by depth, so nothing requested is dropped.
+   */
+  inherentParts: number;
+  /** How many professional standards go into CONSTRAINTS, after the domain boundaries. */
   standards: number;
 }
 
 export const DEPTH_SPECS: Record<DepthType, DepthSpec> = {
   short: {
     sections: ['ROLE', 'OBJECTIVE', 'TASKS', 'CONSTRAINTS'],
-    subPoints: 0,
-    profileConstraints: 3,
+    inherentParts: 0,
     standards: 1,
   },
   medium: {
     sections: ['ROLE', 'CONTEXT', 'OBJECTIVE', 'TASKS', 'CONSTRAINTS', 'OUTPUT FORMAT'],
-    subPoints: 2,
-    profileConstraints: 5,
+    inherentParts: 2,
     standards: 2,
   },
   detailed: {
     sections: ['ROLE', 'CONTEXT', 'OBJECTIVE', 'TASKS', 'CONSTRAINTS', 'OUTPUT FORMAT', 'ACCEPTANCE CRITERIA'],
-    subPoints: 4,
-    profileConstraints: 7,
+    inherentParts: 4,
     standards: 4,
   },
   ultra: {
@@ -305,8 +310,7 @@ export const DEPTH_SPECS: Record<DepthType, DepthSpec> = {
       'ACCEPTANCE CRITERIA',
       'ASSUMPTIONS & OPEN QUESTIONS',
     ],
-    subPoints: 5,
-    profileConstraints: 9,
+    inherentParts: 5,
     standards: 5,
   },
 };
@@ -347,8 +351,8 @@ Return one JSON object and nothing else (no code fence, no text before or after 
 RULES:
 - Use only what the user wrote. Rephrase it precisely and professionally, but never add features, fields, screens, endpoints, options, policies, rules, limits, numbers, names, technologies or audiences they did not mention, and never decide anything for them.
 - tasks: one per deliverable the user asked for that belongs to the DOMAIN below. Never split one deliverable into several tasks. Quality work (validation, security, accessibility, performance, testing) is never a task; the code adds it as standards.
-- parts: only pieces the user named, or pieces the deliverable cannot exist without (a login screen has credential fields and a sign-in button). Never optional extras.
-- outOfDomain: parts of the request that belong to another domain. They never become tasks (for a backend request, a "sign-up link" on a login screen is navigation, not a registration endpoint).
+- parts: every element the user named for that deliverable (never drop one), plus, only where LIMITS allows, pieces the deliverable cannot exist without (a login screen needs a sign-in button). Never optional extras.
+- outOfDomain: only parts of the request that the DOMAIN below says belong to other domains. They never become tasks. Everything else the user named stays in tasks or parts; never drop it.
 - userConstraints: only requirements the user stated (technology, tone, length, style, platform). Never professional standards of your own.
 - edgeCases: only states of elements the user named (empty, invalid, loading, error, success).
 - An idea the user did not ask for may appear only as a question in openQuestions. Never answer the questions.
@@ -387,11 +391,10 @@ export function describeDomainAndDepth(domain: DomainType, depth: DepthType): st
   return `DOMAIN (${domain}): the prompt is for a ${p.role.en}, who delivers ${p.deliverable.en}.
 In this domain:
 ${bullets(p.inScope)}
-Not in this domain (such parts of the request go to outOfDomain):
-${bullets(p.outOfScope)}
+Belongs to other domains (such parts of the request go to outOfDomain): ${p.otherDomains}.
 
 LIMITS (${depth}):
-- parts: ${d.subPoints ? `at most ${d.subPoints} per task` : 'always []'}
+- parts: every element the user named, ${d.inherentParts ? `plus at most ${d.inherentParts} pieces the deliverable cannot exist without` : 'and nothing else'}
 - edgeCases and openQuestions: ${ultra ? 'at most 5 each' : 'always []'}`;
 }
 
@@ -449,13 +452,14 @@ export function buildSystemInstruction(params: {
 
 const MAX_TASKS = 8;
 const MAX_ITEMS = 6;
+const MAX_PARTS = 10;
 const MAX_TEXT = 400;
 
 /**
  * Reads the model's JSON brief. Tolerates a code fence or stray text around the object and caps
- * every list to the depth. Returns null when there is no usable brief (no JSON, or no tasks).
+ * every list. Returns null when there is no usable brief (no JSON, or no tasks).
  */
-export function parseBrief(text: string, depth: DepthType = 'medium'): PromptBrief | null {
+export function parseBrief(text: string): PromptBrief | null {
   const start = text.indexOf('{');
   const end = text.lastIndexOf('}');
   if (start < 0 || end <= start) return null;
@@ -468,12 +472,11 @@ export function parseBrief(text: string, depth: DepthType = 'medium'): PromptBri
   }
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
 
-  const spec = DEPTH_SPECS[depth] ?? DEPTH_SPECS.medium;
   const str = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, MAX_TEXT) : '');
   const strs = (v: unknown, limit = MAX_ITEMS) => (Array.isArray(v) ? v.map(str).filter(Boolean).slice(0, limit) : []);
 
   const tasks = (Array.isArray(data.tasks) ? data.tasks : [])
-    .map((t: any) => (typeof t === 'string' ? { task: str(t), parts: [] } : { task: str(t?.task), parts: strs(t?.parts, spec.subPoints) }))
+    .map((t: any) => (typeof t === 'string' ? { task: str(t), parts: [] } : { task: str(t?.task), parts: strs(t?.parts, MAX_PARTS) }))
     .filter((t: { task: string }) => t.task)
     .slice(0, MAX_TASKS);
   if (!tasks.length) return null;
@@ -491,7 +494,7 @@ export function parseBrief(text: string, depth: DepthType = 'medium'): PromptBri
 }
 
 /** A brief built from the raw request alone, for the offline engine. */
-export function localBrief(rawText: string, domain: DomainType, language: 'ar' | 'en'): PromptBrief {
+export function localBrief(rawText: string, domain: DomainType, language: 'ar' | 'en', depth: DepthType = 'medium'): PromptBrief {
   const ar = language === 'ar';
   const profile = DOMAIN_PROFILES[domain] ?? DOMAIN_PROFILES.general;
   const t = (text: Bilingual) => (ar ? text.ar : text.en);
@@ -505,7 +508,7 @@ export function localBrief(rawText: string, domain: DomainType, language: 'ar' |
     tasks: [
       {
         task: ar ? `سلّم ${t(profile.deliverable)} للطلب: ${quoted}` : `Deliver ${t(profile.deliverable)} for: ${quoted}`,
-        parts: profile.inScope.map(t),
+        parts: profile.inScope.slice(0, (DEPTH_SPECS[depth] ?? DEPTH_SPECS.medium).inherentParts).map(t),
       },
     ],
     outOfDomain: [],
@@ -555,13 +558,13 @@ export function composePrompt(params: {
 
   const tasks = brief.tasks
     .map((task, i) => {
-      const parts = task.parts.slice(0, spec.subPoints);
+      const parts = task.parts.slice(0, MAX_PARTS);
       return `${i + 1}. ${task.task}${parts.length ? `\n${parts.map((p) => `   - ${p}`).join('\n')}` : ''}`;
     })
     .join('\n');
 
   const constraints = [
-    ...[...profile.outOfScope, ...profile.standards.slice(0, spec.standards)].slice(0, spec.profileConstraints).map(t),
+    ...[...profile.outOfScope, ...profile.standards.slice(0, spec.standards)].map(t),
     ...brief.userConstraints,
     ...exclusionLines(params.exclusions).map((e) => (ar ? `المستخدم لا يريد: ${plain(e)}` : `The user does not want: ${plain(e)}`)),
     ar ? 'اكتب الرد بالعربية.' : 'Respond in English.',
