@@ -28,7 +28,7 @@ interface HowItWorksProps {
   onStart?: () => void;
 }
 
-/** "How it works" button under the hero text, opening the video (once set) and three steps. */
+/** "Start now" and "How it works" under the hero text; the second opens the video (once set) and three steps. */
 export const HowItWorks: React.FC<HowItWorksProps> = ({ lang, onStart }) => {
   const isAr = lang === 'ar';
   const [open, setOpen] = useState(false);
@@ -36,18 +36,25 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ lang, onStart }) => {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={`group mt-5 sm:mt-6 inline-flex items-center gap-2.5 h-11 ps-2 pe-5 rounded-full text-sm font-semibold text-zinc-800 dark:text-zinc-100 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700/70 shadow-sm hover:border-purple-400 dark:hover:border-purple-500 transition-colors duration-200 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 ${
-          isAr ? 'font-arabic' : ''
-        }`}
-      >
-        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-600 text-white transition-transform duration-200 group-hover:scale-110">
-          <Play className="w-3.5 h-3.5 fill-current ms-0.5" />
-        </span>
-        {isAr ? 'كيف يعمل؟' : 'How it works'}
-      </button>
+      {/* Primary: start now; secondary: how it works (opens the steps and the video). */}
+      <div className={`mt-6 sm:mt-7 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 ${isAr ? 'font-arabic' : ''}`}>
+        <button
+          type="button"
+          onClick={onStart}
+          className="group inline-flex items-center gap-2 h-11 sm:h-12 px-5 sm:px-6 rounded-2xl text-sm sm:text-base font-semibold text-white bg-purple-600 hover:bg-purple-700 shadow-[0_6px_20px_rgba(124,58,237,0.3)] transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950"
+        >
+          {isAr ? 'ابدأ الآن' : 'Start now'}
+          <ArrowRight className="w-4 h-4 rtl:-scale-x-100 transition-transform duration-200 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="group inline-flex items-center gap-2 h-11 sm:h-12 px-5 rounded-2xl text-sm sm:text-base font-semibold text-zinc-800 dark:text-zinc-100 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700/70 hover:border-purple-400 dark:hover:border-purple-500 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+        >
+          <Play className="w-3.5 h-3.5 fill-current text-purple-600 dark:text-purple-400 transition-transform duration-200 group-hover:scale-110" />
+          {isAr ? 'كيف يعمل؟' : 'How it works'}
+        </button>
+      </div>
 
       <Modal open={open} lang={lang} labelledBy="how-title" onClose={() => setOpen(false)} size="lg">
         <h2 id="how-title" className="text-xl font-bold pe-8 text-start">
