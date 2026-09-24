@@ -6,15 +6,19 @@
  * Google sign-in and the daily prompt limits (src/server/account.ts) run only here,
  * since they need the D1 database; the local Express server has no limits.
  *
- * Secrets: OPENROUTER_API_KEY and GOOGLE_CLIENT_SECRET (plus GOOGLE_CLIENT_ID) are uploaded
- * from the build variables by scripts/cf-deploy.mjs.
+ * Secrets: OPENROUTER_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and RESEND_API_KEY are
+ * uploaded from the build variables by scripts/cf-deploy.mjs.
  */
 import { handleGenerate, handleHealth, handleModels, handleRefine, type HandlerResult } from '../src/server/api';
 import { renderEvalPage, runEval } from '../src/server/eval';
 import {
   authEnabled,
   consumeQuota,
+  emailEnabled,
+  googleEnabled,
   handleCallback,
+  handleEmailLink,
+  handleEmailVerify,
   handleLogin,
   handleLogout,
   readSession,
@@ -97,7 +101,13 @@ export default {
         const usage = await readUsage(request, env, user);
         return json({
           status: 200,
-          body: { authEnabled: authEnabled(env), user: user && { name: user.name, email: user.email }, usage },
+          body: {
+            authEnabled: authEnabled(env),
+            google: googleEnabled(env),
+            email: emailEnabled(env),
+            user: user && { name: user.name, email: user.email },
+            usage,
+          },
         });
       }
       case '/api/auth/login':
@@ -106,6 +116,11 @@ export default {
         return handleCallback(request, env);
       case '/api/auth/logout':
         return handleLogout(request, env);
+      case '/api/auth/email':
+        if (request.method !== 'POST') return methodNotAllowed('POST');
+        return handleEmailLink(request, env);
+      case '/api/auth/email/verify':
+        return handleEmailVerify(request, env);
       case '/api/generate': {
         if (request.method !== 'POST') return methodNotAllowed('POST');
         const body = await readJson(request);

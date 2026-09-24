@@ -31,7 +31,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { Clock } from 'lucide-react';
 import { CustomCursor } from './components/CustomCursor';
 import { Mascot } from './components/Mascot';
-import { LimitNotice } from './components/AccountMenu';
+import { LimitNotice, SignInDialog } from './components/AccountMenu';
 import { AccountState, DailyLimitError, fetchAccount } from './services/account';
 
 // Keys keep their original "gemini_" names so prompts saved before the move to OpenRouter still load.
@@ -148,7 +148,9 @@ export default function App() {
   // Sign-in state and today's prompt count (null without the account API, e.g. local dev).
   const [account, setAccount] = useState<AccountState | null>(null);
   const [limitNotice, setLimitNotice] = useState<{ canSignIn: boolean; limit?: number } | null>(null);
-  const [signInFailed, setSignInFailed] = useState<boolean>(false);
+  const [signInIssue, setSignInIssue] = useState<'error' | 'expired' | null>(null);
+  const [isSignInOpen, setIsSignInOpen] = useState<boolean>(false);
+  const closeSignIn = useCallback(() => setIsSignInOpen(false), []);
 
   const refreshAccount = useCallback(async () => {
     setAccount(await fetchAccount());
@@ -160,7 +162,7 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     const signin = params.get('signin');
     if (signin) {
-      if (signin === 'error') setSignInFailed(true);
+      if (signin === 'error' || signin === 'expired') setSignInIssue(signin);
       params.delete('signin');
       const query = params.toString();
       window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
@@ -473,7 +475,10 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         onScrollToBuilder={scrollToBuilder}
         account={account}
+        onSignIn={() => setIsSignInOpen(true)}
       />
+
+      <SignInDialog open={isSignInOpen} lang={lang} account={account} onClose={closeSignIn} />
 
       {/* Hero Section with Embedded Glassmorphic Prompt Builder */}
       <HeroSection
@@ -506,21 +511,28 @@ export default function App() {
               lang={lang}
               canSignIn={limitNotice.canSignIn}
               limit={limitNotice.limit}
+              onSignIn={() => setIsSignInOpen(true)}
               onDismiss={() => setLimitNotice(null)}
             />
           )}
 
-          {signInFailed && (
+          {signInIssue && (
             <div
               role="status"
               className="flex items-center justify-between gap-3 p-3 rounded-xl bg-amber-500/10 backdrop-blur-md border border-amber-500/20 text-sm text-amber-800 dark:text-amber-200"
             >
               <span>
-                {lang === 'ar' ? 'لم يكتمل تسجيل الدخول بجوجل. حاول مرة أخرى.' : 'Google sign-in did not complete. Please try again.'}
+                {signInIssue === 'expired'
+                  ? lang === 'ar'
+                    ? 'انتهت صلاحية رابط الدخول أو استُخدم من قبل. اطلب رابطًا جديدًا.'
+                    : 'That sign-in link has expired or was already used. Ask for a new one.'
+                  : lang === 'ar'
+                    ? 'لم يكتمل تسجيل الدخول. حاول مرة أخرى.'
+                    : 'Sign-in did not complete. Please try again.'}
               </span>
               <button
                 type="button"
-                onClick={() => setSignInFailed(false)}
+                onClick={() => setSignInIssue(null)}
                 className="px-2.5 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/10 cursor-pointer"
               >
                 {lang === 'ar' ? 'إغلاق' : 'Dismiss'}
