@@ -6,8 +6,8 @@ import {
   GenerationErrorDetails,
 } from '../types';
 import { EXACT_SYSTEM_INSTRUCTION } from '../constants';
+import type { ClarifyingQuestion } from '../prompting';
 import { refineLocalPromptText } from './localRefiner';
-import { generateLocalStructuredPrompt } from './localEngine';
 import { dailyLimitError } from './account';
 
 /**
@@ -119,11 +119,22 @@ export async function fetchModels(): Promise<ModelInfo[]> {
 
 const BACKOFF_DELAYS_MS = [1000, 2000, 4000];
 
+/** The model is busy or down: the UI offers a retry instead of a weaker offline prompt. */
+export class ModelUnavailableError extends Error {
+  constructor(message = 'The AI model is busy or unavailable.') {
+    super(message);
+    this.name = 'ModelUnavailableError';
+  }
+}
+
+/** A generated prompt, or questions to answer first when the request is too vague. */
+export type GenerateResult = { prompt: string } | { clarify: ClarifyingQuestion[] };
+
 /**
  * Sends the request to /api/generate, where the system instruction and the
  * user's text go to the model as separate messages.
- * On 429 it retries after 1s, 2s and 4s; any other failure falls back to the local engine.
- * A used-up daily limit throws DailyLimitError instead.
+ * On 429 it retries after 1s, 2s and 4s. A used-up daily limit throws DailyLimitError; a busy or
+ * unreachable model throws ModelUnavailableError.
  */
 export async function generateStructuredPrompt(params: {
   model: string;
@@ -133,8 +144,10 @@ export async function generateStructuredPrompt(params: {
   outputLanguage: OutputLanguage;
   exclusions?: string;
   baseSystemInstruction?: string;
+  /** True once the user answered or skipped the clarifying questions. */
+  skipClarify?: boolean;
   onRetry?: (attempt: number, delaySeconds: number, isPerMinute: boolean) => void;
-}): Promise<string> {
+}): Promise<GenerateResult> {
   const {
     model,
     rawText,
@@ -143,6 +156,7 @@ export async function generateStructuredPrompt(params: {
     outputLanguage,
     exclusions,
     baseSystemInstruction = EXACT_SYSTEM_INSTRUCTION,
+    skipClarify = false,
     onRetry,
   } = params;
 
@@ -154,40 +168,40 @@ export async function generateStructuredPrompt(params: {
   }
   requireModel(model);
 
-
   for (let attempt = 0; ; attempt++) {
-    const { res, data } = await postJson('/api/generate', {
-      rawText: rawText.trim(),
-      model,
-      systemInstruction: baseSystemInstruction,
-      domain,
-      depth,
-      outputLanguage,
-      exclusions,
-    });
-
-    if (res.ok) {
-      const text = stripMarkdownFences(String(data?.result || ''));
-      if (text) {
-        return text;
-      }
+    let res: Response;
+    let data: any;
+    try {
+      ({ res, data } = await postJson('/api/generate', {
+        rawText: rawText.trim(),
+        model,
+        systemInstruction: baseSystemInstruction,
+        domain,
+        depth,
+        outputLanguage,
+        exclusions,
+        skipClarify,
+      }));
+    } catch {
+      throw new ModelUnavailableError('Could not reach the server.');
     }
 
-    // Out of prompts for today: the UI explains it (and offers sign-in), no local fallback.
+    if (res.ok && Array.isArray(data?.clarify) && data.clarify.length) {
+      return { clarify: data.clarify };
+    }
+    if (res.ok) {
+      const text = stripMarkdownFences(String(data?.result || ''));
+      if (text) return { prompt: text };
+    }
+
+    // Out of prompts for today: the UI explains it (and offers sign-in).
     const limitError = dailyLimitError(res.status, data);
     if (limitError) throw limitError;
 
     const parsed = parseApiError(res.status, data);
     if (res.status !== 429 || attempt >= BACKOFF_DELAYS_MS.length) {
-      // Never block the user: any other failure, or an empty reply, gets the local engine's prompt.
-      console.warn('API returned no prompt, using the local engine:', res.status, parsed.rawMessage);
-      return generateLocalStructuredPrompt({
-        rawText: rawText.trim(),
-        domain,
-        depth,
-        outputLanguage,
-        exclusions,
-      });
+      console.warn('No prompt from the API:', res.status, parsed.rawMessage);
+      throw new ModelUnavailableError(parsed.rawMessage);
     }
 
     const waitMs = BACKOFF_DELAYS_MS[attempt];

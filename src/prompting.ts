@@ -288,6 +288,14 @@ export interface PromptBrief {
   acceptanceCriteria: string[];
   openQuestions: string[];
   outOfDomain: string[];
+  /** Asked before generating when the request is too vague for a useful prompt; usually empty. */
+  clarifyingQuestions: ClarifyingQuestion[];
+}
+
+export interface ClarifyingQuestion {
+  question: string;
+  /** Short suggested answers; the user may also type their own. */
+  options: string[];
 }
 
 /**
@@ -309,7 +317,8 @@ Return one JSON object and nothing else (no code fence, no text before or after 
   "edgeCases": ["a state or failure case of something the user asked to create"],
   "acceptanceCriteria": ["a checkable condition the answer must meet"],
   "openQuestions": ["a question about something the request leaves open"],
-  "outOfDomain": ["a part of the request that belongs to another domain"]
+  "outOfDomain": ["a part of the request that belongs to another domain"],
+  "clarifyingQuestions": [{ "question": "a short question", "options": ["a short likely answer"] }]
 }
 
 EVERYTHING FOLLOWS THE REQUEST. The DOMAIN below only says whose expertise answers it. Decide the kind first, then make every field fit what this user actually asked for.
@@ -333,6 +342,8 @@ Never add features, policies, rules, limits, numbers, technologies or audiences 
 outputFormat: how to deliver this particular answer. Follow any format, count or length the user gave; otherwise choose the simplest format that fits the answer (a numbered list for names). Use the DOMAIN's typical formats only when kind is create and they fit.
 
 approach: ordered steps for carrying out the tasks, with no new work. acceptanceCriteria: checkable conditions tied to the tasks and constraints. edgeCases: only for create or edit, and only states or failures of things the user named (empty, invalid, loading, error). openQuestions: what the request leaves open; never answer them. An idea the user did not ask for may appear only as an open question.
+
+clarifyingQuestions: only when the request is too vague to plan a useful prompt, because something missing would change the answer a lot (what is being made, for whom, on which platform, the goal). Ask at most 3 short questions, each with 2 to 4 short likely answers, about the missing essentials only. A request that is clear enough gets []; most requests are. Still fill every other field as well as you can.
 
 OTHER RULES:
 - Use only what the user wrote. Rephrase it precisely and professionally; never decide anything for them.
@@ -442,6 +453,7 @@ const MAX_TASKS = 8;
 const MAX_ITEMS = 12;
 const MAX_PARTS = 10;
 const MAX_TEXT = 400;
+const MAX_QUESTIONS = 3;
 const KINDS: RequestKind[] = ['create', 'information', 'review', 'edit', 'other'];
 
 /**
@@ -484,6 +496,10 @@ export function parseBrief(text: string): PromptBrief | null {
     acceptanceCriteria: strs(data.acceptanceCriteria),
     openQuestions: strs(data.openQuestions),
     outOfDomain: strs(data.outOfDomain),
+    clarifyingQuestions: (Array.isArray(data.clarifyingQuestions) ? data.clarifyingQuestions : [])
+      .map((q: any) => ({ question: str(q?.question).slice(0, 200), options: strs(q?.options, 4).map((o) => o.slice(0, 60)) }))
+      .filter((q: ClarifyingQuestion) => q.question)
+      .slice(0, MAX_QUESTIONS),
   };
 }
 
@@ -516,6 +532,7 @@ export function localBrief(rawText: string, domain: DomainType, language: 'ar' |
       : ['The answer fulfils the request exactly', 'Nothing the request did not ask for was added'],
     openQuestions: [],
     outOfDomain: [],
+    clarifyingQuestions: [],
   };
 }
 
