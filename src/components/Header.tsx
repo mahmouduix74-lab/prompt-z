@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { History, Sun, Moon, Languages } from 'lucide-react';
+import { History, Sun, Moon, Languages, Sparkles } from 'lucide-react';
 import { Theme, AppLang, UI_STRINGS } from '../utils/i18n';
 import { Logo } from './Logo';
 import { AccountMenu } from './AccountMenu';
@@ -24,6 +24,53 @@ interface HeaderProps {
 // Every header control is 36px tall, so language, theme and account line up.
 const iconButtonClassName =
   'relative inline-flex items-center justify-center w-9 h-9 rounded-xl text-zinc-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-all duration-150 cursor-pointer focus:outline-hidden';
+
+function CreditsBadge({
+  usage,
+  lang,
+  signedIn,
+  onSignIn,
+}: {
+  usage: NonNullable<AccountState['usage']>;
+  lang: AppLang;
+  signedIn: boolean;
+  onSignIn: () => void;
+}) {
+  const isAr = lang === 'ar';
+  const empty = usage.remaining === 0;
+  const label = isAr
+    ? `متبقٍ ${usage.remaining} من ${usage.limit} برومبتات مجانية اليوم`
+    : `${usage.remaining} of ${usage.limit} free prompts left today`;
+  const className = `inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 rounded-xl border text-sm font-bold tabular-nums leading-none ${
+    empty
+      ? 'border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400'
+      : 'border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-100'
+  }`;
+  const content = (
+    <>
+      <Sparkles className={`hidden sm:block w-4 h-4 ${empty ? '' : 'text-purple-600 dark:text-purple-400'}`} />
+      <span dir="ltr">
+        {usage.remaining}/{usage.limit}
+      </span>
+    </>
+  );
+  // Visitors can tap it to sign in for more; for a signed-in user it only informs.
+  return signedIn ? (
+    <span className={className} title={label} aria-label={label} role="status">
+      {content}
+    </span>
+  ) : (
+    <button
+      type="button"
+      onClick={onSignIn}
+      title={label}
+      aria-label={label}
+      className={`${className} cursor-pointer hover:border-purple-400 dark:hover:border-purple-500 transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400`}
+    >
+      {content}
+    </button>
+  );
+}
 
 export const Header: React.FC<HeaderProps> = ({
   savedCount = 0,
@@ -56,22 +103,25 @@ export const Header: React.FC<HeaderProps> = ({
           className="group cursor-pointer focus:outline-hidden transition-transform duration-150"
           title="PromptZ"
         >
-          <Logo size="sm" lang={lang} />
+          <Logo size="sm" lang={lang} wordmarkClassName="hidden min-[360px]:flex" />
         </motion.button>
 
         {/* Right Controls: Language, Theme Appearance */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Today's free prompts left, in a small outlined frame next to the language toggle */}
+          {account?.usage && <CreditsBadge usage={account.usage} lang={lang} signedIn={Boolean(account.user)} onSignIn={onSignIn} />}
+
           {/* Language Toggle */}
           <motion.button
             type="button"
             onClick={onToggleLang}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl text-zinc-700 dark:text-zinc-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-all duration-150 cursor-pointer text-xs font-bold focus:outline-hidden"
+            className="inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-xl text-zinc-700 dark:text-zinc-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-all duration-150 cursor-pointer text-xs font-bold focus:outline-hidden"
             title={isAr ? 'Switch to English' : 'التحويل للعربية'}
             aria-label="Language"
           >
-            <Languages className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <Languages className="hidden sm:block w-4 h-4 text-purple-600 dark:text-purple-400" />
             <span className={isAr ? 'font-arabic font-bold text-sm leading-none' : 'font-mono uppercase text-[11px] font-bold leading-none'}>
               {isAr ? 'ع' : 'EN'}
             </span>
