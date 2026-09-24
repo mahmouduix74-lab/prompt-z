@@ -47,7 +47,8 @@ const CASES: EvalCase[] = [
     domain: 'ui_ux',
     depth: 'medium',
     language: 'en',
-    forbidden: /remember me|dark mode|social login|Google|Facebook|MFA|two.?factor|biometric/i,
+    // Also nothing about servers, APIs or platforms, which the user never mentioned.
+    forbidden: /remember me|dark mode|social login|Google|Facebook|MFA|two.?factor|biometric|server|\bAPI|authentication logic|web or mobile/i,
     requiredInTasks: [/email/i, /password/i, /sign.?up|register|create an? account/i],
     // Creating a design: design standards belong in the prompt.
     expected: /hover|focus|error state|contrast|spacing|hierarchy/i,
