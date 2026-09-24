@@ -105,7 +105,7 @@ export default {
             authEnabled: authEnabled(env),
             google: googleEnabled(env),
             email: emailEnabled(env),
-            user: user && { name: user.name, email: user.email },
+            user: user && { name: user.name, email: user.email, picture: user.picture },
             usage,
           },
         });

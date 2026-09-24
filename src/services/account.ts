@@ -13,7 +13,7 @@ export interface AccountState {
   /** Which ways of signing in are configured. */
   google: boolean;
   email: boolean;
-  user: { name: string; email: string } | null;
+  user: { name: string; email: string; picture?: string } | null;
   usage: AccountUsage | null;
 }
 

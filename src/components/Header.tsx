@@ -94,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
           </motion.button>
 
           {/* Sign in / signed-in user, last */}
-          <AccountMenu account={account} lang={lang} onSignIn={onSignIn} />
+          <AccountMenu account={account} lang={lang} onSignIn={onSignIn} onOpenLibrary={onOpenLibrary} />
         </div>
       </div>
     </motion.header>
