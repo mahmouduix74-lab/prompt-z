@@ -551,9 +551,9 @@ export default function App() {
           dir={lang === 'ar' ? 'rtl' : 'ltr'}
         >
           {/* Ambient Glow Emitters for Glassmorphism Refraction - Pure Purple Only */}
-          <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-3/4 max-w-[700px] h-[350px] rounded-full bg-gradient-to-r from-purple-600/25 via-purple-500/20 to-violet-600/25 blur-3xl pointer-events-none -z-10" />
-          <div className="absolute top-1/4 -left-12 w-80 h-80 rounded-full bg-gradient-to-br from-purple-600/20 to-violet-500/15 blur-3xl pointer-events-none -z-10" />
-          <div className="absolute bottom-10 -right-12 w-96 h-96 rounded-full bg-gradient-to-tl from-violet-600/20 via-purple-600/25 to-purple-500/20 blur-3xl pointer-events-none -z-10" />
+          <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-3/4 max-w-[700px] h-[350px] rounded-full bg-gradient-to-r from-purple-600/25 via-purple-500/20 to-purple-600/25 blur-3xl pointer-events-none -z-10" />
+          <div className="absolute top-1/4 -left-12 w-80 h-80 rounded-full bg-gradient-to-br from-purple-600/20 to-purple-500/15 blur-3xl pointer-events-none -z-10" />
+          <div className="absolute bottom-10 -right-12 w-96 h-96 rounded-full bg-gradient-to-tl from-purple-600/20 via-purple-600/25 to-purple-500/20 blur-3xl pointer-events-none -z-10" />
 
           {/* Retry countdown notice */}
           {retryNotice && (
@@ -581,7 +581,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setSignInIssue(null)}
-                className="px-2.5 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/10 cursor-pointer"
+                className="h-9 px-3 rounded-xl text-sm font-bold hover:bg-amber-500/10 cursor-pointer"
               >
                 {lang === 'ar' ? 'إغلاق' : 'Dismiss'}
               </button>

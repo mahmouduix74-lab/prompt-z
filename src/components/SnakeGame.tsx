@@ -259,7 +259,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ lang, isAr, theme }) => {
     ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
     // Grid lines color
-    ctx.strokeStyle = isDark ? 'rgba(161, 161, 170, 0.08)' : 'rgba(147, 51, 234, 0.12)';
+    ctx.strokeStyle = isDark ? 'rgba(161, 161, 170, 0.08)' : 'rgba(113, 50, 245, 0.12)';
     ctx.lineWidth = 1;
     for (let i = 0; i <= GRID_SIZE; i++) {
       ctx.beginPath();
@@ -279,15 +279,15 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ lang, isAr, theme }) => {
 
     ctx.save();
     // Outer food aura ring
-    ctx.fillStyle = isDark ? 'rgba(168, 85, 247, 0.22)' : 'rgba(124, 58, 237, 0.18)';
+    ctx.fillStyle = isDark ? 'rgba(159, 120, 251, 0.22)' : 'rgba(113, 50, 245, 0.18)';
     ctx.beginPath();
     ctx.arc(foodX, foodY, CELL_SIZE / 1.6, 0, Math.PI * 2);
     ctx.fill();
 
     // Inner glowing food orb
-    ctx.shadowColor = isDark ? '#C084FC' : '#7C3AED';
+    ctx.shadowColor = isDark ? '#BEA6FF' : '#7132F5';
     ctx.shadowBlur = isDark ? 10 : 8;
-    ctx.fillStyle = isDark ? '#C084FC' : '#7C3AED';
+    ctx.fillStyle = isDark ? '#BEA6FF' : '#7132F5';
     ctx.beginPath();
     ctx.arc(foodX, foodY, CELL_SIZE / 2.6, 0, Math.PI * 2);
     ctx.fill();
@@ -302,14 +302,14 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ lang, isAr, theme }) => {
 
       ctx.save();
       if (isHead) {
-        ctx.shadowColor = isDark ? '#A855F7' : '#6D28D9';
+        ctx.shadowColor = isDark ? '#9F78FB' : '#5F22D9';
         ctx.shadowBlur = 8;
-        ctx.fillStyle = isDark ? '#A855F7' : '#6D28D9';
+        ctx.fillStyle = isDark ? '#9F78FB' : '#5F22D9';
       } else {
         const opacity = Math.max(0.35, 1 - index / (snake.length + 3));
         ctx.fillStyle = isDark
-          ? `rgba(168, 85, 247, ${opacity})`
-          : `rgba(124, 58, 237, ${opacity})`;
+          ? `rgba(159, 120, 251, ${opacity})`
+          : `rgba(113, 50, 245, ${opacity})`;
       }
 
       const radius = isHead ? 5 : 3;
@@ -425,7 +425,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ lang, isAr, theme }) => {
             <button
               type="button"
               onClick={handleReset}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold shadow-md transition-all cursor-pointer"
+              className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold shadow-md transition-all cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>{isAr ? 'إعادة اللعب' : 'Play Again'}</span>
@@ -440,7 +440,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ lang, isAr, theme }) => {
         <button
           type="button"
           onClick={() => changeDirection({ x: 0, y: -1 })}
-          className={`w-13 h-12 sm:w-14 sm:h-12 flex items-center justify-center rounded-2xl border font-bold shadow-xs active:scale-90 transition-all cursor-pointer touch-none ${
+          className={`w-13 h-12 sm:w-14 sm:h-12 flex items-center justify-center rounded-xl border font-bold shadow-xs active:scale-90 transition-all cursor-pointer touch-none ${
             isDark
               ? 'bg-zinc-900/90 border-zinc-700/80 text-purple-300 hover:bg-purple-600 hover:text-white active:bg-purple-600 active:text-white shadow-xs'
               : 'bg-white border-purple-200/90 text-purple-700 hover:bg-purple-600 hover:text-white active:bg-purple-600 active:text-white shadow-xs'
@@ -455,7 +455,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ lang, isAr, theme }) => {
           <button
             type="button"
             onClick={() => changeDirection({ x: -1, y: 0 })}
-            className={`w-13 h-12 sm:w-14 sm:h-12 flex items-center justify-center rounded-2xl border font-bold shadow-xs active:scale-90 transition-all cursor-pointer touch-none ${
+            className={`w-13 h-12 sm:w-14 sm:h-12 flex items-center justify-center rounded-xl border font-bold shadow-xs active:scale-90 transition-all cursor-pointer touch-none ${
               isDark
                 ? 'bg-zinc-900/90 border-zinc-700/80 text-purple-300 hover:bg-purple-600 hover:text-white active:bg-purple-600 active:text-white shadow-xs'
                 : 'bg-white border-purple-200/90 text-purple-700 hover:bg-purple-600 hover:text-white active:bg-purple-600 active:text-white shadow-xs'
@@ -480,7 +480,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ lang, isAr, theme }) => {
           <button
             type="button"
             onClick={() => changeDirection({ x: 1, y: 0 })}
-            className={`w-13 h-12 sm:w-14 sm:h-12 flex items-center justify-center rounded-2xl border font-bold shadow-xs active:scale-90 transition-all cursor-pointer touch-none ${
+            className={`w-13 h-12 sm:w-14 sm:h-12 flex items-center justify-center rounded-xl border font-bold shadow-xs active:scale-90 transition-all cursor-pointer touch-none ${
               isDark
                 ? 'bg-zinc-900/90 border-zinc-700/80 text-purple-300 hover:bg-purple-600 hover:text-white active:bg-purple-600 active:text-white shadow-xs'
                 : 'bg-white border-purple-200/90 text-purple-700 hover:bg-purple-600 hover:text-white active:bg-purple-600 active:text-white shadow-xs'
@@ -495,7 +495,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ lang, isAr, theme }) => {
         <button
           type="button"
           onClick={() => changeDirection({ x: 0, y: 1 })}
-          className={`w-13 h-12 sm:w-14 sm:h-12 flex items-center justify-center rounded-2xl border font-bold shadow-xs active:scale-90 transition-all cursor-pointer touch-none ${
+          className={`w-13 h-12 sm:w-14 sm:h-12 flex items-center justify-center rounded-xl border font-bold shadow-xs active:scale-90 transition-all cursor-pointer touch-none ${
             isDark
               ? 'bg-zinc-900/90 border-zinc-700/80 text-purple-300 hover:bg-purple-600 hover:text-white active:bg-purple-600 active:text-white shadow-xs'
               : 'bg-white border-purple-200/90 text-purple-700 hover:bg-purple-600 hover:text-white active:bg-purple-600 active:text-white shadow-xs'

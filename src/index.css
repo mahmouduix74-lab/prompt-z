@@ -2,6 +2,59 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Design tokens. One primary colour for the whole site (the logo's #7132F5): Tailwind's purple,
+ * violet and indigo scales all resolve to it, so no second purple can creep in.
+ * Controls: every button and tab is 12px round with 14px text; regular controls are 36px tall
+ * (h-9), main actions 44px (h-11). Segments inside a 12px frame use 8px so they sit concentric.
+ */
+@theme {
+  --color-brand-50: #f4f0ff;
+  --color-brand-100: #ebe3ff;
+  --color-brand-200: #d9ccff;
+  --color-brand-300: #bea6ff;
+  --color-brand-400: #9f78fb;
+  --color-brand-500: #8452f8;
+  --color-brand-600: #7132f5;
+  --color-brand-700: #5f22d9;
+  --color-brand-800: #4e1db2;
+  --color-brand-900: #411b8f;
+  --color-brand-950: #270f5c;
+  --color-purple-50: var(--color-brand-50);
+  --color-purple-100: var(--color-brand-100);
+  --color-purple-200: var(--color-brand-200);
+  --color-purple-300: var(--color-brand-300);
+  --color-purple-400: var(--color-brand-400);
+  --color-purple-500: var(--color-brand-500);
+  --color-purple-600: var(--color-brand-600);
+  --color-purple-700: var(--color-brand-700);
+  --color-purple-800: var(--color-brand-800);
+  --color-purple-900: var(--color-brand-900);
+  --color-purple-950: var(--color-brand-950);
+  --color-violet-50: var(--color-brand-50);
+  --color-violet-100: var(--color-brand-100);
+  --color-violet-200: var(--color-brand-200);
+  --color-violet-300: var(--color-brand-300);
+  --color-violet-400: var(--color-brand-400);
+  --color-violet-500: var(--color-brand-500);
+  --color-violet-600: var(--color-brand-600);
+  --color-violet-700: var(--color-brand-700);
+  --color-violet-800: var(--color-brand-800);
+  --color-violet-900: var(--color-brand-900);
+  --color-violet-950: var(--color-brand-950);
+  --color-indigo-50: var(--color-brand-50);
+  --color-indigo-100: var(--color-brand-100);
+  --color-indigo-200: var(--color-brand-200);
+  --color-indigo-300: var(--color-brand-300);
+  --color-indigo-400: var(--color-brand-400);
+  --color-indigo-500: var(--color-brand-500);
+  --color-indigo-600: var(--color-brand-600);
+  --color-indigo-700: var(--color-brand-700);
+  --color-indigo-800: var(--color-brand-800);
+  --color-indigo-900: var(--color-brand-900);
+  --color-indigo-950: var(--color-brand-950);
+}
+
 :root {
   /* Default body font is SF Pro with native Apple and system fallbacks */
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'SF Pro', system-ui, sans-serif;
@@ -84,7 +137,7 @@ a:active,
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: 
-    0 20px 45px -12px rgba(124, 58, 237, 0.08),
+    0 20px 45px -12px rgba(113, 50, 245, 0.08),
     0 8px 24px -4px rgba(0, 0, 0, 0.03),
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.85);
 }
@@ -96,7 +149,7 @@ a:active,
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 
     0 24px 50px -12px rgba(0, 0, 0, 0.45),
-    0 10px 24px -4px rgba(124, 58, 237, 0.12),
+    0 10px 24px -4px rgba(113, 50, 245, 0.12),
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.08);
 }
 

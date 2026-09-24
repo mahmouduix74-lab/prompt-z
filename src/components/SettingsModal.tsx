@@ -88,7 +88,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               id="settings-title"
               className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2"
             >
-              <Sparkles className="w-4 h-4 text-indigo-500" />
+              <Sparkles className="w-4 h-4 text-purple-500" />
               <span>{t.settingsTitle}</span>
             </h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{t.settingsDesc}</p>
@@ -97,7 +97,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label={t.close}
-            className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -112,13 +112,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 htmlFor="system-instruction"
                 className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5"
               >
-                <Code className="w-3.5 h-3.5 text-indigo-500" />
+                <Code className="w-3.5 h-3.5 text-purple-500" />
                 <span>{t.systemInstructionLabel}</span>
               </label>
               <button
                 type="button"
                 onClick={() => setTempInstruction(EXACT_SYSTEM_INSTRUCTION)}
-                className="text-[11px] text-zinc-500 hover:text-indigo-500 flex items-center gap-1 cursor-pointer"
+                className="text-sm text-zinc-500 hover:text-purple-500 flex items-center gap-1 cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
                 <span>{t.resetDefaultInstruction}</span>
@@ -133,14 +133,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onChange={(e) => setTempInstruction(e.target.value)}
               rows={12}
               dir="ltr"
-              className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-mono text-zinc-900 dark:text-zinc-200 focus:outline-none focus:border-indigo-500 resize-none leading-relaxed select-text"
+              className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-mono text-zinc-900 dark:text-zinc-200 focus:outline-none focus:border-purple-500 resize-none leading-relaxed select-text"
             />
           </div>
 
           {/* Read-only: the full instruction as it will be sent */}
           <div className="space-y-2">
             <div className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-              <Eye className="w-3.5 h-3.5 text-indigo-500" />
+              <Eye className="w-3.5 h-3.5 text-purple-500" />
               <span>{t.effectiveInstructionLabel}</span>
             </div>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
@@ -170,14 +170,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 text-xs font-medium rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
+              className="h-9 px-3.5 text-sm font-medium rounded-xl text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
             >
               {t.close}
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer transition-colors shadow-xs"
+              className="h-9 px-4 text-sm font-semibold rounded-xl bg-purple-600 hover:bg-purple-700 text-white cursor-pointer transition-colors shadow-xs"
             >
               {t.saveAndClose}
             </button>

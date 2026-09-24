@@ -30,13 +30,13 @@
   --xhero-bg: #FAFAFC;
   --xhero-text: #09090b;
   --xhero-text-muted: #27272a;
-  --xhero-accent: #7c3aed;
-  --xhero-accent-soft: #a855f7;
+  --xhero-accent: #7132f5;
+  --xhero-accent-soft: #9f78fb;
   --xhero-surface: rgb(255 255 255 / 0.85);
   --xhero-badge-border: #e4e4e7;
   --xhero-button-border: rgb(0 0 0 / 0.12);
   --xhero-button-border-hover: rgb(0 0 0 / 0.25);
-  --xhero-focus-ring: #7c3aed; /* A11y addition (WCAG 2.4.7). */
+  --xhero-focus-ring: #7132f5; /* A11y addition (WCAG 2.4.7). */
   /* Clash Display for Latin; IBM Plex Sans Arabic for Arabic */
   --xhero-font: "Clash Display", "IBM Plex Sans Arabic", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   --xhero-button-shadow:
@@ -85,13 +85,13 @@
   --xhero-bg: transparent;
   --xhero-text: #ffffff;
   --xhero-text-muted: #f4f4f5;
-  --xhero-accent: #8b5cf6;
-  --xhero-accent-soft: #c084fc;
+  --xhero-accent: #8452f8;
+  --xhero-accent-soft: #bea6ff;
   --xhero-surface: rgb(18 18 24 / 0.7);
   --xhero-badge-border: #27272a;
   --xhero-button-border: rgb(255 255 255 / 0.12);
   --xhero-button-border-hover: rgb(255 255 255 / 0.3);
-  --xhero-focus-ring: #df7afe;
+  --xhero-focus-ring: #bea6ff;
   --xhero-button-shadow:
     0 0.7066px 0.7066px -0.625px rgb(0 0 0 / 0.25),
     0 1.8066px 1.8066px -1.25px rgb(0 0 0 / 0.2),
@@ -264,12 +264,13 @@
   align-items: center;
   justify-content: center;
   margin: 0;
-  padding: 9px 13px;
+  height: 44px;
+  padding: 0 16px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 12px;
   color: var(--xhero-text);
   font-family: inherit;
-  font-size: 0.9375rem; /* 15px */
+  font-size: 0.875rem; /* 14px, as every control */
   font-weight: 400;
   line-height: 1.2;
   letter-spacing: -0.04em;
@@ -434,7 +435,7 @@
 
 .xhero-orb__disc--outer {
   inset: 0;
-  background: linear-gradient(229deg, #c084fc 13%, rgba(192, 132, 252, 0) 35.02%, rgba(168, 85, 247, 0) 64.17%, #7c3aed 88%);
+  background: linear-gradient(229deg, #bea6ff 13%, rgba(192, 132, 252, 0) 35.02%, rgba(159, 120, 251, 0) 64.17%, #7132f5 88%);
   animation-direction: reverse; /* -360° every 10s */
 }
 
@@ -444,7 +445,7 @@
   width: 320px;
   height: 320px;
   margin: -160px 0 0 -160px;
-  background: linear-gradient(141deg, #d8b4fe 13%, rgba(216, 180, 254, 0) 35.02%, rgba(147, 51, 234, 0) 64.17%, #9333ea 88%);
+  background: linear-gradient(141deg, #d8b4fe 13%, rgba(216, 180, 254, 0) 35.02%, rgba(113, 50, 245, 0) 64.17%, #7132f5 88%);
   animation-duration: 12s; /* +360° every 12s */
 }
 

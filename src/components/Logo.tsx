@@ -131,7 +131,7 @@ export const Logo: React.FC<LogoProps> = ({
               fontFamily: "'Montserrat', system-ui, -apple-system, sans-serif",
             }}
           >
-            Prompt<span className="text-[#7132F5] dark:text-[#8B5CF6]">Z</span>
+            Prompt<span className="text-[#7132F5] dark:text-[#8452F8]">Z</span>
           </span>
           {showBadge && (
             <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-mono font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 ms-1.5">

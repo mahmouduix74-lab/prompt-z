@@ -210,7 +210,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45, ease: 'easeOut' }}
       className={`relative flex flex-col h-full rounded-2xl bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl overflow-hidden shadow-xs transition-shadow duration-700 ${
-        newResultGlow ? 'shadow-[0_0_24px_rgba(168,85,247,0.18)]' : ''
+        newResultGlow ? 'shadow-[0_0_24px_rgba(159,120,251,0.18)]' : ''
       }`}
     >
       {/* Clean, Simple Output Header */}
@@ -230,7 +230,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
               <button
                 type="button"
                 onClick={handleSkipTyping}
-                className="text-[10px] px-1.5 py-0.5 rounded text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-0.5"
+                className="text-sm h-9 px-2.5 rounded-xl text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-0.5"
                 title={isAr ? 'إظهار فوراً' : 'Skip typing effect'}
               >
                 <FastForward className="w-2.5 h-2.5" />
@@ -244,11 +244,11 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
         <div className="flex items-center gap-2 flex-wrap">
           {/* View Mode Switcher */}
           {hasResult && (
-            <div className="flex items-center p-0.5 rounded-lg bg-zinc-100/90 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 text-[11px]">
+            <div className="flex items-center h-9 p-0.5 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 text-sm">
               <button
                 type="button"
                 onClick={() => setViewMode('formatted')}
-                className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+                className={`h-full px-2.5 rounded-lg transition-all cursor-pointer ${
                   viewMode === 'formatted'
                     ? 'bg-white dark:bg-zinc-900 text-purple-600 dark:text-purple-400 font-semibold shadow-2xs'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -259,7 +259,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
               <button
                 type="button"
                 onClick={() => setViewMode('raw')}
-                className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+                className={`h-full px-2.5 rounded-lg transition-all cursor-pointer ${
                   viewMode === 'raw'
                     ? 'bg-white dark:bg-zinc-900 text-purple-600 dark:text-purple-400 font-semibold shadow-2xs'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -270,7 +270,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
               <button
                 type="button"
                 onClick={() => setViewMode('sections')}
-                className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+                className={`h-full px-2.5 rounded-lg transition-all cursor-pointer ${
                   viewMode === 'sections'
                     ? 'bg-white dark:bg-zinc-900 text-purple-600 dark:text-purple-400 font-semibold shadow-2xs'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -291,7 +291,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                   onSaveToLibrary();
                 }}
                 disabled={!hasResult || isLoading}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`flex items-center gap-1 h-9 px-3 rounded-xl text-sm font-medium transition-all ${
                   hasResult && !isLoading
                     ? isSaved
                       ? 'bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20'
@@ -312,7 +312,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
               type="button"
               onClick={handleCopy}
               disabled={!hasResult || isLoading}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-semibold transition-all ${
                 hasResult && !isLoading
                   ? copied
                     ? 'bg-emerald-600 dark:bg-emerald-500 text-white shadow-xs cursor-pointer'
@@ -354,7 +354,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
               type="button"
               onClick={handleDownload}
               disabled={!hasResult || isLoading}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-medium transition-all ${
                 hasResult && !isLoading
                   ? 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 cursor-pointer shadow-2xs'
                   : 'bg-zinc-100/50 dark:bg-zinc-900/50 text-zinc-400 dark:text-zinc-600 cursor-not-allowed border border-zinc-200/60 dark:border-zinc-800/40 opacity-50'
@@ -372,7 +372,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={onOpenLibrary}
-                className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 cursor-pointer shadow-2xs transition-all border border-zinc-200/60 dark:border-zinc-800/60"
+                className="relative flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-medium bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 cursor-pointer shadow-2xs transition-all border border-zinc-200/60 dark:border-zinc-800/60"
                 title={t.library || (isAr ? 'السجل والمكتبة' : 'History & Saved')}
                 aria-label={t.library || (isAr ? 'السجل والمكتبة' : 'History & Saved')}
               >
@@ -381,7 +381,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                   {isAr ? 'السجل' : 'History'}
                 </span>
                 {savedCount > 0 && (
-                  <span className="min-w-[15px] h-3.5 px-1 rounded-full text-[9px] font-mono font-bold bg-[#7C3AED] text-white flex items-center justify-center shadow-2xs">
+                  <span className="min-w-[15px] h-3.5 px-1 rounded-full text-[9px] font-mono font-bold bg-[#7132F5] text-white flex items-center justify-center shadow-2xs">
                     {savedCount}
                   </span>
                 )}

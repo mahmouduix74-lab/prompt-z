@@ -73,7 +73,7 @@ export const DomainSelector: React.FC<DomainSelectorProps> = ({
               onClick={() => onSelectDomain(domain.id)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
-              className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`relative flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-medium whitespace-nowrap transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                 isSelected
                   ? 'text-white font-semibold'
                   : 'bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md hover:bg-white/90 dark:hover:bg-zinc-800/90 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 border border-white/80 dark:border-zinc-800/80 shadow-2xs'

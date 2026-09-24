@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 /**
  * CustomCursor provides a refined, responsive cursor:
- * 1) Small precision dot (10px, brand purple #7C3AED / #7638F5) tightly following cursor with no lag.
+ * 1) Small precision dot (10px, brand purple #7132F5 / #7638F5) tightly following cursor with no lag.
  * 2) Smooth expansion into hollow ring (32px, purple border, transparent center) on hovering interactive targets.
  * 3) Respects touch devices (pointer: coarse) - renders nothing and restores default cursor.
  */
@@ -107,8 +107,8 @@ export const CustomCursor: React.FC = () => {
       <div
         className={`-translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-150 ease-out ${
           isHovered
-            ? 'w-8 h-8 border-2 border-[#7C3AED] dark:border-[#9061F9] bg-transparent shadow-[0_0_12px_rgba(124,58,237,0.35)]'
-            : 'w-2.5 h-2.5 bg-[#7C3AED] dark:bg-[#9061F9] shadow-[0_0_8px_rgba(124,58,237,0.45)]'
+            ? 'w-8 h-8 border-2 border-[#7132F5] dark:border-[#9061F9] bg-transparent shadow-[0_0_12px_rgba(113,50,245,0.35)]'
+            : 'w-2.5 h-2.5 bg-[#7132F5] dark:bg-[#9061F9] shadow-[0_0_8px_rgba(113,50,245,0.45)]'
         }`}
       />
     </div>

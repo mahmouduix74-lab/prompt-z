@@ -60,7 +60,7 @@ export const ClarifyDialog: React.FC<ClarifyDialogProps> = ({ open, lang, questi
                       type="button"
                       aria-pressed={selected}
                       onClick={() => setAnswer(i, selected ? '' : option)}
-                      className={`h-9 px-3.5 rounded-full text-sm border transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 ${
+                      className={`h-9 px-3.5 rounded-xl text-sm border transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 ${
                         selected
                           ? 'bg-purple-600 border-purple-600 text-white'
                           : 'border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:border-purple-400'
@@ -78,7 +78,7 @@ export const ClarifyDialog: React.FC<ClarifyDialogProps> = ({ open, lang, questi
               onChange={(e) => setAnswer(i, e.target.value)}
               placeholder={isAr ? 'أو اكتب إجابتك' : 'Or type your answer'}
               aria-label={`${q.question} ${isAr ? '(إجابة أخرى)' : '(other answer)'}`}
-              className="h-11 px-4 rounded-2xl text-sm border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500/60 focus:border-purple-500"
+              className="h-11 px-4 rounded-xl text-sm border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500/60 focus:border-purple-500"
             />
           </fieldset>
         ))}
@@ -89,7 +89,7 @@ export const ClarifyDialog: React.FC<ClarifyDialogProps> = ({ open, lang, questi
           type="button"
           disabled={isLoading || !answered.length}
           onClick={() => onSubmit(answered)}
-          className="w-full h-12 px-4 rounded-2xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+          className="w-full h-11 px-4 rounded-xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
         >
           {isAr ? 'ولّد بالإجابات' : 'Generate with answers'}
         </button>
@@ -97,7 +97,7 @@ export const ClarifyDialog: React.FC<ClarifyDialogProps> = ({ open, lang, questi
           type="button"
           disabled={isLoading}
           onClick={() => onSubmit([])}
-          className="w-full h-12 px-4 rounded-2xl text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+          className="w-full h-11 px-4 rounded-xl text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
         >
           {isAr ? 'تخطَّ وولّد' : 'Skip and generate'}
         </button>
@@ -168,7 +168,7 @@ export const FeedbackBar: React.FC<FeedbackBarProps> = ({ lang, onSend }) => {
         : active
           ? 'bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-600/25'
           : 'border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:border-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:text-rose-300 dark:hover:bg-rose-500/10';
-    return `inline-flex items-center gap-2 h-10 px-4 rounded-full border text-sm font-semibold transition-colors duration-150 cursor-pointer disabled:cursor-default focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 ${tone}`;
+    return `inline-flex items-center gap-2 h-9 px-4 rounded-xl border text-sm font-semibold transition-colors duration-150 cursor-pointer disabled:cursor-default focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 ${tone}`;
   };
 
   return (
@@ -257,9 +257,9 @@ export const FeedbackBar: React.FC<FeedbackBarProps> = ({ lang, onSend }) => {
               onChange={(e) => setComment(e.target.value)}
               maxLength={1000}
               placeholder={isAr ? 'ما الذي لم يعجبك؟ (اختياري)' : 'What was wrong? (optional)'}
-              className="w-full sm:flex-1 h-10 shrink-0 px-4 rounded-xl text-sm border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:outline-hidden focus:ring-2 focus:ring-purple-500/60 focus:border-purple-500"
+              className="w-full sm:flex-1 h-9 shrink-0 px-4 rounded-xl text-sm border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:outline-hidden focus:ring-2 focus:ring-purple-500/60 focus:border-purple-500"
             />
-            <button type="submit" disabled={state === 'sending'} className={`${primaryButton} h-10`}>
+            <button type="submit" disabled={state === 'sending'} className={primaryButton}>
               {state === 'sending' ? (isAr ? 'جاري الإرسال...' : 'Sending...') : isAr ? 'إرسال' : 'Send'}
             </button>
           </motion.form>

@@ -68,7 +68,7 @@ export const Modal: React.FC<ModalProps> = ({ open, lang, labelledBy, onClose, s
               type="button"
               onClick={onClose}
               aria-label={isAr ? 'إغلاق' : 'Close'}
-              className="absolute top-4 end-4 p-2 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+              className="absolute top-4 end-4 inline-flex items-center justify-center w-9 h-9 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
             >
               <X className="w-4 h-4" />
             </button>

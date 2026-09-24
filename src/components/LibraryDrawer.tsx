@@ -105,7 +105,7 @@ export const LibraryDrawer: React.FC<LibraryDrawerProps> = ({
         {/* Drawer Header */}
         <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
           <div className="flex items-center gap-2">
-            <History className="w-4 h-4 text-indigo-500" />
+            <History className="w-4 h-4 text-purple-500" />
             <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
               {t.libraryTitle}
             </h2>
@@ -119,7 +119,7 @@ export const LibraryDrawer: React.FC<LibraryDrawerProps> = ({
               <button
                 type="button"
                 onClick={handleConfirmClearAll}
-                className="p-1.5 text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer text-xs flex items-center gap-1"
+                className="inline-flex items-center justify-center h-9 px-2.5 text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer text-sm gap-1"
                 title={t.clearAll}
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -128,7 +128,7 @@ export const LibraryDrawer: React.FC<LibraryDrawerProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -144,7 +144,7 @@ export const LibraryDrawer: React.FC<LibraryDrawerProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t.searchPlaceholder}
-              className="w-full pl-3 pr-8 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+              className="w-full h-9 pl-3 pr-8 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-purple-500"
             />
           </div>
 
@@ -152,7 +152,7 @@ export const LibraryDrawer: React.FC<LibraryDrawerProps> = ({
             <button
               type="button"
               onClick={() => setSelectedDomainFilter('all')}
-              className={`px-2.5 py-1 rounded-md font-medium whitespace-nowrap cursor-pointer transition-colors ${
+              className={`inline-flex items-center h-9 px-3 rounded-xl text-sm font-medium whitespace-nowrap cursor-pointer transition-colors ${
                 selectedDomainFilter === 'all'
                   ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
                   : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
@@ -165,9 +165,9 @@ export const LibraryDrawer: React.FC<LibraryDrawerProps> = ({
                 key={d.id}
                 type="button"
                 onClick={() => setSelectedDomainFilter(d.id)}
-                className={`px-2.5 py-1 rounded-md font-medium whitespace-nowrap cursor-pointer transition-colors ${
+                className={`inline-flex items-center h-9 px-3 rounded-xl text-sm font-medium whitespace-nowrap cursor-pointer transition-colors ${
                   selectedDomainFilter === d.id
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-purple-600 text-white'
                     : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
                 }`}
               >
@@ -200,7 +200,7 @@ export const LibraryDrawer: React.FC<LibraryDrawerProps> = ({
                   {/* Item Header */}
                   <div className="flex items-center justify-between gap-2 text-[11px]">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="px-2 py-0.5 rounded-md font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">
+                      <span className="px-2 py-0.5 rounded-md font-medium bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20">
                         {getDomainLabel(item.domain)}
                       </span>
                       <span className="px-1.5 py-0.5 rounded-md text-zinc-600 dark:text-zinc-400 bg-zinc-200 dark:bg-zinc-800 font-mono">
@@ -231,7 +231,7 @@ export const LibraryDrawer: React.FC<LibraryDrawerProps> = ({
                     <button
                       type="button"
                       onClick={() => onReopenItem(item)}
-                      className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:underline font-medium cursor-pointer"
+                      className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:underline font-medium cursor-pointer"
                     >
                       <span>{t.reopen}</span>
                       {lang === 'ar' ? (
@@ -245,7 +245,7 @@ export const LibraryDrawer: React.FC<LibraryDrawerProps> = ({
                       <button
                         type="button"
                         onClick={() => handleCopyItem(item.id, item.output)}
-                        className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                        className={`inline-flex items-center justify-center w-9 h-9 rounded-xl transition-colors cursor-pointer ${
                           isCopied
                             ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10'
                             : 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800'
@@ -258,7 +258,7 @@ export const LibraryDrawer: React.FC<LibraryDrawerProps> = ({
                       <button
                         type="button"
                         onClick={() => onDeleteItem(item.id)}
-                        className="p-1.5 rounded-md text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer"
+                        className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer"
                         title={t.delete}
                       >
                         <Trash2 className="w-3.5 h-3.5" />

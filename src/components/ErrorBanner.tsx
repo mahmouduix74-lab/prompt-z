@@ -72,7 +72,7 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
             <button
               type="button"
               onClick={onRetry}
-              className="p-1.5 rounded-lg text-rose-300 hover:text-white hover:bg-rose-900/50 transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-rose-300 hover:text-white hover:bg-rose-900/50 transition-colors cursor-pointer"
               title="إعادة المحاولة"
               aria-label="إعادة المحاولة"
             >
@@ -82,7 +82,7 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
           <button
             type="button"
             onClick={onDismiss}
-            className="p-1.5 rounded-lg text-rose-400 hover:text-rose-200 hover:bg-rose-900/50 transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-rose-400 hover:text-rose-200 hover:bg-rose-900/50 transition-colors cursor-pointer"
             title="إغلاق التنبيه"
             aria-label="إغلاق التنبيه"
           >
