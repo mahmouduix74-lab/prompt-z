@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ChevronDown, History, Hourglass, LogIn, LogOut, Mail, X, CheckCircle2, Sparkles } from 'lucide-react';
+import { ChevronDown, CircleUserRound, History, Hourglass, LogOut, Mail, X, CheckCircle2, Sparkles } from 'lucide-react';
 import { Modal } from './Modal';
 import { AppLang } from '../utils/i18n';
 import { AccountState, AccountUsage, requestEmailLink } from '../services/account';
@@ -123,8 +123,9 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({ account, lang, onSignI
         aria-label={isAr ? 'تسجيل الدخول' : 'Sign in'}
         className={`${signInButtonClassName} ${isAr ? 'font-arabic' : ''}`}
       >
-        <LogIn className="w-4 h-4" />
+        {/* Label first, icon trailing: on the right in English, on the left in Arabic. */}
         <span className="hidden sm:inline">{isAr ? 'تسجيل الدخول' : 'Sign in'}</span>
+        <CircleUserRound className="w-[18px] h-[18px]" strokeWidth={2} />
       </button>
     );
   }
@@ -463,8 +464,8 @@ export const LimitDialog: React.FC<LimitDialogProps> = ({ open, lang, canSignIn,
               }}
               className="flex items-center justify-center gap-2 w-full h-12 px-4 rounded-2xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
             >
-              <LogIn className="w-4 h-4" />
               {isAr ? 'تسجيل الدخول' : 'Sign in'}
+              <CircleUserRound className="w-[18px] h-[18px]" strokeWidth={2} />
             </button>
           )}
           <button
