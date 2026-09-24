@@ -41,14 +41,14 @@ function CreditsBadge({
   const label = isAr
     ? `متبقٍ ${usage.remaining} من ${usage.limit} برومبتات مجانية اليوم`
     : `${usage.remaining} of ${usage.limit} free prompts left today`;
-  const className = `inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 rounded-xl border text-sm font-bold tabular-nums leading-none ${
+  const className = `inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 rounded-xl border text-xs font-medium tabular-nums leading-none ${
     empty
       ? 'border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400'
       : 'border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-100'
   }`;
   const content = (
     <>
-      <Sparkles className={`hidden sm:block w-4 h-4 ${empty ? '' : 'text-purple-600 dark:text-purple-400'}`} />
+      <Sparkles className={`hidden sm:block w-3.5 h-3.5 ${empty ? '' : 'text-purple-600 dark:text-purple-400'}`} />
       <span dir="ltr">
         {usage.remaining}/{usage.limit}
       </span>
