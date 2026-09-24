@@ -148,7 +148,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
   const placeholderLines = lang === 'ar' ? PROMPT_PLACEHOLDERS_AR : PROMPT_PLACEHOLDERS_EN;
 
   return (
-    <div className="relative flex flex-col h-full rounded-2xl bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 focus-within:border-purple-500/70 focus-within:ring-1 focus-within:ring-purple-500/30 shadow-xs transition-all overflow-hidden">
+    <div className="relative flex flex-col h-full rounded-2xl bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl focus-within:ring-2 focus-within:ring-purple-500/30 shadow-xs transition-all overflow-hidden">
       {/* Header toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 min-h-[48px] border-b border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/40 backdrop-blur-md rounded-t-2xl">
         <div className="flex items-center gap-2 text-xs">

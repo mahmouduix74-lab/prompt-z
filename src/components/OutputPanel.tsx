@@ -31,6 +31,22 @@ interface OutputPanelProps {
 
 type ViewMode = 'formatted' | 'raw' | 'sections';
 
+/** Preview view: the prompt as written, with each "# TITLE" line drawn as a bold, highlighted heading. */
+function renderWithHeadings(text: string): React.ReactNode {
+  return text.split('\n').map((line, i, lines) => {
+    const newline = i < lines.length - 1 ? '\n' : '';
+    if (!line.startsWith('# ')) return <React.Fragment key={i}>{line + newline}</React.Fragment>;
+    return (
+      <React.Fragment key={i}>
+        <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-500/15 text-purple-700 dark:text-purple-300 text-sm sm:text-base font-extrabold tracking-wide">
+          {line}
+        </span>
+        {newline}
+      </React.Fragment>
+    );
+  });
+}
+
 export const OutputPanel: React.FC<OutputPanelProps> = ({
   output,
   isLoading,
@@ -209,10 +225,8 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
       initial={timestamp ? { opacity: 0.85 } : false}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45, ease: 'easeOut' }}
-      className={`relative flex flex-col h-full rounded-2xl bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl border overflow-hidden shadow-xs transition-colors duration-700 ${
-        newResultGlow
-          ? 'border-purple-500/60 dark:border-purple-500/50 shadow-[0_0_24px_rgba(168,85,247,0.12)]'
-          : 'border-zinc-200/80 dark:border-zinc-800/80'
+      className={`relative flex flex-col h-full rounded-2xl bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl overflow-hidden shadow-xs transition-shadow duration-700 ${
+        newResultGlow ? 'shadow-[0_0_24px_rgba(168,85,247,0.18)]' : ''
       }`}
     >
       {/* Clean, Simple Output Header */}
@@ -441,8 +455,8 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                       transition={{ duration: 0.28, delay: idx * 0.04 }}
                       className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/70 p-3.5"
                     >
-                      <div className="text-xs font-bold font-mono text-purple-600 dark:text-purple-400 mb-1.5 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                      <div className="text-sm font-extrabold font-mono tracking-wide text-purple-700 dark:text-purple-300 mb-2 flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
                         <span># {sec.title}</span>
                       </div>
                       <div className="text-xs font-mono text-zinc-800 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">
@@ -466,7 +480,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                       : 'text-zinc-900 dark:text-zinc-100 font-mono'
                   }`}
                 >
-                  {isTyping ? displayedText : output}
+                  {viewMode === 'raw' ? currentActiveText : renderWithHeadings(currentActiveText)}
                   {isTyping && (
                     <span
                       className="inline-block w-2 h-4 ml-0.5 bg-purple-600 dark:bg-purple-400 animate-pulse align-middle rounded-xs"
