@@ -11,6 +11,7 @@
  */
 import { handleGenerate, handleHealth, handleModels, handleRefine, type HandlerResult } from '../src/server/api';
 import { renderEvalPage, runEval } from '../src/server/eval';
+import { handleHistory } from '../src/server/history';
 import {
   authEnabled,
   consumeQuota,
@@ -121,6 +122,8 @@ export default {
         return handleEmailLink(request, env);
       case '/api/auth/email/verify':
         return handleEmailVerify(request, env);
+      case '/api/history':
+        return handleHistory(request, env, await readSession(request, env));
       case '/api/generate': {
         if (request.method !== 'POST') return methodNotAllowed('POST');
         const body = await readJson(request);

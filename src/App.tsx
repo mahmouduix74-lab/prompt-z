@@ -33,6 +33,7 @@ import { CustomCursor } from './components/CustomCursor';
 import { Mascot } from './components/Mascot';
 import { LimitNotice, SignInDialog } from './components/AccountMenu';
 import { AccountState, DailyLimitError, fetchAccount } from './services/account';
+import { deleteHistory, fetchHistory, saveHistory } from './services/history';
 
 // Keys keep their original "gemini_" names so prompts saved before the move to OpenRouter still load.
 const STORAGE_KEYS = {
@@ -190,6 +191,29 @@ export default function App() {
     return safeStorage.getJSON<SavedPromptItem[]>(STORAGE_KEYS.SAVED_PROMPTS, []);
   });
 
+  // Signed in: history lives in the account (server). Prompts saved in this browser before signing
+  // in move into the account once, then leave the browser, so the next person here cannot see them.
+  const signedIn = Boolean(account?.user);
+  const accountEmail = account?.user?.email;
+  const accountLoaded = account !== null;
+  useEffect(() => {
+    if (!accountLoaded) return;
+    let cancelled = false;
+    (async () => {
+      if (!accountEmail) {
+        setSavedItems(safeStorage.getJSON<SavedPromptItem[]>(STORAGE_KEYS.SAVED_PROMPTS, []));
+        return;
+      }
+      const local = safeStorage.getJSON<SavedPromptItem[]>(STORAGE_KEYS.SAVED_PROMPTS, []);
+      if (local.length && (await saveHistory(local))) safeStorage.removeItem(STORAGE_KEYS.SAVED_PROMPTS);
+      const remote = await fetchHistory();
+      if (!cancelled && remote) setSavedItems(remote);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [accountLoaded, accountEmail]);
+
   const handleChangeDepth = (value: DepthType) => {
     setDepth(value);
     safeStorage.setItem(STORAGE_KEYS.DEPTH, value);
@@ -298,7 +322,13 @@ export default function App() {
     };
     const updatedLibrary = [newItem, ...savedItems.filter((i) => i.output !== item.output)].slice(0, 100);
     setSavedItems(updatedLibrary);
-    safeStorage.setJSON(STORAGE_KEYS.SAVED_PROMPTS, updatedLibrary);
+    if (signedIn) {
+      // The same output saved before is replaced by the new entry.
+      saveHistory([newItem]);
+      savedItems.filter((i) => i.output === item.output).forEach((i) => deleteHistory(i.id));
+    } else {
+      safeStorage.setJSON(STORAGE_KEYS.SAVED_PROMPTS, updatedLibrary);
+    }
   };
 
   // Main Submit Handler
@@ -448,12 +478,14 @@ export default function App() {
   const handleDeleteSavedItem = (id: string) => {
     const updated = savedItems.filter((item) => item.id !== id);
     setSavedItems(updated);
-    safeStorage.setJSON(STORAGE_KEYS.SAVED_PROMPTS, updated);
+    if (signedIn) deleteHistory(id);
+    else safeStorage.setJSON(STORAGE_KEYS.SAVED_PROMPTS, updated);
   };
 
   const handleClearAllSaved = () => {
     setSavedItems([]);
-    safeStorage.removeItem(STORAGE_KEYS.SAVED_PROMPTS);
+    if (signedIn) deleteHistory();
+    else safeStorage.removeItem(STORAGE_KEYS.SAVED_PROMPTS);
   };
 
   return (
