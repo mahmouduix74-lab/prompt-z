@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { X } from 'lucide-react';
 import { AppLang } from '../utils/i18n';
@@ -14,6 +15,8 @@ interface ModalProps {
   onClose: () => void;
   /** Wider dialogs for forms. */
   size?: 'sm' | 'md' | 'lg';
+  /** 'solid' hides the page behind completely instead of dimming it. */
+  backdrop?: 'dim' | 'solid';
   children: React.ReactNode;
 }
 
@@ -21,7 +24,7 @@ interface ModalProps {
  * The site's popup: dimmed backdrop, centered card, Esc and backdrop click to close, focus moved
  * into the dialog on open and back to where it was on close.
  */
-export const Modal: React.FC<ModalProps> = ({ open, lang, labelledBy, onClose, size = 'sm', children }) => {
+export const Modal: React.FC<ModalProps> = ({ open, lang, labelledBy, onClose, size = 'sm', backdrop = 'dim', children }) => {
   const isAr = lang === 'ar';
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -41,7 +44,8 @@ export const Modal: React.FC<ModalProps> = ({ open, lang, labelledBy, onClose, s
     };
   }, [open, onClose]);
 
-  return (
+  // Rendered at the end of <body> so no section's stacking (the hero, the sticky header) sits above it.
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -49,7 +53,9 @@ export const Modal: React.FC<ModalProps> = ({ open, lang, labelledBy, onClose, s
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2, ease: EASE }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/50 backdrop-blur-sm"
+          className={`fixed inset-0 z-[100] flex items-center justify-center p-4 ${
+            backdrop === 'solid' ? 'bg-zinc-50/95 dark:bg-zinc-950/95 backdrop-blur-2xl' : 'bg-zinc-950/50 backdrop-blur-sm'
+          }`}
           onMouseDown={(e) => e.target === e.currentTarget && onClose()}
         >
           <motion.div
@@ -76,6 +82,7 @@ export const Modal: React.FC<ModalProps> = ({ open, lang, labelledBy, onClose, s
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
