@@ -180,6 +180,8 @@ export interface EvalResult {
   passed: boolean;
   problems: string[];
   modelUsed?: string;
+  /** What the automatic check found in the model's first brief, and whether its fix was used. */
+  autoFix?: { issues: string[]; repaired: boolean };
   prompt: string;
 }
 
@@ -212,7 +214,7 @@ function check(c: EvalCase, body: any): EvalResult {
   const taskCount = (tasks.match(/^\d+\./gm) || []).length;
   if (c.maxTasks && taskCount > c.maxTasks) problems.push(`Too many tasks: ${taskCount} (max ${c.maxTasks})`);
 
-  return { name: c.name, domain: c.domain, depth: c.depth, passed: problems.length === 0, problems, modelUsed: body?.modelUsed, prompt };
+  return { name: c.name, domain: c.domain, depth: c.depth, passed: problems.length === 0, problems, modelUsed: body?.modelUsed, autoFix: body?.check, prompt };
 }
 
 /** Runs every case, three at a time so OpenRouter does not rate-limit the run. */
@@ -256,6 +258,7 @@ export function renderEvalPage(run: Awaited<ReturnType<typeof runEval>>): string
     .map(
       (r) => `<details${r.passed ? '' : ' open'}>
 <summary><b class="${r.passed ? 'ok' : 'bad'}">${r.passed ? 'PASS' : 'FAIL'}</b> ${escape(r.name)} <span>${r.domain} · ${r.depth}</span></summary>
+${r.autoFix?.issues.length ? `<p>Auto-check: ${escape(r.autoFix.issues.join(', '))} · ${r.autoFix.repaired ? 'fixed by the model' : 'not fixed'}</p>` : ''}
 ${r.problems.length ? `<ul>${r.problems.map((p) => `<li>${escape(p)}</li>`).join('')}</ul>` : ''}
 <pre dir="auto">${escape(r.prompt)}</pre>
 </details>`
@@ -275,7 +278,7 @@ summary{cursor:pointer}summary span{color:var(--muted);font-size:13px}
 pre{white-space:pre-wrap;word-break:break-word;font-size:13px;border-top:1px solid var(--line);padding-top:8px}
 </style></head><body>
 <h1>${run.passed} / ${run.total} passed</h1>
-<p>Each case is a fixed request run through the live model, then checked automatically. ${run.seconds}s.</p>
+<p>Each case is a fixed request run through the live model, then checked automatically. ${run.seconds}s. Auto-fixed: ${run.results.filter((r) => r.autoFix?.repaired).length}.</p>
 ${rows}
 </body></html>`;
 }

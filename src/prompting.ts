@@ -499,6 +499,11 @@ export interface PromptBrief {
   outOfDomain: string[];
   /** Asked before generating when the request is too vague for a useful prompt; usually empty. */
   clarifyingQuestions: ClarifyingQuestion[];
+  /**
+   * Each separate item of the request, copied as written, and the task (1-based) that covers it;
+   * task 0 marks background that asks for nothing. Checked by checkBrief, never shown.
+   */
+  coverage: { item: string; task: number }[];
 }
 
 export interface ClarifyingQuestion {
@@ -527,7 +532,8 @@ Return one JSON object and nothing else (no code fence, no text before or after 
   "acceptanceCriteria": ["a checkable condition the answer must meet"],
   "openQuestions": ["a question about something the request leaves open"],
   "outOfDomain": ["something the user wrote that belongs to another domain; usually []"],
-  "clarifyingQuestions": [{ "question": "a short question", "options": ["a short likely answer"] }]
+  "clarifyingQuestions": [{ "question": "a short question", "options": ["a short likely answer"] }],
+  "coverage": [{ "item": "one separate item of the request, copied word for word", "task": 1 }]
 }
 
 EVERYTHING FOLLOWS THE REQUEST. The DOMAIN below only says whose expertise answers it. Decide the kind first, then make every field fit what this user actually asked for.
@@ -540,6 +546,8 @@ kind:
 role: seniority plus the specialty this request needs, taken from the DOMAIN and adapted to its subject (e.g. "Senior Product Designer who knows food-delivery apps well").
 
 tasks: one per thing the user asked for. Every separate item the user wrote (each bullet, numbered point, line or sentence that asks for something) becomes its own task, or a part of a task it clearly belongs to; count them, and none may be missing. Never split one item into several tasks, never add tasks, and never turn quality work into a task. parts: every element the user named for that task (never drop one), plus, only where LIMITS allows, pieces it cannot exist without. Something the user wrote that belongs to another domain goes to outOfDomain instead.
+
+coverage: every separate item of the request in order (each bullet, numbered point, line or sentence), copied word for word, with the number of the task that covers it (1 for the first task). Use 0 only for an item that asks for nothing (pure background), and for an item that went to outOfDomain. PromptZ checks this list against the request.
 
 constraints: only rules that follow from this request, each starting with a verb:
 - every requirement or limit the user stated (technology, tone, length, count, platform);
@@ -710,6 +718,10 @@ export function parseBrief(text: string): PromptBrief | null {
       .map((q: any) => ({ question: str(q?.question).slice(0, 200), options: strs(q?.options, 4).map((o) => o.slice(0, 60)) }))
       .filter((q: ClarifyingQuestion) => q.question)
       .slice(0, MAX_QUESTIONS),
+    coverage: (Array.isArray(data.coverage) ? data.coverage : [])
+      .map((c: any) => ({ item: str(c?.item), task: Number.isInteger(c?.task) ? c.task : -1 }))
+      .filter((c: { item: string }) => c.item)
+      .slice(0, 40),
   };
 }
 
@@ -743,6 +755,7 @@ export function localBrief(rawText: string, domain: DomainType, language: 'ar' |
     openQuestions: [],
     outOfDomain: [],
     clarifyingQuestions: [],
+    coverage: [],
   };
 }
 
