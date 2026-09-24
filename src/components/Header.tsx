@@ -27,48 +27,56 @@ const iconButtonClassName =
 
 function CreditsBadge({
   usage,
+  dailyCredits,
   lang,
   signedIn,
   onSignIn,
 }: {
   usage: NonNullable<AccountState['usage']>;
+  /** What an account gets a day; the badge always shows this number. */
+  dailyCredits: number;
   lang: AppLang;
   signedIn: boolean;
   onSignIn: () => void;
 }) {
   const isAr = lang === 'ar';
-  const empty = usage.remaining === 0;
-  const label = isAr
-    ? `متبقٍ ${usage.remaining} من ${usage.limit} برومبتات مجانية اليوم`
-    : `${usage.remaining} of ${usage.limit} free prompts left today`;
-  const className = `inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 rounded-xl border text-xs font-medium tabular-nums leading-none ${
-    empty
-      ? 'border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400'
-      : 'border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-100'
-  }`;
-  const content = (
-    <>
-      <Sparkles className={`hidden sm:block w-3.5 h-3.5 ${empty ? '' : 'text-purple-600 dark:text-purple-400'}`} />
-      <span dir="ltr">
-        {usage.remaining}/{usage.limit}
-      </span>
-    </>
-  );
-  // Visitors can tap it to sign in for more; for a signed-in user it only informs.
-  return signedIn ? (
-    <span className={className} title={label} aria-label={label} role="status">
-      {content}
-    </span>
-  ) : (
-    <button
-      type="button"
-      onClick={onSignIn}
-      title={label}
-      aria-label={label}
-      className={`${className} cursor-pointer hover:border-purple-400 dark:hover:border-purple-500 transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400`}
-    >
-      {content}
-    </button>
+  const [open, setOpen] = React.useState(false);
+  const title = isAr ? `متبقٍ ${usage.remaining} من ${usage.limit} اليوم` : `${usage.remaining} of ${usage.limit} left today`;
+  const note = signedIn
+    ? isAr
+      ? 'تتجدد كل يوم.'
+      : 'They renew every day.'
+    : isAr
+      ? `سجّل الدخول لتحصل على ${dailyCredits} كل يوم.`
+      : `Sign in to get ${dailyCredits} every day.`;
+
+  return (
+    <div className="relative group" onMouseLeave={() => setOpen(false)}>
+      <button
+        type="button"
+        // Visitors go to sign-in; for a signed-in user a tap shows the count (hover does on desktop).
+        onClick={() => (signedIn ? setOpen((v) => !v) : onSignIn())}
+        onBlur={() => setOpen(false)}
+        aria-label={`${title}. ${note}`}
+        aria-describedby="credits-tooltip"
+        className="inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-xs font-medium leading-none text-zinc-500 dark:text-zinc-400 hover:border-purple-400 dark:hover:border-purple-500 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+      >
+        <Sparkles className="hidden sm:block w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+        <span className="tabular-nums">
+          {dailyCredits} {isAr ? 'كريدت' : 'credits'}
+        </span>
+      </button>
+      <div
+        id="credits-tooltip"
+        role="tooltip"
+        className={`absolute top-full mt-2 end-0 z-50 w-max max-w-[15rem] px-3 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-800 text-white shadow-lg text-xs leading-relaxed pointer-events-none transition-opacity duration-150 ${
+          open ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
+        } ${isAr ? 'font-arabic text-right' : 'text-left'}`}
+      >
+        <p className="font-semibold tabular-nums">{title}</p>
+        <p className="text-zinc-300">{note}</p>
+      </div>
+    </div>
   );
 }
 
@@ -109,7 +117,15 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Right Controls: Language, Theme Appearance */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Today's free prompts left, in a small outlined frame next to the language toggle */}
-          {account?.usage && <CreditsBadge usage={account.usage} lang={lang} signedIn={Boolean(account.user)} onSignIn={onSignIn} />}
+          {account?.usage && (
+            <CreditsBadge
+              usage={account.usage}
+              dailyCredits={account.limits.signedIn}
+              lang={lang}
+              signedIn={Boolean(account.user)}
+              onSignIn={onSignIn}
+            />
+          )}
 
           {/* Language Toggle */}
           <motion.button

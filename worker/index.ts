@@ -24,6 +24,7 @@ import {
   handleEmailVerify,
   handleLogin,
   handleLogout,
+  LIMITS,
   readSession,
   readUsage,
   type AccountEnv,
@@ -119,6 +120,7 @@ export default {
             email: emailEnabled(env),
             user: user && { name: user.name, email: user.email, picture: user.picture },
             usage,
+            limits: LIMITS,
           },
         });
       }
