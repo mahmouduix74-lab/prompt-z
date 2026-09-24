@@ -16,7 +16,6 @@ import {
   refinePromptText,
 } from './services/api';
 import { refineLocalPromptText } from './services/localRefiner';
-import { generateLocalStructuredPrompt } from './services/localEngine';
 import { Theme, AppLang } from './utils/i18n';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
@@ -32,7 +31,9 @@ import { Clock } from 'lucide-react';
 import { CustomCursor } from './components/CustomCursor';
 import { Mascot } from './components/Mascot';
 import { LimitNotice, SignInDialog } from './components/AccountMenu';
-import { AccountState, DailyLimitError, fetchAccount } from './services/account';
+import { AccountState, DailyLimitError, fetchAccount, sendFeedback } from './services/account';
+import { ClarifyPanel, FeedbackBar, ServiceNotice } from './components/PromptAssist';
+import type { ClarifyingQuestion } from './prompting';
 import { deleteHistory, fetchHistory, saveHistory } from './services/history';
 
 // Keys keep their original "gemini_" names so prompts saved before the move to OpenRouter still load.
@@ -332,8 +333,15 @@ export default function App() {
   };
 
   // Main Submit Handler
-  const handleGenerate = async () => {
-    if (!rawText.trim()) {
+  // Clarifying questions for a vague request, a busy model, and 👍/👎 on the latest prompt.
+  const [clarifyQuestions, setClarifyQuestions] = useState<ClarifyingQuestion[] | null>(null);
+  const [serviceDown, setServiceDown] = useState<boolean>(false);
+  const [feedbackTarget, setFeedbackTarget] = useState<{ id: number; request: string; prompt: string } | null>(null);
+  const lastRunRef = useRef<{ skipClarify: boolean; text: string }>({ skipClarify: false, text: '' });
+
+  const runGenerate = async (opts: { skipClarify?: boolean; requestText?: string } = {}) => {
+    const text = (opts.requestText ?? rawText).trim();
+    if (!text) {
       setGenerationError({
         statusCode: 400,
         rawMessage:
@@ -346,19 +354,24 @@ export default function App() {
 
     setGenerationError(null);
     setRetryNotice(null);
+    setServiceDown(false);
+    setClarifyQuestions(null);
     const model = resolveModel();
     if (!model) return;
+    const skipClarify = Boolean(opts.skipClarify);
+    lastRunRef.current = { skipClarify, text };
 
     setIsLoading(true);
     try {
-      const generatedPrompt = await generateStructuredPrompt({
+      const result = await generateStructuredPrompt({
         model,
-        rawText,
+        rawText: text,
         exclusions,
         domain,
         depth,
         outputLanguage,
         baseSystemInstruction: systemInstruction,
+        skipClarify,
         onRetry: (attempt, delaySeconds, isPerMinute) => {
           setRetryNotice(
             lang === 'ar'
@@ -368,24 +381,20 @@ export default function App() {
         },
       });
 
-      const finalOutput =
-        generatedPrompt && generatedPrompt.trim()
-          ? generatedPrompt.trim()
-          : generateLocalStructuredPrompt({
-              rawText,
-              domain,
-              depth,
-              outputLanguage,
-              exclusions,
-            });
+      if ('clarify' in result) {
+        setClarifyQuestions(result.clarify);
+        return;
+      }
 
+      const finalOutput = result.prompt.trim();
       const now = Date.now();
       setOutput(finalOutput);
       setCurrentResultTimestamp(now);
+      setFeedbackTarget({ id: now, request: text, prompt: finalOutput });
 
-      // Auto save to local library
+      // Auto save to the library
       saveToLibrary({
-        rawInput: rawText.trim(),
+        rawInput: text,
         exclusions: exclusions.trim() || undefined,
         domain,
         depth,
@@ -400,32 +409,30 @@ export default function App() {
         handleDailyLimit(err);
         return;
       }
-      console.warn('Remote generation issue handled gracefully by local engine:', err);
-      const fallbackPrompt = generateLocalStructuredPrompt({
-        rawText,
-        domain,
-        depth,
-        outputLanguage,
-        exclusions,
-      });
-      const now = Date.now();
-      setOutput(fallbackPrompt);
-      setCurrentResultTimestamp(now);
-      saveToLibrary({
-        rawInput: rawText.trim(),
-        exclusions: exclusions.trim() || undefined,
-        domain,
-        depth,
-        outputLanguage,
-        model,
-        output: fallbackPrompt,
-        timestamp: now,
-      });
+      // Busy or unreachable model: say so and offer a retry, never a weaker stand-in prompt.
+      console.warn('Generation failed:', err);
+      setServiceDown(true);
     } finally {
       setIsLoading(false);
       setRetryNotice(null);
     }
   };
+
+  const handleGenerate = () => runGenerate();
+
+  /** Answers to the clarifying questions are added to the request, so the user sees what was sent. */
+  const handleClarifySubmit = (answers: string[]) => {
+    const text = answers.length
+      ? `${rawText.trim()}\n\n${lang === 'ar' ? 'تفاصيل إضافية' : 'More details'}:\n${answers.map((a) => `- ${a}`).join('\n')}`
+      : rawText;
+    if (answers.length) setRawText(text);
+    runGenerate({ skipClarify: true, requestText: text });
+  };
+
+  const handleSendFeedback = (rating: 'up' | 'down', comment: string) =>
+    feedbackTarget
+      ? sendFeedback({ rating, comment, request: feedbackTarget.request, prompt: feedbackTarget.prompt, domain, depth, outputLanguage })
+      : Promise.resolve(false);
 
   // Manual save to library
   const handleManualSaveToLibrary = () => {
@@ -572,6 +579,25 @@ export default function App() {
             </div>
           )}
 
+          {serviceDown && (
+            <ServiceNotice
+              lang={lang}
+              isLoading={isLoading}
+              onRetry={() => runGenerate({ skipClarify: lastRunRef.current.skipClarify, requestText: lastRunRef.current.text })}
+              onDismiss={() => setServiceDown(false)}
+            />
+          )}
+
+          {clarifyQuestions && (
+            <ClarifyPanel
+              lang={lang}
+              questions={clarifyQuestions}
+              isLoading={isLoading}
+              onSubmit={handleClarifySubmit}
+              onDismiss={() => setClarifyQuestions(null)}
+            />
+          )}
+
           {/* Error Banner */}
           <ErrorBanner
             error={generationError}
@@ -646,6 +672,11 @@ export default function App() {
                   onOpenLibrary={() => setIsLibraryOpen(true)}
                   savedCount={savedItems.length}
                 />
+                {feedbackTarget && feedbackTarget.prompt === output && !isLoading && (
+                  <div className="mt-3 px-1">
+                    <FeedbackBar key={feedbackTarget.id} lang={lang} onSend={handleSendFeedback} />
+                  </div>
+                )}
               </div>
             </div>
           </div>

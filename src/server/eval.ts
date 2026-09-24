@@ -182,6 +182,7 @@ function check(c: EvalCase, body: any): EvalResult {
   const tasks = section(prompt, 'TASKS');
   const problems: string[] = [];
 
+  if (body?.error) problems.push(`Model unavailable: ${body.error.detail || body.error.message}`);
   if (body?.fallbackUsed) problems.push(`Model not used (local engine): ${body.fallbackReason || 'no reason given'}`);
   const language = detectRequestLanguage(tasks.replace(/"[^"]*"/g, ''));
   if (language !== c.language) problems.push(`Wrong language: expected ${c.language}, got ${language}`);
@@ -211,7 +212,14 @@ export async function runEval(serverKey?: string): Promise<{ passed: number; tot
       const i = next++;
       const c = CASES[i];
       const { body } = await handleGenerate(
-        { rawText: c.rawText, domain: c.domain, depth: c.depth, outputLanguage: c.outputLanguage || 'match', exclusions: c.exclusions },
+        {
+          rawText: c.rawText,
+          domain: c.domain,
+          depth: c.depth,
+          outputLanguage: c.outputLanguage || 'match',
+          exclusions: c.exclusions,
+          skipClarify: true,
+        },
         undefined,
         serverKey
       );

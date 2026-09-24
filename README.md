@@ -22,6 +22,12 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
   says whose expertise answers it (its standards are candidates for requests that create
   something). Code (`composePrompt` in [`src/prompting.ts`](src/prompting.ts)) lays the brief out in
   the depth's sections.
+- **Clarifying questions:** when a request is too vague, `/api/generate` returns up to 3 optional
+  questions (`clarify`) instead of a prompt; the answers are added to the request (`skipClarify`).
+- **Busy model:** if OpenRouter fails, `/api/generate` returns 503 `model_unavailable` and the site
+  offers a retry (the call is not counted). The local engine is used only when no key is set.
+- **Feedback:** 👍 / 👎 under each prompt go to `/api/feedback` (D1 table `feedback`). Signed-in
+  emails listed in `ADMIN_EMAILS` (a build variable) can read them at `/api/feedback`.
 - **Eval:** open `/api/eval` to run 12 fixed requests through the live model and check each prompt
   automatically (`/api/eval?json` for JSON). Cases live in [`src/server/eval.ts`](src/server/eval.ts).
 - **Fallback:** if there is no key or OpenRouter fails, a local engine builds the prompt, so the

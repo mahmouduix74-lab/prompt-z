@@ -37,6 +37,8 @@ export interface AccountEnv {
   RESEND_API_KEY?: string;
   /** Sender of sign-in emails; its domain must be verified in Resend. */
   EMAIL_FROM?: string;
+  /** Comma-separated emails allowed to read the feedback page (/api/feedback). */
+  ADMIN_EMAILS?: string;
 }
 
 export const LIMITS = { anonymous: 3, signedIn: 6 };
@@ -361,6 +363,22 @@ async function quotaSubject(request: Request, env: AccountEnv, user: SessionUser
   // Stored hashed (with the site's secret) so the database never holds raw IP addresses.
   const subject = `ip:${await sha256(`${siteSecret(env) || 'promptz'}:${ip}`)}`;
   return { subject, limit: authEnabled(env) ? LIMITS.anonymous : LIMITS.signedIn };
+}
+
+/** A hash of the caller's IP (with the site's secret), for per-IP limits without storing the address. */
+export async function ipKey(request: Request, env: AccountEnv): Promise<string> {
+  return sha256(`${siteSecret(env) || 'promptz'}:${request.headers.get('CF-Connecting-IP') || 'unknown'}`);
+}
+
+/** Gives back one counted call (the model was down, or it asked questions instead of answering). */
+export async function refundQuota(request: Request, env: AccountEnv, user: SessionUser | null): Promise<void> {
+  if (!env.DB) return;
+  try {
+    const { subject } = await quotaSubject(request, env, user);
+    await env.DB.prepare('UPDATE usage SET count = MAX(count - 1, 0) WHERE subject = ?1 AND day = ?2').bind(subject, today()).run();
+  } catch (err) {
+    console.warn('[Quota] Could not refund usage:', err);
+  }
 }
 
 /** Today's usage for the request's user or IP, without counting anything. */

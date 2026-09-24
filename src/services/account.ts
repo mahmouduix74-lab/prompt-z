@@ -50,6 +50,29 @@ export async function requestEmailLink(email: string, lang: string): Promise<str
   }
 }
 
+/** Records 👍 / 👎 on a generated prompt. Resolves to false when it could not be saved. */
+export async function sendFeedback(feedback: {
+  rating: 'up' | 'down';
+  comment: string;
+  request: string;
+  prompt: string;
+  domain: string;
+  depth: string;
+  outputLanguage: string;
+}): Promise<boolean> {
+  try {
+    const res = await fetch('/api/feedback', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(feedback),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 /** Thrown by generate/refine when today's limit is used up; the UI explains it instead of falling back. */
 export class DailyLimitError extends Error {
   canSignIn: boolean;

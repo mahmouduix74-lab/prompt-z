@@ -12,10 +12,12 @@
 import { handleGenerate, handleHealth, handleModels, handleRefine, type HandlerResult } from '../src/server/api';
 import { renderEvalPage, runEval } from '../src/server/eval';
 import { handleHistory } from '../src/server/history';
+import { handleFeedback } from '../src/server/feedback';
 import {
   authEnabled,
   consumeQuota,
   emailEnabled,
+  refundQuota,
   googleEnabled,
   handleCallback,
   handleEmailLink,
@@ -78,8 +80,12 @@ async function withinLimit(
   }
 
   const result = await run();
-  if (usage && result.status === 200 && result.body && typeof result.body === 'object') {
-    (result.body as Record<string, unknown>).usage = usage;
+  const resultBody = result.body as Record<string, unknown> | null;
+  // Nothing was delivered (the model was down, or it asked clarifying questions): not counted.
+  if (usage && (result.status >= 500 || resultBody?.clarify)) {
+    await refundQuota(request, env, user);
+  } else if (usage && result.status === 200 && resultBody && typeof resultBody === 'object') {
+    resultBody.usage = usage;
   }
   return json(result);
 }
@@ -122,6 +128,8 @@ export default {
         return handleEmailLink(request, env);
       case '/api/auth/email/verify':
         return handleEmailVerify(request, env);
+      case '/api/feedback':
+        return handleFeedback(request, env, await readSession(request, env));
       case '/api/history':
         return handleHistory(request, env, await readSession(request, env));
       case '/api/generate': {

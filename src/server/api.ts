@@ -162,6 +162,8 @@ export interface GenerateInput {
   model?: string;
   systemInstruction?: string;
   outputLanguage?: OutputLanguage;
+  /** True when the user already answered (or skipped) the clarifying questions. */
+  skipClarify?: boolean;
 }
 
 export async function handleGenerate(
@@ -169,7 +171,7 @@ export async function handleGenerate(
   userApiKey: string | undefined,
   serverKey = nodeServerKey()
 ): Promise<HandlerResult> {
-  const { rawText, exclusions, domain, depth, systemInstruction, outputLanguage } = input || ({} as GenerateInput);
+  const { rawText, exclusions, domain, depth, systemInstruction, outputLanguage, skipClarify } = input || ({} as GenerateInput);
 
   if (!rawText || !rawText.trim()) {
     return { status: 400, body: { error: { code: 400, message: 'Text input is required.' } } };
@@ -209,6 +211,11 @@ export async function handleGenerate(
     const brief = parseBrief(text);
     if (!brief) throw new Error(`${modelUsed} did not return a readable brief.`);
 
+    // Too vague to plan well: ask the user first (they can answer or skip).
+    if (!skipClarify && brief.clarifyingQuestions.length) {
+      return { status: 200, body: { clarify: brief.clarifyingQuestions, modelUsed } };
+    }
+
     // Step 2: code builds the prompt from the brief, so structure and boundaries never vary.
     const result = composePrompt({
       brief,
@@ -219,9 +226,14 @@ export async function handleGenerate(
     });
     return { status: 200, body: { result, modelUsed } };
   } catch (err: any) {
-    const fallbackReason = String(err?.message || err);
-    console.warn('[Generate Resilience] OpenRouter unavailable/busy, using smart local engine fallback:', fallbackReason);
-    return { status: 200, body: { result: localPrompt(), fallbackUsed: true, fallbackReason, modelUsed: 'Local Smart Engine' } };
+    // With a key configured, a failure means the model is busy or down. Say so (the site offers a
+    // retry) rather than handing back a much weaker offline prompt as if it were the real result.
+    const reason = String(err?.message || err);
+    console.warn('[Generate] Model unavailable:', reason);
+    return {
+      status: 503,
+      body: { error: { code: 503, reason: 'model_unavailable', message: 'The AI model is busy or unavailable. Try again shortly.', detail: reason } },
+    };
   }
 }
 
