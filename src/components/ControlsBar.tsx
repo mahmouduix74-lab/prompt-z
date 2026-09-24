@@ -79,7 +79,7 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
                 {isSelected && (
                   <motion.div
                     layoutId="depth-tab-indicator"
-                    className="absolute inset-0 bg-white dark:bg-zinc-800 rounded-lg shadow-sm shadow-purple-500/10 border border-purple-500/80 dark:border-purple-400/70 -z-10"
+                    className="absolute inset-0 bg-white dark:bg-zinc-800 rounded-lg border border-purple-500/80 dark:border-purple-400/70 -z-10"
                     transition={{ type: 'spring', bounce: 0.15, duration: 0.3 }}
                   />
                 )}
@@ -108,7 +108,7 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
             value={outputLanguage}
             onChange={(e) => onChangeOutputLanguage(e.target.value as OutputLanguage)}
             disabled={disabled}
-            className="w-full h-full appearance-none bg-zinc-100/90 dark:bg-zinc-950/80 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-800/80 rounded-xl px-3 pe-8 text-sm font-medium focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/30 cursor-pointer disabled:opacity-50 transition-colors truncate shadow-xs"
+            className="w-full h-full appearance-none bg-zinc-100/90 dark:bg-zinc-950/80 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-800/80 rounded-xl px-3 pe-8 text-sm font-medium focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/30 cursor-pointer disabled:opacity-50 transition-colors truncate"
           >
             {OUTPUT_LANGUAGES.map((option) => (
               <option

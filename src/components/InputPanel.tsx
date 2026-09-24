@@ -258,7 +258,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
           disabled={isBusy || !rawText.trim()}
           whileHover={isBusy || !rawText.trim() ? {} : { scale: 1.03 }}
           whileTap={isBusy || !rawText.trim() ? {} : { scale: 0.97 }}
-          className="flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-medium bg-zinc-100/90 hover:bg-purple-50/80 dark:bg-zinc-800/80 dark:hover:bg-purple-950/40 text-zinc-700 hover:text-purple-700 dark:text-zinc-300 dark:hover:text-purple-300 border border-zinc-200/80 hover:border-purple-300/80 dark:border-zinc-700/80 dark:hover:border-purple-500/40 shadow-2xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-medium bg-zinc-100/90 hover:bg-purple-50/80 dark:bg-zinc-800/80 dark:hover:bg-purple-950/40 text-zinc-700 hover:text-purple-700 dark:text-zinc-300 dark:hover:text-purple-300 border border-zinc-200/80 hover:border-purple-300/80 dark:border-zinc-700/80 dark:hover:border-purple-500/40 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           title={t.enhancePromptTooltip}
         >
           {isEnhancing ? (
@@ -328,7 +328,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             disabled={isBusy || !rawText.trim()}
             whileHover={isBusy || !rawText.trim() ? {} : { scale: 1.03 }}
             whileTap={isBusy || !rawText.trim() ? {} : { scale: 0.96 }}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 sm:px-8 h-11 min-h-11 rounded-xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-600 dark:hover:bg-purple-500 text-white text-sm font-bold shadow-[0_6px_20px_rgba(113,50,245,0.38)] hover:shadow-[0_8px_25px_rgba(113,50,245,0.5)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 sm:px-8 h-11 min-h-11 rounded-xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-600 dark:hover:bg-purple-500 text-white text-sm font-bold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             title="Shortcut: Ctrl/Cmd + Enter"
           >
             {isLoading ? (

@@ -177,7 +177,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               type="button"
               onClick={handleSave}
-              className="h-9 px-4 text-sm font-semibold rounded-xl bg-purple-600 hover:bg-purple-700 text-white cursor-pointer transition-colors shadow-xs"
+              className="h-9 px-4 text-sm font-semibold rounded-xl bg-purple-600 hover:bg-purple-700 text-white cursor-pointer transition-colors"
             >
               {t.saveAndClose}
             </button>

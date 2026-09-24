@@ -163,17 +163,17 @@ export const FeedbackBar: React.FC<FeedbackBarProps> = ({ lang, onSend }) => {
     const tone =
       kind === 'up'
         ? active
-          ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-600/25'
+          ? 'bg-emerald-600 border-emerald-600 text-white'
           : 'border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:text-emerald-300 dark:hover:bg-emerald-500/10'
         : active
-          ? 'bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-600/25'
+          ? 'bg-rose-600 border-rose-600 text-white'
           : 'border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:border-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:text-rose-300 dark:hover:bg-rose-500/10';
     return `inline-flex items-center gap-2 h-9 px-4 rounded-xl border text-sm font-semibold transition-colors duration-150 cursor-pointer disabled:cursor-default focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 ${tone}`;
   };
 
   return (
     <div
-      className={`flex flex-col gap-3 p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-xs ${isAr ? 'font-arabic' : ''}`}
+      className={`flex flex-col gap-3 p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md ${isAr ? 'font-arabic' : ''}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <AnimatePresence mode="wait" initial={false}>
