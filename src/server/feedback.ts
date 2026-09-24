@@ -70,9 +70,18 @@ export async function handleFeedback(request: Request, env: AccountEnv, user: Se
   }
 
   if (request.method === 'GET') {
-    const admins = (env.ADMIN_EMAILS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+    // Pull the addresses out of however the variable was typed (quotes, spaces, commas, a label).
+    const admins = ((env.ADMIN_EMAILS || '').match(/[^\s,;:"'<>=]+@[^\s,;:"'<>=]+/g) || []).map((e) => e.toLowerCase());
     if (!user || !admins.includes(user.email.toLowerCase())) {
-      return new Response('Sign in with an admin account to see feedback.', { status: 403, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      const why = !user
+        ? 'You are not signed in on this site.'
+        : !admins.length
+          ? 'ADMIN_EMAILS has no email address in it (or is not set on this deployment).'
+          : `You are signed in as ${user.email}, which is not in ADMIN_EMAILS (${admins.length} address${admins.length > 1 ? 'es' : ''} listed).`;
+      return new Response(`Sign in with an admin account to see feedback.\n${why}`, {
+        status: 403,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      });
     }
     const onlyDown = new URL(request.url).searchParams.get('rating') === 'down';
     const totals = await db
