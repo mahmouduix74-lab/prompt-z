@@ -30,9 +30,9 @@ import { SettingsModal } from './components/SettingsModal';
 import { Clock } from 'lucide-react';
 import { CustomCursor } from './components/CustomCursor';
 import { Mascot } from './components/Mascot';
-import { LimitNotice, SignInDialog } from './components/AccountMenu';
+import { LimitDialog, SignInDialog } from './components/AccountMenu';
 import { AccountState, DailyLimitError, fetchAccount, sendFeedback } from './services/account';
-import { ClarifyPanel, FeedbackBar, ServiceNotice } from './components/PromptAssist';
+import { ClarifyDialog, FeedbackBar, ServiceNotice } from './components/PromptAssist';
 import type { ClarifyingQuestion } from './prompting';
 import { deleteHistory, fetchHistory, saveHistory } from './services/history';
 
@@ -153,6 +153,7 @@ export default function App() {
   const [signInIssue, setSignInIssue] = useState<'error' | 'expired' | null>(null);
   const [isSignInOpen, setIsSignInOpen] = useState<boolean>(false);
   const closeSignIn = useCallback(() => setIsSignInOpen(false), []);
+  const closeLimitNotice = useCallback(() => setLimitNotice(null), []);
 
   const refreshAccount = useCallback(async () => {
     setAccount(await fetchAccount());
@@ -338,6 +339,7 @@ export default function App() {
   const [serviceDown, setServiceDown] = useState<boolean>(false);
   const [feedbackTarget, setFeedbackTarget] = useState<{ id: number; request: string; prompt: string } | null>(null);
   const lastRunRef = useRef<{ skipClarify: boolean; text: string }>({ skipClarify: false, text: '' });
+  const closeClarify = useCallback(() => setClarifyQuestions(null), []);
 
   const runGenerate = async (opts: { skipClarify?: boolean; requestText?: string } = {}) => {
     const text = (opts.requestText ?? rawText).trim();
@@ -518,6 +520,22 @@ export default function App() {
       />
 
       <SignInDialog open={isSignInOpen} lang={lang} account={account} onClose={closeSignIn} />
+      <LimitDialog
+        open={Boolean(limitNotice)}
+        lang={lang}
+        canSignIn={limitNotice?.canSignIn ?? false}
+        limit={limitNotice?.limit}
+        onSignIn={() => setIsSignInOpen(true)}
+        onClose={closeLimitNotice}
+      />
+      <ClarifyDialog
+        open={Boolean(clarifyQuestions)}
+        lang={lang}
+        questions={clarifyQuestions || []}
+        isLoading={isLoading}
+        onSubmit={handleClarifySubmit}
+        onClose={closeClarify}
+      />
 
       {/* Hero Section with Embedded Glassmorphic Prompt Builder */}
       <HeroSection
@@ -545,15 +563,6 @@ export default function App() {
             </div>
           )}
 
-          {limitNotice && (
-            <LimitNotice
-              lang={lang}
-              canSignIn={limitNotice.canSignIn}
-              limit={limitNotice.limit}
-              onSignIn={() => setIsSignInOpen(true)}
-              onDismiss={() => setLimitNotice(null)}
-            />
-          )}
 
           {signInIssue && (
             <div
@@ -588,15 +597,6 @@ export default function App() {
             />
           )}
 
-          {clarifyQuestions && (
-            <ClarifyPanel
-              lang={lang}
-              questions={clarifyQuestions}
-              isLoading={isLoading}
-              onSubmit={handleClarifySubmit}
-              onDismiss={() => setClarifyQuestions(null)}
-            />
-          )}
 
           {/* Error Banner */}
           <ErrorBanner

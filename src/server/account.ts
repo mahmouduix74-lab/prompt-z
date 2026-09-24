@@ -356,13 +356,29 @@ export function accountKey(user: SessionUser): string {
 }
 
 /** Who the request counts against, and their daily limit. */
+async function ipSubject(request: Request, env: AccountEnv): Promise<string> {
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  // Stored hashed (with the site's secret) so the database never holds raw IP addresses.
+  return `ip:${await sha256(`${siteSecret(env) || 'promptz'}:${ip}`)}`;
+}
+
 async function quotaSubject(request: Request, env: AccountEnv, user: SessionUser | null) {
   // An account is its email, so Google and email sign-in for the same address share one count.
   if (user) return { subject: `user:${accountKey(user)}`, limit: LIMITS.signedIn };
-  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-  // Stored hashed (with the site's secret) so the database never holds raw IP addresses.
-  const subject = `ip:${await sha256(`${siteSecret(env) || 'promptz'}:${ip}`)}`;
-  return { subject, limit: authEnabled(env) ? LIMITS.anonymous : LIMITS.signedIn };
+  return { subject: await ipSubject(request, env), limit: authEnabled(env) ? LIMITS.anonymous : LIMITS.signedIn };
+}
+
+/**
+ * Signed-in prompts also count against the IP, so signing out after using the account's prompts
+ * does not open a fresh anonymous allowance on the same connection.
+ */
+async function bumpIp(request: Request, env: AccountEnv, delta: 1 | -1): Promise<void> {
+  const subject = await ipSubject(request, env);
+  const sql =
+    delta > 0
+      ? `INSERT INTO usage (subject, day, count) VALUES (?1, ?2, 1) ON CONFLICT(subject, day) DO UPDATE SET count = count + 1`
+      : 'UPDATE usage SET count = MAX(count - 1, 0) WHERE subject = ?1 AND day = ?2';
+  await env.DB!.prepare(sql).bind(subject, today()).run();
 }
 
 /** A hash of the caller's IP (with the site's secret), for per-IP limits without storing the address. */
@@ -376,6 +392,7 @@ export async function refundQuota(request: Request, env: AccountEnv, user: Sessi
   try {
     const { subject } = await quotaSubject(request, env, user);
     await env.DB.prepare('UPDATE usage SET count = MAX(count - 1, 0) WHERE subject = ?1 AND day = ?2').bind(subject, today()).run();
+    if (user) await bumpIp(request, env, -1);
   } catch (err) {
     console.warn('[Quota] Could not refund usage:', err);
   }
@@ -419,8 +436,10 @@ export async function consumeQuota(
     )
       .bind(subject, today())
       .first<{ count: number }>();
+    const allowed = (row?.count ?? 1) <= limit;
+    if (kind === 'prompt' && user && allowed) await bumpIp(request, env, 1);
     const used = Math.min(row?.count ?? 1, limit);
-    return { allowed: (row?.count ?? 1) <= limit, used, limit, remaining: Math.max(0, limit - used) };
+    return { allowed, used, limit, remaining: Math.max(0, limit - used) };
   } catch (err) {
     console.warn('[Quota] Could not count usage, allowing the request:', err);
     return null;
