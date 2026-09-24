@@ -6,6 +6,7 @@
  * OPENROUTER_API_KEY is a Worker secret: `npx wrangler secret put OPENROUTER_API_KEY`,
  * or Settings → Variables and Secrets in the Cloudflare dashboard.
  */
+import { renderEvalPage, runEval } from '../src/server/eval';
 import { handleGenerate, handleHealth, handleModels, handleRefine, type HandlerResult } from '../src/server/api';
 
 interface Env {
@@ -46,6 +47,11 @@ export default {
       case '/api/refine':
         if (request.method !== 'POST') return methodNotAllowed('POST');
         return json(await handleRefine(await readJson(request), userApiKey, serverKey));
+      case '/api/eval': {
+        const run = await runEval(serverKey);
+        if (searchParams.has('json')) return json({ status: 200, body: run });
+        return new Response(renderEvalPage(run), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      }
       default:
         return json({ status: 404, body: { error: { code: 404, message: 'Not found.' } } });
     }

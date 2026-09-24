@@ -3,6 +3,7 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { handleHealth, handleModels, handleGenerate, handleRefine } from './src/server/api.js';
+import { renderEvalPage, runEval } from './src/server/eval.js';
 
 // This Express server is used for local development and for platforms that
 // run a persistent Node process. In production the site runs on Cloudflare
@@ -38,6 +39,12 @@ app.post('/api/refine', async (req, res) => {
   const userApiKey = (req.headers['x-api-key'] as string) || '';
   const { status, body } = await handleRefine(req.body || {}, userApiKey);
   res.status(status).json(body);
+});
+
+app.get('/api/eval', async (req, res) => {
+  const run = await runEval();
+  if ('json' in req.query) res.json(run);
+  else res.type('html').send(renderEvalPage(run));
 });
 
 async function startServer() {
