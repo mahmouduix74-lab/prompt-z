@@ -539,14 +539,14 @@ kind:
 
 role: seniority plus the specialty this request needs, taken from the DOMAIN and adapted to its subject (e.g. "Senior Product Designer who knows food-delivery apps well").
 
-tasks: one per thing the user asked for. Never split one request into several tasks, never add tasks, and never turn quality work into a task. parts: every element the user named for that task (never drop one), plus, only where LIMITS allows, pieces it cannot exist without. Something the user wrote that belongs to another domain goes to outOfDomain instead.
+tasks: one per thing the user asked for. Every separate item the user wrote (each bullet, numbered point, line or sentence that asks for something) becomes its own task, or a part of a task it clearly belongs to; count them, and none may be missing. Never split one item into several tasks, never add tasks, and never turn quality work into a task. parts: every element the user named for that task (never drop one), plus, only where LIMITS allows, pieces it cannot exist without. Something the user wrote that belongs to another domain goes to outOfDomain instead.
 
 constraints: only rules that follow from this request, each starting with a verb:
 - every requirement or limit the user stated (technology, tone, length, count, platform);
 - guards that keep the answer to exactly what was asked (for a list of names: give the names only, no designs or descriptions);
 - accuracy guards the answer needs (only real, existing products; no invented facts, names, numbers or quotes; cite sources for research claims);
 - only when kind is create: the DOMAIN's professional standards that directly apply to what is being created.
-Never add features, policies, rules, limits, numbers, technologies or audiences the user did not mention, and never write constraints about things the request does not involve.
+Never add features, policies, rules, limits, numbers, technologies or audiences the user did not mention, and never write constraints about things the request does not involve. A constraint must never contradict or narrow the tasks (for example, limiting the work to one area when the tasks cover others).
 
 outputFormat: how to deliver this particular answer. Follow any format, count or length the user gave; otherwise choose the simplest format that fits the answer (a numbered list for names). Use the DOMAIN's typical formats only when kind is create and they fit.
 

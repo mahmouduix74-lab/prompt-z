@@ -148,6 +148,18 @@ const CASES: EvalCase[] = [
     maxTasks: 1,
   },
   {
+    name: 'Every item of a list becomes a task',
+    rawText:
+      'تحسين شريط التنقل (Navbar) وضبط المسافات بين أيقونات اللغة، والمظهر، والحساب، مع توحيد ارتفاع أيقونة الحساب ليتساوى مع ارتفاع الأيقونات المجاورة.\n- إضافة معظم النطاقات (Domains) المتاحة.\n- تعزيز إبراز العمق (Depth) من خلال إضافة حدود (Stroke) خفيفة، مع زيادة التفاعل وإبراز أيقونات الإعجاب وعدم الإعجاب (Like/Dislike) بشكل أوضح وتفاعلاتها',
+    domain: 'frontend',
+    depth: 'medium',
+    language: 'ar',
+    // No item may be dropped, and no constraint may shrink the work to the navbar alone.
+    requiredInTasks: [/navbar|شريط التنقل/i, /domain|النطاقات|المجالات/i, /depth|العمق/i, /like|dislike|الإعجاب/i],
+    forbidden: /navbar only|only (to )?the navbar|شريط التنقل فقط|على شريط التنقل وحده|Navbar فقط/i,
+    maxTasks: 5,
+  },
+  {
     name: 'Exclusions stay out of the tasks',
     rawText: 'Sign up form with name, email and password',
     domain: 'ui_ux',
