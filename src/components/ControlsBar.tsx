@@ -39,9 +39,9 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 rounded-2xl bg-white/70 dark:bg-zinc-900/50 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs transition-colors">
       {/* 1. Detail Depth Tabs */}
       <div className="flex flex-col space-y-1.5">
-        <div className="flex items-center gap-2 h-5 text-xs">
-          <div className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300 font-medium">
-            <Gauge className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+        <div className="flex items-center gap-2 h-6 text-sm">
+          <div className="flex items-center gap-1.5 text-zinc-900 dark:text-zinc-50 font-bold">
+            <Gauge className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
             <span>{t.depthLabel}</span>
           </div>
           <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/50">
@@ -92,12 +92,12 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
 
       {/* 2. Output Language */}
       <div className="flex flex-col space-y-1.5">
-        <div className="flex items-center justify-between h-5 text-xs">
+        <div className="flex items-center justify-between h-6 text-sm">
           <label
             htmlFor="output-language"
-            className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300 font-medium"
+            className="flex items-center gap-1.5 text-zinc-900 dark:text-zinc-50 font-bold"
           >
-            <Languages className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+            <Languages className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
             <span>{t.outputLanguageLabel}</span>
           </label>
         </div>

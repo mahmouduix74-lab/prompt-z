@@ -217,14 +217,15 @@ export async function handleCallback(request: Request, env: AccountEnv): Promise
 
   const picture = typeof claims.picture === 'string' && claims.picture.startsWith('https://') ? claims.picture : undefined;
   const user: SessionUser = { sub: String(claims.sub), email: String(claims.email || ''), name: String(claims.name || ''), picture };
-  return back('?signin=ok', [await startSession(env, user)]);
+  return back('?signin=ok', [await startSession(request, env, user)]);
 }
 
 /** Saves the user and returns the Set-Cookie value of a new signed session. */
-async function startSession(env: AccountEnv, user: SessionUser): Promise<string> {
+async function startSession(request: Request, env: AccountEnv, user: SessionUser): Promise<string> {
   if (env.DB) {
     try {
       await ensureSchema(env.DB);
+      await carryOverAnonymousUsage(request, env, user);
       await env.DB.prepare(
         `INSERT INTO users (id, email, name, created_at) VALUES (?1, ?2, ?3, ?4)
          ON CONFLICT(id) DO UPDATE SET email = excluded.email, name = CASE WHEN excluded.name <> '' THEN excluded.name ELSE users.name END`
@@ -319,7 +320,7 @@ export async function handleEmailVerify(request: Request, env: AccountEnv): Prom
     .first<{ email: string; expires_at: number }>();
   if (!row || row.expires_at < Date.now()) return back('?signin=expired');
 
-  return back('?signin=ok', await startSession(env, { sub: `email:${row.email}`, email: row.email, name: '' }));
+  return back('?signin=ok', await startSession(request, env, { sub: `email:${row.email}`, email: row.email, name: '' }));
 }
 
 /** GET /api/auth/logout */
@@ -379,6 +380,24 @@ async function bumpIp(request: Request, env: AccountEnv, delta: 1 | -1): Promise
       ? `INSERT INTO usage (subject, day, count) VALUES (?1, ?2, 1) ON CONFLICT(subject, day) DO UPDATE SET count = count + 1`
       : 'UPDATE usage SET count = MAX(count - 1, 0) WHERE subject = ?1 AND day = ?2';
   await env.DB!.prepare(sql).bind(subject, today()).run();
+}
+
+/**
+ * Prompts used today before signing in count toward the account's limit, so signing in adds
+ * LIMITS.signedIn - LIMITS.anonymous prompts (as the limit popup promises), not a fresh allowance.
+ */
+async function carryOverAnonymousUsage(request: Request, env: AccountEnv, user: SessionUser): Promise<void> {
+  const row = await env.DB!.prepare('SELECT count FROM usage WHERE subject = ?1 AND day = ?2')
+    .bind(await ipSubject(request, env), today())
+    .first<{ count: number }>();
+  const used = Math.min(row?.count ?? 0, LIMITS.anonymous);
+  if (!used) return;
+  await env.DB!.prepare(
+    `INSERT INTO usage (subject, day, count) VALUES (?1, ?2, ?3)
+     ON CONFLICT(subject, day) DO UPDATE SET count = MAX(count, excluded.count)`
+  )
+    .bind(`user:${accountKey(user)}`, today(), used)
+    .run();
 }
 
 /** A hash of the caller's IP (with the site's secret), for per-IP limits without storing the address. */

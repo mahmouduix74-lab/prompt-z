@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ChevronDown, History, Hourglass, LogIn, LogOut, Mail, X, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, History, Hourglass, LogIn, LogOut, Mail, X, CheckCircle2, Sparkles } from 'lucide-react';
 import { Modal } from './Modal';
 import { AppLang } from '../utils/i18n';
-import { AccountState, requestEmailLink } from '../services/account';
+import { AccountState, AccountUsage, requestEmailLink } from '../services/account';
 import { PromptZIcon } from './Logo';
 
 /** Soft ease-out used for menus and dialogs. */
@@ -37,6 +37,45 @@ function Avatar({ name, picture, size = 'sm' }: { name: string; picture?: string
     >
       {(name.trim()[0] || '?').toUpperCase()}
     </span>
+  );
+}
+
+/** Today's free prompts: what is left of the daily allowance, as a number and a bar. */
+function UsageMeter({ usage, lang }: { usage: AccountUsage; lang: AppLang }) {
+  const isAr = lang === 'ar';
+  const share = usage.limit ? usage.remaining / usage.limit : 0;
+  const tone = usage.remaining === 0 ? 'bg-rose-500' : share <= 0.34 ? 'bg-amber-500' : 'bg-purple-600';
+  return (
+    <div className="px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2 text-sm">
+        <span className="inline-flex items-center gap-2 font-semibold text-zinc-800 dark:text-zinc-100">
+          <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+          {isAr ? 'البرومبتات المجانية اليوم' : "Today's free prompts"}
+        </span>
+        <span className="font-bold tabular-nums text-zinc-900 dark:text-zinc-50" dir="ltr">
+          {usage.remaining}/{usage.limit}
+        </span>
+      </div>
+      <div
+        className="mt-2 h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={usage.limit}
+        aria-valuenow={usage.remaining}
+        aria-label={isAr ? 'المتبقي من برومبتات اليوم' : "Prompts left today"}
+      >
+        <div className={`h-full rounded-full ${tone} transition-[width] duration-500`} style={{ width: `${share * 100}%` }} />
+      </div>
+      <p className="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+        {usage.remaining === 0
+          ? isAr
+            ? 'انتهت برومبتات اليوم، وتتجدد غدًا.'
+            : 'All used today. They renew tomorrow.'
+          : isAr
+            ? `متبقٍ ${usage.remaining} من ${usage.limit}، وتتجدد كل يوم.`
+            : `${usage.remaining} of ${usage.limit} left. They renew every day.`}
+      </p>
+    </div>
   );
 }
 
@@ -117,7 +156,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({ account, lang, onSignI
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.18, ease: EASE }}
-            className="absolute top-full mt-2 end-0 z-50 w-64 p-1.5 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-black/10 origin-top"
+            className="absolute top-full mt-2 end-0 z-50 w-72 max-w-[calc(100vw-2rem)] p-1.5 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-black/10 origin-top"
           >
             <div className="flex items-center gap-3 px-3 py-3">
               <Avatar name={displayName} picture={user.picture} size="md" />
@@ -129,6 +168,12 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({ account, lang, onSignI
               </div>
             </div>
             <div className="h-px bg-zinc-200 dark:bg-zinc-800 mx-2 my-1" />
+            {account.usage && (
+              <>
+                <UsageMeter usage={account.usage} lang={lang} />
+                <div className="h-px bg-zinc-200 dark:bg-zinc-800 mx-2 my-1" />
+              </>
+            )}
             <button
               type="button"
               role="menuitem"
@@ -253,6 +298,14 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ open, lang, account,
               <p className="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">
                 {isAr ? 'سجّل الدخول لتحصل على برومبتات إضافية كل يوم.' : 'Sign in to get more prompts every day.'}
               </p>
+              {account?.usage && (
+                <p className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-700 dark:text-purple-300">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {isAr
+                    ? `متبقٍ لك ${account.usage.remaining} من ${account.usage.limit} مجانًا اليوم`
+                    : `${account.usage.remaining} of ${account.usage.limit} free prompts left today`}
+                </p>
+              )}
             </div>
 
             {status === 'sent' ? (
@@ -267,6 +320,11 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ open, lang, account,
                     {email.trim()}
                   </span>
                   {isAr ? '. الرابط صالح 15 دقيقة ولمرة واحدة.' : '. It works once, for 15 minutes.'}
+                </p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {isAr
+                    ? 'افتح الرابط في هذا المتصفح نفسه ليتم تسجيل دخولك هنا.'
+                    : 'Open the link in this same browser, or you will be signed in somewhere else.'}
                 </p>
                 <button
                   type="button"

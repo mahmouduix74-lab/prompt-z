@@ -58,8 +58,8 @@ export const DomainSelector: React.FC<DomainSelectorProps> = ({
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 px-0.5">
-        <span className="font-medium text-zinc-700 dark:text-zinc-300">{t.domainLabel}</span>
+      <div className="flex items-center justify-between h-6 text-sm px-0.5">
+        <span className="text-zinc-900 dark:text-zinc-50 font-bold">{t.domainLabel}</span>
       </div>
 
       <div className="flex items-center gap-1.5 overflow-x-auto sm:overflow-visible sm:flex-wrap pb-1 scrollbar-none no-scrollbar">
