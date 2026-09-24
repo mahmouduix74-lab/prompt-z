@@ -150,7 +150,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {/* Language and theme share one segmented frame */}
-          <div className="inline-flex items-center h-9 p-0.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60">
+          <div className="inline-flex items-center h-9 p-0.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white/60 dark:bg-zinc-900/60">
           <motion.button
             type="button"
             onClick={onToggleLang}

@@ -34,7 +34,7 @@
   --xhero-accent-soft: #9f78fb;
   --xhero-surface: rgb(255 255 255 / 0.85);
   --xhero-badge-border: #e4e4e7;
-  --xhero-button-border: rgb(0 0 0 / 0.12);
+  --xhero-button-border: #d4d4d8; /* zinc-300: the stroke of every outlined control */
   --xhero-button-border-hover: rgb(0 0 0 / 0.25);
   --xhero-focus-ring: #7132f5; /* A11y addition (WCAG 2.4.7). */
   /* Clash Display for Latin; IBM Plex Sans Arabic for Arabic */
@@ -89,7 +89,7 @@
   --xhero-accent-soft: #bea6ff;
   --xhero-surface: rgb(18 18 24 / 0.7);
   --xhero-badge-border: #27272a;
-  --xhero-button-border: rgb(255 255 255 / 0.12);
+  --xhero-button-border: #3f3f46; /* zinc-700 */
   --xhero-button-border-hover: rgb(255 255 255 / 0.3);
   --xhero-focus-ring: #bea6ff;
   --xhero-button-shadow:
@@ -293,6 +293,13 @@
 .xhero-button--primary {
   background-color: var(--xhero-accent);
   color: #fff;
+}
+
+/* A filled button needs no stroke, at rest or on hover and focus. */
+.xhero-button--primary::after,
+.xhero-button--primary:hover::after,
+.xhero-button--primary:focus-visible::after {
+  border-color: transparent;
 }
 
 .xhero-button--secondary {
