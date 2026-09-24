@@ -188,7 +188,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {/* 2-3 Word Title with Typewriter Looping Effect */}
             <h1
               id="hero-title"
-              className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight select-none max-w-4xl mx-auto"
+              className="text-[25px] min-[420px]:text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight select-none max-w-4xl mx-auto"
               style={{
                 fontFamily: isAr
                   ? "'IBM Plex Sans Arabic', system-ui, sans-serif"
