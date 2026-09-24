@@ -8,6 +8,7 @@
  */
 import { EXACT_SYSTEM_INSTRUCTION, OPENROUTER_MODEL, OPENROUTER_MODELS, buildSystemInstruction } from '../constants.js';
 import { buildRefineInstruction, composePrompt, parseBrief, refineAddsContent, resolveOutputLanguage } from '../prompting.js';
+import { checkBrief, repairRequest } from '../briefCheck.js';
 import { refineLocalPromptText } from '../services/localRefiner.js';
 import { generateLocalStructuredPrompt } from '../services/localEngine.js';
 import { DomainType, DepthType, OutputLanguage } from '../types.js';
@@ -44,7 +45,13 @@ function isModelUnavailable(status: number, message: string): boolean {
  */
 async function generateWithOpenRouter(
   apiKey: string,
-  params: { systemInstruction: string; userText: string; temperature: number }
+  params: {
+    systemInstruction: string;
+    userText: string;
+    temperature: number;
+    /** Later turns of the same conversation (the model's earlier answer and a follow-up). */
+    followUp?: { role: 'assistant' | 'user'; content: string }[];
+  }
 ): Promise<{ text: string; modelUsed: string }> {
   let lastError: Error | null = null;
 
@@ -54,6 +61,7 @@ async function generateWithOpenRouter(
       messages: [
         { role: 'system', content: params.systemInstruction },
         { role: 'user', content: params.userText },
+        ...(params.followUp || []),
       ],
       temperature: params.temperature,
     });
@@ -208,7 +216,7 @@ export async function handleGenerate(
       temperature: 0.1,
     });
 
-    const brief = parseBrief(text);
+    let brief = parseBrief(text);
     if (!brief) throw new Error(`${modelUsed} did not return a readable brief.`);
 
     // Too vague to plan well: ask the user first (they can answer or skip).
@@ -216,15 +224,38 @@ export async function handleGenerate(
       return { status: 200, body: { clarify: brief.clarifyingQuestions, modelUsed } };
     }
 
+    // Check the brief against the request; on a problem, the model fixes its own brief once.
+    const language = resolveOutputLanguage(outputLanguage, rawText);
+    const issues = checkBrief(brief, rawText, exclusions, language);
+    let repaired = false;
+    if (issues.length) {
+      try {
+        const fix = await generateWithOpenRouter(activeKey, {
+          systemInstruction: extractionInstruction,
+          userText: rawText.trim(),
+          temperature: 0.1,
+          followUp: [
+            { role: 'assistant', content: text },
+            { role: 'user', content: repairRequest(issues) },
+          ],
+        });
+        const fixed = parseBrief(fix.text);
+        // Keep the fix only when it is readable and leaves fewer problems.
+        if (fixed && checkBrief(fixed, rawText, exclusions, language).length < issues.length) {
+          brief = fixed;
+          repaired = true;
+        }
+      } catch (err: any) {
+        console.warn('[Generate] Repair failed, keeping the first brief:', String(err?.message || err));
+      }
+    }
+
     // Step 2: code builds the prompt from the brief, so structure and boundaries never vary.
-    const result = composePrompt({
-      brief,
-      domain,
-      depth,
-      language: resolveOutputLanguage(outputLanguage, rawText),
-      exclusions,
-    });
-    return { status: 200, body: { result, modelUsed } };
+    const result = composePrompt({ brief, domain, depth, language, exclusions });
+    return {
+      status: 200,
+      body: { result, modelUsed, check: { issues: issues.map((i) => i.kind), repaired } },
+    };
   } catch (err: any) {
     // With a key configured, a failure means the model is busy or down. Say so (the site offers a
     // retry) rather than handing back a much weaker offline prompt as if it were the real result.
