@@ -108,17 +108,15 @@ export const Header: React.FC<HeaderProps> = ({
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="sticky top-0 z-40 text-zinc-900 dark:text-white"
+      className={`sticky top-0 z-40 text-zinc-900 dark:text-white border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${
+        scrolled
+          ? 'bg-white/75 dark:bg-zinc-950/70 backdrop-blur-xl border-zinc-200/70 dark:border-zinc-800/70 shadow-[0_1px_12px_rgba(24,22,34,0.06)]'
+          : 'bg-transparent border-transparent'
+      }`}
     >
-      {/* Same width and glass as the Domain Context frame below (max-w-7xl, px-4 sm:px-6). */}
       <div
-        className={`max-w-7xl mx-auto px-4 sm:px-6 transition-[padding] duration-300 ${
-          scrolled ? 'pt-2' : 'pt-4 sm:pt-5'
-        }`}
-      >
-      <div
-        className={`flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4 py-2 rounded-3xl bg-white/80 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 transition-shadow duration-300 ${
-          scrolled ? 'shadow-[0_8px_30px_rgba(24,22,34,0.08)]' : 'shadow-sm'
+        className={`max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between gap-2 sm:gap-4 transition-[padding] duration-300 ${
+          scrolled ? 'py-2.5' : 'pt-6 pb-2.5 sm:pt-7 sm:pb-3'
         }`}
       >
         {/* Logo & Name: PromptZ */}
@@ -189,7 +187,6 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Sign in / signed-in user, last */}
           <AccountMenu account={account} lang={lang} onSignIn={onSignIn} onOpenLibrary={onOpenLibrary} />
         </div>
-      </div>
       </div>
     </motion.header>
   );
