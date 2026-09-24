@@ -270,7 +270,7 @@
   color: var(--xhero-text);
   font-family: inherit;
   font-size: 0.9375rem; /* 15px */
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.2;
   letter-spacing: -0.04em;
   text-decoration: none;
@@ -292,6 +292,7 @@
 
 .xhero-button--primary {
   background-color: var(--xhero-accent);
+  color: #fff;
 }
 
 .xhero-button--secondary {
@@ -309,7 +310,7 @@
 .xhero-button__face {
   display: flex;
   flex: none;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   gap: 5px;
   transition: transform var(--dur-spring-button, 0.3s) var(--ease-spring-button, ease-out);
@@ -319,6 +320,15 @@
   flex: none;
   width: 16px;
   height: 16px;
+}
+
+/* Arabic letters rise and fall further than Latin ones: give each rolling line more room. */
+.xhero:lang(ar) .xhero-button__roll {
+  height: 1.6em;
+}
+
+.xhero:lang(ar) .xhero-button__face {
+  line-height: 1.6;
 }
 
 /* Arrows point along the reading direction. */
@@ -334,6 +344,10 @@
   .xhero-button:hover .xhero-button__face {
     transform: translateY(calc(-1.2em - 10px));
   }
+
+  .xhero:lang(ar) .xhero-button:hover .xhero-button__face {
+    transform: translateY(calc(-1.6em - 10px));
+  }
 }
 
 /* A11y addition: keyboard focus gets the hover state plus a visible ring. */
@@ -348,6 +362,10 @@
 
 .xhero-button:focus-visible .xhero-button__face {
   transform: translateY(calc(-1.2em - 10px));
+}
+
+.xhero:lang(ar) .xhero-button:focus-visible .xhero-button__face {
+  transform: translateY(calc(-1.6em - 10px));
 }
 
 /* --------------------------------------------------------------------------
