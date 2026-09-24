@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { HelpCircle, RefreshCw, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { HelpCircle, RefreshCw, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Modal } from './Modal';
 import { AppLang } from '../utils/i18n';
 import type { ClarifyingQuestion } from '../prompting';
 
@@ -8,17 +9,18 @@ const primaryButton =
 const quietButton =
   'inline-flex items-center justify-center h-9 px-3 rounded-xl text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400';
 
-interface ClarifyPanelProps {
+interface ClarifyDialogProps {
+  open: boolean;
   lang: AppLang;
   questions: ClarifyingQuestion[];
   isLoading: boolean;
-  /** Called with the answered questions as "question: answer" lines (empty when skipped). */
+  /** Called with the answered questions as "question answer" lines (empty when skipped). */
   onSubmit: (answers: string[]) => void;
-  onDismiss: () => void;
+  onClose: () => void;
 }
 
-/** Optional questions asked when a request is too vague; answers are added to the request. */
-export const ClarifyPanel: React.FC<ClarifyPanelProps> = ({ lang, questions, isLoading, onSubmit, onDismiss }) => {
+/** Popup with optional questions asked when a request is too vague; answers are added to the request. */
+export const ClarifyDialog: React.FC<ClarifyDialogProps> = ({ open, lang, questions, isLoading, onSubmit, onClose }) => {
   const isAr = lang === 'ar';
   const [answers, setAnswers] = useState<string[]>(() => questions.map(() => ''));
 
@@ -26,40 +28,27 @@ export const ClarifyPanel: React.FC<ClarifyPanelProps> = ({ lang, questions, isL
 
   const setAnswer = (i: number, value: string) => setAnswers((prev) => prev.map((a, n) => (n === i ? value : a)));
   const answered = questions
-    .map((q, i) => (answers[i].trim() ? `${q.question} ${answers[i].trim()}` : ''))
+    .map((q, i) => (answers[i]?.trim() ? `${q.question} ${answers[i].trim()}` : ''))
     .filter(Boolean);
 
   return (
-    <section
-      aria-labelledby="clarify-title"
-      className={`relative p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-purple-500/25 shadow-lg shadow-purple-950/5 ${isAr ? 'font-arabic' : ''}`}
-    >
-      <button
-        type="button"
-        onClick={onDismiss}
-        aria-label={isAr ? 'إغلاق' : 'Close'}
-        className="absolute top-3 end-3 p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-      >
-        <X className="w-4 h-4" />
-      </button>
-      <div className="flex items-start gap-3 mb-4 pe-8">
-        <span className="w-9 h-9 shrink-0 rounded-xl bg-purple-500/10 inline-flex items-center justify-center">
-          <HelpCircle className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+    <Modal open={open} lang={lang} labelledBy="clarify-title" onClose={onClose} size="md">
+      <div className="flex flex-col items-center text-center mb-6">
+        <span className="w-12 h-12 rounded-2xl bg-purple-500/10 inline-flex items-center justify-center">
+          <HelpCircle className="w-6 h-6 text-purple-600 dark:text-purple-400" />
         </span>
-        <div>
-          <h2 id="clarify-title" className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-            {isAr ? 'سؤال سريع لبرومبت أدق' : 'A quick question for a sharper prompt'}
-          </h2>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {isAr ? 'طلبك ينقصه بعض التفاصيل. أجب عمّا تريد، أو تخطَّ.' : 'Your request is missing a few details. Answer what you like, or skip.'}
-          </p>
-        </div>
+        <h2 id="clarify-title" className="mt-4 text-xl font-bold">
+          {isAr ? 'سؤال سريع لبرومبت أدق' : 'A quick question for a sharper prompt'}
+        </h2>
+        <p className="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+          {isAr ? 'طلبك ينقصه بعض التفاصيل. أجب عمّا تريد، أو تخطَّ.' : 'Your request is missing a few details. Answer what you like, or skip.'}
+        </p>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         {questions.map((q, i) => (
-          <fieldset key={i} className="flex flex-col gap-2">
-            <legend className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-2">{q.question}</legend>
+          <fieldset key={i} className="flex flex-col gap-2.5">
+            <legend className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-2.5">{q.question}</legend>
             {q.options.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {q.options.map((option) => {
@@ -70,7 +59,7 @@ export const ClarifyPanel: React.FC<ClarifyPanelProps> = ({ lang, questions, isL
                       type="button"
                       aria-pressed={selected}
                       onClick={() => setAnswer(i, selected ? '' : option)}
-                      className={`h-8 px-3 rounded-full text-sm border transition-colors duration-150 cursor-pointer ${
+                      className={`h-9 px-3.5 rounded-full text-sm border transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 ${
                         selected
                           ? 'bg-purple-600 border-purple-600 text-white'
                           : 'border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:border-purple-400'
@@ -84,25 +73,35 @@ export const ClarifyPanel: React.FC<ClarifyPanelProps> = ({ lang, questions, isL
             )}
             <input
               type="text"
-              value={q.options.includes(answers[i]) ? '' : answers[i]}
+              value={q.options.includes(answers[i]) ? '' : answers[i] || ''}
               onChange={(e) => setAnswer(i, e.target.value)}
               placeholder={isAr ? 'أو اكتب إجابتك' : 'Or type your answer'}
               aria-label={`${q.question} ${isAr ? '(إجابة أخرى)' : '(other answer)'}`}
-              className="h-9 px-3 rounded-xl text-sm border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:outline-hidden focus:ring-2 focus:ring-purple-500/60"
+              className="h-11 px-4 rounded-2xl text-sm border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500/60 focus:border-purple-500"
             />
           </fieldset>
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 mt-5">
-        <button type="button" disabled={isLoading || !answered.length} onClick={() => onSubmit(answered)} className={primaryButton}>
+      <div className="flex flex-col gap-2 mt-7">
+        <button
+          type="button"
+          disabled={isLoading || !answered.length}
+          onClick={() => onSubmit(answered)}
+          className="w-full h-12 px-4 rounded-2xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+        >
           {isAr ? 'ولّد بالإجابات' : 'Generate with answers'}
         </button>
-        <button type="button" disabled={isLoading} onClick={() => onSubmit([])} className={quietButton}>
+        <button
+          type="button"
+          disabled={isLoading}
+          onClick={() => onSubmit([])}
+          className="w-full h-12 px-4 rounded-2xl text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+        >
           {isAr ? 'تخطَّ وولّد' : 'Skip and generate'}
         </button>
       </div>
-    </section>
+    </Modal>
   );
 };
 

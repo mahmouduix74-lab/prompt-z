@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ChevronDown, History, LogIn, LogOut, Mail, X, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, History, Hourglass, LogIn, LogOut, Mail, X, CheckCircle2 } from 'lucide-react';
+import { Modal } from './Modal';
 import { AppLang } from '../utils/i18n';
 import { AccountState, requestEmailLink } from '../services/account';
 import { PromptZIcon } from './Logo';
@@ -363,47 +364,73 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ open, lang, account,
   );
 };
 
-interface LimitNoticeProps {
+interface LimitDialogProps {
+  open: boolean;
   lang: AppLang;
   canSignIn: boolean;
   limit?: number;
   onSignIn: () => void;
-  onDismiss: () => void;
+  onClose: () => void;
 }
 
-/** Shown when today's prompts are used up: offers sign-in for more, or asks to come back tomorrow. */
-export const LimitNotice: React.FC<LimitNoticeProps> = ({ lang, canSignIn, limit, onSignIn, onDismiss }) => {
+/** Popup shown when today's prompts are used up: offers sign-in for more, or says when they renew. */
+export const LimitDialog: React.FC<LimitDialogProps> = ({ open, lang, canSignIn, limit, onSignIn, onClose }) => {
   const isAr = lang === 'ar';
-  const count = limit ? ` (${limit})` : '';
-  const message = canSignIn
+  const n = limit ?? (canSignIn ? 3 : 6);
+  const title = canSignIn
     ? isAr
-      ? `استخدمت البرومبتات المجانية لليوم${count}. سجّل الدخول لتحصل على 3 برومبتات إضافية.`
-      : `You have used today's free prompts${count}. Sign in to get 3 more.`
+      ? 'انتهت البرومبتات المجانية لليوم'
+      : "You've used today's free prompts"
     : isAr
-      ? `استخدمت كل برومبتات اليوم${count}. يتجدد العدد غدًا.`
-      : `You have used all of today's prompts${count}. They renew tomorrow.`;
+      ? 'انتهت برومبتات اليوم'
+      : "You've used today's prompts";
+  const body = canSignIn
+    ? isAr
+      ? `استخدمت ${n} برومبتات مجانية اليوم. سجّل الدخول لتحصل على 3 برومبتات إضافية الآن.`
+      : `You've used ${n} free prompts today. Sign in to get 3 more right now.`
+    : isAr
+      ? `استخدمت كل برومبتات اليوم (${n}). يتجدد العدد غدًا.`
+      : `You've used all ${n} of today's prompts. They renew tomorrow.`;
 
   return (
-    <div
-      role="status"
-      className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-purple-500/10 backdrop-blur-md border border-purple-500/25 text-sm text-purple-800 dark:text-purple-200"
-    >
-      <span>{message}</span>
-      <div className="flex items-center gap-2">
-        {canSignIn && (
-          <button type="button" onClick={onSignIn} className={`${signInButtonClassName} ${isAr ? 'font-arabic' : ''}`}>
-            <LogIn className="w-4 h-4" />
-            {isAr ? 'تسجيل الدخول' : 'Sign in'}
+    <Modal open={open} lang={lang} labelledBy="limit-title" onClose={onClose}>
+      <div className="flex flex-col items-center text-center">
+        <span className="w-14 h-14 rounded-2xl bg-purple-500/10 inline-flex items-center justify-center">
+          <Hourglass className="w-7 h-7 text-purple-600 dark:text-purple-400" />
+        </span>
+        <h2 id="limit-title" className="mt-4 text-xl font-bold">
+          {title}
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{body}</p>
+        <div className="mt-6 flex flex-col gap-2 w-full">
+          {canSignIn && (
+            <button
+              type="button"
+              data-autofocus
+              onClick={() => {
+                onClose();
+                onSignIn();
+              }}
+              className="flex items-center justify-center gap-2 w-full h-12 px-4 rounded-2xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+            >
+              <LogIn className="w-4 h-4" />
+              {isAr ? 'تسجيل الدخول' : 'Sign in'}
+            </button>
+          )}
+          <button
+            type="button"
+            data-autofocus={canSignIn ? undefined : true}
+            onClick={onClose}
+            className={`w-full h-12 px-4 rounded-2xl text-sm font-semibold cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 ${
+              canSignIn
+                ? 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                : 'text-white bg-purple-600 hover:bg-purple-700'
+            }`}
+          >
+            {canSignIn ? (isAr ? 'ليس الآن' : 'Not now') : isAr ? 'حسنًا' : 'OK'}
           </button>
-        )}
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="px-2.5 py-1.5 rounded-xl text-xs font-bold hover:bg-purple-500/10 transition-colors duration-150 cursor-pointer"
-        >
-          {isAr ? 'إغلاق' : 'Dismiss'}
-        </button>
+        </div>
       </div>
-    </div>
+    </Modal>
   );
 };
