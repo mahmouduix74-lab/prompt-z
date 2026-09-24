@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AppLang, Theme, UI_STRINGS } from '../utils/i18n';
 import { createParticleField, ParticleField } from '../utils/particles';
 import '../styles/xtract-hero.css';
+import { HowItWorks } from './HowItWorks';
 
 interface HeroSectionProps {
   lang?: AppLang;
@@ -104,6 +105,7 @@ const LoopingTitle: React.FC<{
 export const HeroSection: React.FC<HeroSectionProps> = ({
   lang = 'ar',
   theme = 'light',
+  onScrollToBuilder,
   children,
 }) => {
   const t = UI_STRINGS[lang];
@@ -214,6 +216,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             >
               {t.heroLead}
             </p>
+
+            <HowItWorks lang={lang} onStart={onScrollToBuilder} />
           </div>
         </div>
 

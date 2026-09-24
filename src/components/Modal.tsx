@@ -13,7 +13,7 @@ interface ModalProps {
   labelledBy: string;
   onClose: () => void;
   /** Wider dialogs for forms. */
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
 }
 
@@ -62,7 +62,7 @@ export const Modal: React.FC<ModalProps> = ({ open, lang, labelledBy, onClose, s
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.97 }}
             transition={{ duration: 0.28, ease: EASE }}
-            className={`relative w-full ${size === 'md' ? 'max-w-[480px]' : 'max-w-[400px]'} max-h-[90vh] overflow-y-auto rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl shadow-purple-950/20 p-7 sm:p-8 text-zinc-900 dark:text-zinc-100 ${isAr ? 'font-arabic' : ''}`}
+            className={`relative w-full ${size === 'lg' ? 'max-w-[640px]' : size === 'md' ? 'max-w-[480px]' : 'max-w-[400px]'} max-h-[90vh] overflow-y-auto rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl shadow-purple-950/20 p-7 sm:p-8 text-zinc-900 dark:text-zinc-100 ${isAr ? 'font-arabic' : ''}`}
           >
             <button
               type="button"
