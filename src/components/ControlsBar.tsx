@@ -49,7 +49,7 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-4 gap-1 p-1 h-10 bg-zinc-100/90 dark:bg-zinc-950/80 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 items-center">
+        <div className="grid grid-cols-4 gap-1 p-1 h-10 bg-zinc-100/90 dark:bg-zinc-950/80 rounded-xl border border-zinc-300/80 dark:border-zinc-700/80 items-center">
           {DEPTHS.map((d) => {
             const isSelected = depth === d.id;
             return (
@@ -61,7 +61,7 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 aria-pressed={isSelected}
-                className={`relative h-full flex items-center justify-center rounded-lg text-xs font-medium text-center transition-colors cursor-pointer truncate disabled:opacity-50 ${
+                className={`relative isolate h-full flex items-center justify-center rounded-lg text-xs font-medium text-center transition-colors cursor-pointer truncate disabled:opacity-50 ${
                   isSelected
                     ? 'text-purple-700 dark:text-purple-300 font-bold'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-white/50 dark:hover:bg-zinc-900/50'
@@ -79,7 +79,7 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
                 {isSelected && (
                   <motion.div
                     layoutId="depth-tab-indicator"
-                    className="absolute inset-0 bg-white dark:bg-zinc-800 rounded-lg shadow-xs ring-1 ring-black/5 dark:ring-white/10 -z-10"
+                    className="absolute inset-0 bg-white dark:bg-zinc-800 rounded-lg shadow-sm shadow-purple-500/10 border border-purple-500/80 dark:border-purple-400/70 -z-10"
                     transition={{ type: 'spring', bounce: 0.15, duration: 0.3 }}
                   />
                 )}

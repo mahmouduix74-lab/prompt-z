@@ -8,41 +8,22 @@ export interface DomainOption {
 
 // Labels for the domain chips. What each domain means for the prompt is in prompting.ts.
 export const DOMAINS: DomainOption[] = [
-  {
-    id: 'general',
-    labelAr: 'عام',
-    labelEn: 'General',
-  },
-  {
-    id: 'ui_ux',
-    labelAr: 'تصميم UI/UX',
-    labelEn: 'UI/UX Design',
-  },
-  {
-    id: 'frontend',
-    labelAr: 'واجهات Frontend',
-    labelEn: 'Frontend',
-  },
-  {
-    id: 'backend',
-    labelAr: 'أنظمة Backend',
-    labelEn: 'Backend',
-  },
-  {
-    id: 'research',
-    labelAr: 'بحث وتحليل',
-    labelEn: 'Research',
-  },
-  {
-    id: 'content',
-    labelAr: 'كتابة محتوى',
-    labelEn: 'Content',
-  },
-  {
-    id: 'media',
-    labelAr: 'صور وفيديو',
-    labelEn: 'Image/Video',
-  },
+  { id: 'general', labelAr: 'عام', labelEn: 'General' },
+  { id: 'ui_ux', labelAr: 'تصميم UI/UX', labelEn: 'UI/UX Design' },
+  { id: 'graphic', labelAr: 'جرافيك وهوية', labelEn: 'Graphic & Brand' },
+  { id: 'frontend', labelAr: 'واجهات Frontend', labelEn: 'Frontend' },
+  { id: 'backend', labelAr: 'أنظمة Backend', labelEn: 'Backend' },
+  { id: 'mobile', labelAr: 'تطبيقات موبايل', labelEn: 'Mobile Apps' },
+  { id: 'devops', labelAr: 'DevOps وسحابة', labelEn: 'DevOps & Cloud' },
+  { id: 'data', labelAr: 'بيانات وتحليلات', labelEn: 'Data & Analytics' },
+  { id: 'ai_ml', labelAr: 'ذكاء اصطناعي', labelEn: 'AI & ML' },
+  { id: 'product', labelAr: 'إدارة منتجات', labelEn: 'Product' },
+  { id: 'marketing', labelAr: 'تسويق', labelEn: 'Marketing' },
+  { id: 'content', labelAr: 'كتابة محتوى', labelEn: 'Content' },
+  { id: 'media', labelAr: 'صور وفيديو', labelEn: 'Image/Video' },
+  { id: 'research', labelAr: 'بحث وتحليل', labelEn: 'Research' },
+  { id: 'education', labelAr: 'تعليم وتدريب', labelEn: 'Education' },
+  { id: 'business', labelAr: 'بيزنس واستراتيجية', labelEn: 'Business' },
 ];
 
 export interface DepthOption {

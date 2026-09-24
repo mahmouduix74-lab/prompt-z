@@ -21,8 +21,9 @@ interface HeaderProps {
   onSignIn?: () => void;
 }
 
+// Every header control is 36px tall, so language, theme and account line up.
 const iconButtonClassName =
-  'relative p-2 rounded-xl text-zinc-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-all duration-150 cursor-pointer focus:outline-hidden';
+  'relative inline-flex items-center justify-center w-9 h-9 rounded-xl text-zinc-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-all duration-150 cursor-pointer focus:outline-hidden';
 
 export const Header: React.FC<HeaderProps> = ({
   savedCount = 0,
@@ -59,14 +60,14 @@ export const Header: React.FC<HeaderProps> = ({
         </motion.button>
 
         {/* Right Controls: Language, Theme Appearance */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Language Toggle */}
           <motion.button
             type="button"
             onClick={onToggleLang}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-zinc-700 dark:text-zinc-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-all duration-150 cursor-pointer text-xs font-bold focus:outline-hidden"
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl text-zinc-700 dark:text-zinc-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-all duration-150 cursor-pointer text-xs font-bold focus:outline-hidden"
             title={isAr ? 'Switch to English' : 'التحويل للعربية'}
             aria-label="Language"
           >

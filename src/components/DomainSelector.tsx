@@ -11,6 +11,15 @@ import {
   FileSearch,
   PenTool,
   Image as ImageIcon,
+  Smartphone,
+  CloudCog,
+  BarChart3,
+  Brain,
+  Target,
+  Megaphone,
+  Palette,
+  GraduationCap,
+  Briefcase,
 } from 'lucide-react';
 
 interface DomainSelectorProps {
@@ -28,6 +37,15 @@ const domainIcons: Record<DomainType, React.ReactNode> = {
   research: <FileSearch className="w-3.5 h-3.5" />,
   content: <PenTool className="w-3.5 h-3.5" />,
   media: <ImageIcon className="w-3.5 h-3.5" />,
+  mobile: <Smartphone className="w-3.5 h-3.5" />,
+  devops: <CloudCog className="w-3.5 h-3.5" />,
+  data: <BarChart3 className="w-3.5 h-3.5" />,
+  ai_ml: <Brain className="w-3.5 h-3.5" />,
+  product: <Target className="w-3.5 h-3.5" />,
+  marketing: <Megaphone className="w-3.5 h-3.5" />,
+  graphic: <Palette className="w-3.5 h-3.5" />,
+  education: <GraduationCap className="w-3.5 h-3.5" />,
+  business: <Briefcase className="w-3.5 h-3.5" />,
 };
 
 export const DomainSelector: React.FC<DomainSelectorProps> = ({
@@ -44,7 +62,7 @@ export const DomainSelector: React.FC<DomainSelectorProps> = ({
         <span className="font-medium text-zinc-700 dark:text-zinc-300">{t.domainLabel}</span>
       </div>
 
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
+      <div className="flex items-center gap-1.5 overflow-x-auto sm:overflow-visible sm:flex-wrap pb-1 scrollbar-none no-scrollbar">
         {DOMAINS.map((domain) => {
           const isSelected = selectedDomain === domain.id;
           return (
