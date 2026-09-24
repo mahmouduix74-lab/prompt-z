@@ -65,7 +65,7 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ lang, onStart }) => {
         </button>
       </div>
 
-      <Modal open={open} lang={lang} labelledBy="how-title" onClose={() => setOpen(false)} size="lg">
+      <Modal open={open} lang={lang} labelledBy="how-title" onClose={() => setOpen(false)} size="lg" backdrop="solid">
         <h2 id="how-title" className="text-xl font-bold pe-8 text-start">
           {isAr ? 'كيف يعمل PromptZ؟' : 'How PromptZ works'}
         </h2>
