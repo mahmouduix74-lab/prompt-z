@@ -37,7 +37,7 @@ export function createParticleField(canvas: HTMLCanvasElement, isDark: boolean =
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
-  const particleColor = isDark ? '#ffffff' : '#7c3aed';
+  const particleColor = isDark ? '#ffffff' : '#7132f5';
   const particleOpacity = isDark ? 0.7 : 0.45;
 
   let width = 0;

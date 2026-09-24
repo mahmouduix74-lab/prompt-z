@@ -32,7 +32,7 @@ export const Footer: React.FC<FooterProps> = ({
             className="text-lg font-[800] tracking-[-0.025em] text-[#181622] dark:text-white select-none"
             style={{ fontFamily: "'Montserrat', system-ui, -apple-system, sans-serif" }}
           >
-            Prompt<span className="text-[#7132F5] dark:text-[#8B5CF6]">Z</span>
+            Prompt<span className="text-[#7132F5] dark:text-[#8452F8]">Z</span>
           </span>
           <span className="text-xs text-zinc-500 dark:text-zinc-400 ms-1">
             {isAr

@@ -103,7 +103,7 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ lang, onStart }) => {
             setOpen(false);
             onStart?.();
           }}
-          className="group mt-6 flex items-center justify-center gap-2 w-full h-12 rounded-2xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+          className="group mt-6 flex items-center justify-center gap-2 w-full h-11 rounded-xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
         >
           {isAr ? 'ابدأ الآن' : 'Start now'}
           <ArrowRight className="w-4 h-4 rtl:-scale-x-100 transition-transform duration-200 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />

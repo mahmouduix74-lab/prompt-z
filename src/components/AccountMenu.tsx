@@ -14,7 +14,7 @@ const signInButtonClassName =
   'group inline-flex items-center justify-center gap-2 h-9 px-[7px] sm:ps-3.5 sm:pe-[7px] rounded-xl text-sm font-semibold leading-none text-white bg-purple-600/90 hover:bg-purple-600 transition-colors duration-150 whitespace-nowrap cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950';
 
 const menuItemClassName =
-  'flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm text-start text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 focus:outline-hidden focus-visible:bg-zinc-100 dark:focus-visible:bg-zinc-800/70 cursor-pointer';
+  'flex items-center gap-2.5 w-full h-9 px-3 rounded-xl text-sm text-start text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 focus:outline-hidden focus-visible:bg-zinc-100 dark:focus-visible:bg-zinc-800/70 cursor-pointer';
 
 /** Arrow in a small translucent circle, after the sign-in label; points and nudges forward in both directions. */
 function SignInArrow() {
@@ -42,7 +42,7 @@ function Avatar({ name, picture, size = 'sm' }: { name: string; picture?: string
   return (
     <span
       aria-hidden="true"
-      className={`${box} rounded-full shrink-0 inline-flex items-center justify-center font-bold text-white bg-gradient-to-br from-purple-500 to-violet-600`}
+      className={`${box} rounded-full shrink-0 inline-flex items-center justify-center font-bold text-white bg-gradient-to-br from-purple-500 to-purple-600`}
     >
       {(name.trim()[0] || '?').toUpperCase()}
     </span>
@@ -295,7 +295,7 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ open, lang, account,
               type="button"
               onClick={onClose}
               aria-label={isAr ? 'إغلاق' : 'Close'}
-              className="absolute top-4 end-4 p-2 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+              className="absolute top-4 end-4 inline-flex items-center justify-center w-9 h-9 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
             >
               <X className="w-4 h-4" />
             </button>
@@ -344,7 +344,7 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ open, lang, account,
                       firstFieldRef.current = el;
                     }}
                     href="/api/auth/login"
-                    className="flex items-center justify-center gap-3 w-full h-12 px-4 rounded-2xl text-sm font-semibold border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+                    className="flex items-center justify-center gap-3 w-full h-11 px-4 rounded-xl text-sm font-semibold border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
                   >
                     <GoogleIcon />
                     {isAr ? 'المتابعة باستخدام Google' : 'Continue with Google'}
@@ -378,7 +378,7 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ open, lang, account,
                       placeholder="name@example.com"
                       aria-invalid={Boolean(error)}
                       aria-describedby={error ? 'signin-error' : undefined}
-                      className={`w-full h-12 px-4 rounded-2xl text-sm border bg-white dark:bg-zinc-950 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500/60 focus:border-purple-500 ${
+                      className={`w-full h-11 px-4 rounded-xl text-sm border bg-white dark:bg-zinc-950 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500/60 focus:border-purple-500 ${
                         error ? 'border-rose-400' : 'border-zinc-300 dark:border-zinc-700'
                       }`}
                     />
@@ -390,7 +390,7 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ open, lang, account,
                     <button
                       type="submit"
                       disabled={status === 'sending' || !email.trim()}
-                      className="flex items-center justify-center gap-2 w-full h-12 px-4 rounded-2xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+                      className="flex items-center justify-center gap-2 w-full h-11 px-4 rounded-xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
                     >
                       <Mail className="w-4 h-4" />
                       {status === 'sending'
@@ -471,7 +471,7 @@ export const LimitDialog: React.FC<LimitDialogProps> = ({ open, lang, canSignIn,
                 onClose();
                 onSignIn();
               }}
-              className="group flex items-center justify-center gap-2 w-full h-12 px-4 rounded-2xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+              className="group flex items-center justify-center gap-2 w-full h-11 px-4 rounded-xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
             >
               {isAr ? 'تسجيل الدخول' : 'Sign in'}
               <SignInArrow />
@@ -481,7 +481,7 @@ export const LimitDialog: React.FC<LimitDialogProps> = ({ open, lang, canSignIn,
             type="button"
             data-autofocus={canSignIn ? undefined : true}
             onClick={onClose}
-            className={`w-full h-12 px-4 rounded-2xl text-sm font-semibold cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 ${
+            className={`w-full h-11 px-4 rounded-xl text-sm font-semibold cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 ${
               canSignIn
                 ? 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                 : 'text-white bg-purple-600 hover:bg-purple-700'

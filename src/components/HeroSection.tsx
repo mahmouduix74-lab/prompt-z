@@ -87,7 +87,7 @@ const LoopingTitle: React.FC<{
         {currentChars}
         {/* Blinking forge cursor */}
         <span
-          className="inline-block w-[3px] sm:w-[4px] h-[0.9em] mx-1 bg-purple-600 dark:bg-purple-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.8)]"
+          className="inline-block w-[3px] sm:w-[4px] h-[0.9em] mx-1 bg-purple-600 dark:bg-purple-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(159,120,251,0.8)]"
           aria-hidden="true"
         />
       </span>

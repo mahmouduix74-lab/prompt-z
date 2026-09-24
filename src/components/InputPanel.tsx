@@ -166,7 +166,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
               onClick={() => setShowTips((prev) => !prev)}
               onFocus={() => setShowTips(true)}
               onBlur={() => setShowTips(false)}
-              className="p-1 rounded-full text-zinc-400 hover:text-purple-600 dark:text-zinc-500 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer focus:outline-hidden"
+              className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-zinc-400 hover:text-purple-600 dark:text-zinc-500 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer focus:outline-hidden"
               title={lang === 'ar' ? 'نصائح لكتابة برومبت فعال' : 'Tips for effective prompts'}
               aria-label="Prompting Tips Help"
             >
@@ -242,7 +242,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
               type="button"
               onClick={onUndoEnhance}
               disabled={isBusy}
-              className="flex items-center gap-1 text-[11px] font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 hover:underline cursor-pointer ms-1.5"
+              className="flex items-center gap-1 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 hover:underline cursor-pointer ms-1.5"
               title={t.undoEnhance}
             >
               <Undo2 className="w-3 h-3" />
@@ -258,7 +258,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
           disabled={isBusy || !rawText.trim()}
           whileHover={isBusy || !rawText.trim() ? {} : { scale: 1.03 }}
           whileTap={isBusy || !rawText.trim() ? {} : { scale: 0.97 }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-100/90 hover:bg-purple-50/80 dark:bg-zinc-800/80 dark:hover:bg-purple-950/40 text-zinc-700 hover:text-purple-700 dark:text-zinc-300 dark:hover:text-purple-300 border border-zinc-200/80 hover:border-purple-300/80 dark:border-zinc-700/80 dark:hover:border-purple-500/40 shadow-2xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-medium bg-zinc-100/90 hover:bg-purple-50/80 dark:bg-zinc-800/80 dark:hover:bg-purple-950/40 text-zinc-700 hover:text-purple-700 dark:text-zinc-300 dark:hover:text-purple-300 border border-zinc-200/80 hover:border-purple-300/80 dark:border-zinc-700/80 dark:hover:border-purple-500/40 shadow-2xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           title={t.enhancePromptTooltip}
         >
           {isEnhancing ? (
@@ -313,7 +313,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
               disabled={isBusy}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer disabled:opacity-50 text-xs font-medium"
+              className="flex items-center gap-1 h-9 px-3 rounded-xl text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer disabled:opacity-50 text-sm font-medium"
               title={t.clear}
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -328,7 +328,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             disabled={isBusy || !rawText.trim()}
             whileHover={isBusy || !rawText.trim() ? {} : { scale: 1.03 }}
             whileTap={isBusy || !rawText.trim() ? {} : { scale: 0.96 }}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 sm:px-8 h-[48px] min-h-[48px] rounded-2xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-600 dark:hover:bg-purple-500 text-white text-sm font-bold shadow-[0_6px_20px_rgba(124,58,237,0.38)] hover:shadow-[0_8px_25px_rgba(124,58,237,0.5)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 sm:px-8 h-11 min-h-11 rounded-xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 dark:bg-purple-600 dark:hover:bg-purple-500 text-white text-sm font-bold shadow-[0_6px_20px_rgba(113,50,245,0.38)] hover:shadow-[0_8px_25px_rgba(113,50,245,0.5)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             title="Shortcut: Ctrl/Cmd + Enter"
           >
             {isLoading ? (

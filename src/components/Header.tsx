@@ -23,7 +23,7 @@ interface HeaderProps {
 
 // Every header control is 36px tall, so language, theme and account line up.
 const iconButtonClassName =
-  'relative inline-flex items-center justify-center w-8 h-full rounded-[10px] text-zinc-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400';
+  'relative inline-flex items-center justify-center w-8 h-full rounded-lg text-zinc-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400';
 
 function CreditsBadge({
   usage,
@@ -59,7 +59,7 @@ function CreditsBadge({
         onBlur={() => setOpen(false)}
         aria-label={`${title}. ${note}`}
         aria-describedby="credits-tooltip"
-        className="inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-xs font-medium leading-none text-zinc-500 dark:text-zinc-400 hover:border-purple-400 dark:hover:border-purple-500 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+        className="inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm font-medium leading-none text-zinc-900 dark:text-white hover:border-purple-400 dark:hover:border-purple-500 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
       >
         <Sparkles className="hidden sm:block w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
         <span className="tabular-nums">
@@ -155,12 +155,12 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onToggleLang}
             whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center gap-1.5 h-full px-2 sm:px-2.5 rounded-[10px] text-zinc-700 dark:text-zinc-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-150 cursor-pointer text-xs font-bold focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
+            className="inline-flex items-center gap-1.5 h-full px-2 sm:px-2.5 rounded-lg text-zinc-700 dark:text-zinc-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-150 cursor-pointer text-sm font-bold focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
             title={isAr ? 'Switch to English' : 'التحويل للعربية'}
             aria-label="Language"
           >
             <Languages className="hidden sm:block w-4 h-4 text-purple-600 dark:text-purple-400" />
-            <span className={isAr ? 'font-arabic font-bold text-sm leading-none' : 'font-mono uppercase text-[11px] font-bold leading-none'}>
+            <span className={isAr ? 'font-arabic font-bold text-sm leading-none' : 'font-mono uppercase text-sm font-bold leading-none'}>
               {isAr ? 'ع' : 'EN'}
             </span>
           </motion.button>
