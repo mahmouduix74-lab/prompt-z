@@ -7,7 +7,7 @@
  * actually handled — only the thin req/res adapter at each entry point differs.
  */
 import { EXACT_SYSTEM_INSTRUCTION, OPENROUTER_MODEL, OPENROUTER_MODELS, buildSystemInstruction } from '../constants.js';
-import { buildRefineInstruction, refineAddsContent } from '../prompting.js';
+import { buildRefineInstruction, composePrompt, parseBrief, refineAddsContent, resolveOutputLanguage } from '../prompting.js';
 import { refineLocalPromptText } from '../services/localRefiner.js';
 import { generateLocalStructuredPrompt } from '../services/localEngine.js';
 import { DomainType, DepthType, OutputLanguage } from '../types.js';
@@ -176,19 +176,22 @@ export async function handleGenerate(
   }
 
   const activeKey = resolveApiKey(userApiKey, serverKey);
-
-  if (!activeKey) {
-    const fallbackPrompt = generateLocalStructuredPrompt({
+  const localPrompt = () =>
+    generateLocalStructuredPrompt({
       rawText: rawText.trim(),
       domain: domain || 'general',
       depth: depth || ('medium' as DepthType),
       outputLanguage: outputLanguage || 'match',
+      exclusions,
     });
-    return { status: 200, body: { result: fallbackPrompt, fallbackUsed: true, modelUsed: 'Local Smart Engine' } };
+
+  if (!activeKey) {
+    return { status: 200, body: { result: localPrompt(), fallbackUsed: true, modelUsed: 'Local Smart Engine' } };
   }
 
   try {
-    const fullSystemInstruction = buildSystemInstruction({
+    // Step 1: the model extracts what the user asked for as a JSON brief.
+    const extractionInstruction = buildSystemInstruction({
       baseInstruction: (systemInstruction || EXACT_SYSTEM_INSTRUCTION).trim(),
       domain,
       depth,
@@ -197,23 +200,28 @@ export async function handleGenerate(
       requestText: rawText,
     });
 
-    const { text: generatedText, modelUsed } = await generateWithOpenRouter(activeKey, {
-      systemInstruction: fullSystemInstruction,
+    const { text, modelUsed } = await generateWithOpenRouter(activeKey, {
+      systemInstruction: extractionInstruction,
       userText: rawText.trim(),
-      temperature: 0.3,
+      temperature: 0.1,
     });
 
-    return { status: 200, body: { result: generatedText, modelUsed } };
+    const brief = parseBrief(text, depth);
+    if (!brief) throw new Error(`${modelUsed} did not return a readable brief.`);
+
+    // Step 2: code builds the prompt from the brief, so structure and boundaries never vary.
+    const result = composePrompt({
+      brief,
+      domain,
+      depth,
+      language: resolveOutputLanguage(outputLanguage, rawText),
+      exclusions,
+    });
+    return { status: 200, body: { result, modelUsed } };
   } catch (err: any) {
     const fallbackReason = String(err?.message || err);
     console.warn('[Generate Resilience] OpenRouter unavailable/busy, using smart local engine fallback:', fallbackReason);
-    const fallbackPrompt = generateLocalStructuredPrompt({
-      rawText: rawText.trim(),
-      domain: domain || 'general',
-      depth: depth || ('medium' as DepthType),
-      outputLanguage: outputLanguage || 'match',
-    });
-    return { status: 200, body: { result: fallbackPrompt, fallbackUsed: true, fallbackReason, modelUsed: 'Local Smart Engine' } };
+    return { status: 200, body: { result: localPrompt(), fallbackUsed: true, fallbackReason, modelUsed: 'Local Smart Engine' } };
   }
 }
 

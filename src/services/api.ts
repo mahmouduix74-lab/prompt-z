@@ -180,6 +180,7 @@ export async function generateStructuredPrompt(params: {
         domain,
         depth,
         outputLanguage,
+        exclusions,
       });
     }
 
