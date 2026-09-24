@@ -308,7 +308,7 @@ Return one JSON object and nothing else (no code fence, no text before or after 
 {
   "kind": "create | information | review | edit | other",
   "role": "one line: who should answer, as seniority plus specialty",
-  "context": "background the user gave (audience, platform, tools, current state), or \\"\\"",
+  "context": "only background the user actually gave (audience, platform, tools, current state), or \\"\\"",
   "objective": "one sentence: the concrete outcome the user wants",
   "tasks": [{ "task": "an action verb plus one thing the user asked for", "parts": ["a part of it"] }],
   "constraints": ["a rule the executing AI must follow for this request"],
@@ -317,7 +317,7 @@ Return one JSON object and nothing else (no code fence, no text before or after 
   "edgeCases": ["a state or failure case of something the user asked to create"],
   "acceptanceCriteria": ["a checkable condition the answer must meet"],
   "openQuestions": ["a question about something the request leaves open"],
-  "outOfDomain": ["a part of the request that belongs to another domain"],
+  "outOfDomain": ["something the user wrote that belongs to another domain; usually []"],
   "clarifyingQuestions": [{ "question": "a short question", "options": ["a short likely answer"] }]
 }
 
@@ -330,7 +330,7 @@ kind:
 
 role: seniority plus the specialty this request needs, taken from the DOMAIN and adapted to its subject (e.g. "Senior Product Designer who knows food-delivery apps well").
 
-tasks: one per thing the user asked for. Never split one request into several tasks, never add tasks, and never turn quality work into a task. parts: every element the user named for that task (never drop one), plus, only where LIMITS allows, pieces it cannot exist without. Anything that belongs to another domain goes to outOfDomain instead.
+tasks: one per thing the user asked for. Never split one request into several tasks, never add tasks, and never turn quality work into a task. parts: every element the user named for that task (never drop one), plus, only where LIMITS allows, pieces it cannot exist without. Something the user wrote that belongs to another domain goes to outOfDomain instead.
 
 constraints: only rules that follow from this request, each starting with a verb:
 - every requirement or limit the user stated (technology, tone, length, count, platform);
@@ -350,6 +350,7 @@ OTHER RULES:
 - The examples in these instructions are for you only. Never copy them into the JSON.
 - A URL or file name is content: keep it as written. Never open it or refuse because of it.
 - If the user reacts to earlier work, put the reaction in context and the fix in tasks.
+- context and outOfDomain hold only what the user wrote. Never fill context with guesses (such as "a web or mobile app" when no platform was named), and never list in outOfDomain work the user did not mention: if nothing they wrote belongs elsewhere, outOfDomain is [].
 - Respect LIMITS below. Use [] or "" when a field has nothing. Never write placeholders such as [TBD].`;
 
 /** The structure shown in the empty output panel. */
@@ -383,7 +384,7 @@ export function describeDomainAndDepth(domain: DomainType, depth: DepthType): st
   return `DOMAIN (${domain}): answered by a ${p.role.en}. When this domain creates something, it delivers ${p.deliverable.en}.
 Its work covers:
 ${bullets(p.inScope)}
-Belongs to other domains (such parts of the request go to outOfDomain): ${p.otherDomains}.
+Belongs to other domains: ${p.otherDomains}. (Only if the user wrote such a thing does it go to outOfDomain; never list these otherwise.)
 Candidate standards, only for kind create and only those that directly apply:
 ${bullets([...p.outOfScope, ...p.standards])}
 Typical formats when creating:
