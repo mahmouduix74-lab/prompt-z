@@ -173,7 +173,7 @@ export const FeedbackBar: React.FC<FeedbackBarProps> = ({ lang, onSend }) => {
 
   return (
     <div
-      className={`flex flex-col gap-3 p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 ${isAr ? 'font-arabic' : ''}`}
+      className={`flex flex-col gap-3 p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-xs ${isAr ? 'font-arabic' : ''}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <AnimatePresence mode="wait" initial={false}>

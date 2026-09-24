@@ -673,7 +673,7 @@ export default function App() {
                   savedCount={savedItems.length}
                 />
                 {feedbackTarget && feedbackTarget.prompt === output && !isLoading && (
-                  <div className="mt-3 px-1">
+                  <div className="mt-3">
                     <FeedbackBar key={feedbackTarget.id} lang={lang} onSend={handleSendFeedback} />
                   </div>
                 )}
