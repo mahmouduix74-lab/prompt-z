@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ChevronDown, CircleUserRound, History, Hourglass, LogOut, Mail, X, CheckCircle2, Sparkles } from 'lucide-react';
+import { ArrowRight, ChevronDown, History, Hourglass, LogOut, Mail, X, CheckCircle2, Sparkles } from 'lucide-react';
 import { Modal } from './Modal';
 import { AppLang } from '../utils/i18n';
 import { AccountState, AccountUsage, requestEmailLink } from '../services/account';
@@ -11,10 +11,19 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 /** Same height as the language and theme controls next to it (32px). */
 const signInButtonClassName =
-  'inline-flex items-center justify-center gap-1.5 h-9 px-2.5 sm:px-3.5 rounded-xl text-sm font-semibold leading-none text-white bg-purple-600 hover:bg-purple-700 shadow-sm shadow-purple-600/20 transition-colors duration-150 whitespace-nowrap cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950';
+  'group inline-flex items-center justify-center gap-2 h-9 px-[7px] sm:ps-3.5 sm:pe-[7px] rounded-xl text-sm font-semibold leading-none text-white bg-purple-600 hover:bg-purple-700 shadow-sm shadow-purple-600/20 transition-colors duration-150 whitespace-nowrap cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950';
 
 const menuItemClassName =
   'flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm text-start text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 focus:outline-hidden focus-visible:bg-zinc-100 dark:focus-visible:bg-zinc-800/70 cursor-pointer';
+
+/** Arrow in a small translucent circle, after the sign-in label; points and nudges forward in both directions. */
+function SignInArrow() {
+  return (
+    <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-full bg-white/20 transition-transform duration-200 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5">
+      <ArrowRight className="w-3.5 h-3.5 rtl:-scale-x-100" strokeWidth={2.5} />
+    </span>
+  );
+}
 
 function Avatar({ name, picture, size = 'sm' }: { name: string; picture?: string; size?: 'sm' | 'md' }) {
   const [broken, setBroken] = useState(false);
@@ -125,7 +134,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({ account, lang, onSignI
       >
         {/* Label first, icon trailing: on the right in English, on the left in Arabic. */}
         <span className="hidden sm:inline">{isAr ? 'تسجيل الدخول' : 'Sign in'}</span>
-        <CircleUserRound className="w-[18px] h-[18px]" strokeWidth={2} />
+        <SignInArrow />
       </button>
     );
   }
@@ -462,10 +471,10 @@ export const LimitDialog: React.FC<LimitDialogProps> = ({ open, lang, canSignIn,
                 onClose();
                 onSignIn();
               }}
-              className="flex items-center justify-center gap-2 w-full h-12 px-4 rounded-2xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+              className="group flex items-center justify-center gap-2 w-full h-12 px-4 rounded-2xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
             >
               {isAr ? 'تسجيل الدخول' : 'Sign in'}
-              <CircleUserRound className="w-[18px] h-[18px]" strokeWidth={2} />
+              <SignInArrow />
             </button>
           )}
           <button

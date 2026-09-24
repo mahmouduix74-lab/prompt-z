@@ -23,7 +23,7 @@ interface HeaderProps {
 
 // Every header control is 36px tall, so language, theme and account line up.
 const iconButtonClassName =
-  'relative inline-flex items-center justify-center w-9 h-9 rounded-xl text-zinc-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-all duration-150 cursor-pointer focus:outline-hidden';
+  'relative inline-flex items-center justify-center w-8 h-full rounded-[10px] text-zinc-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400';
 
 function CreditsBadge({
   usage,
@@ -94,14 +94,31 @@ export const Header: React.FC<HeaderProps> = ({
   const t = UI_STRINGS[lang];
   const isAr = lang === 'ar';
 
+  // Once the page scrolls, the bar gets a frosted background and a slimmer height.
+  const [scrolled, setScrolled] = React.useState(false);
+  React.useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="sticky top-0 z-40 bg-transparent text-zinc-900 dark:text-white transition-colors duration-200"
+      className={`sticky top-0 z-40 text-zinc-900 dark:text-white border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${
+        scrolled
+          ? 'bg-white/75 dark:bg-zinc-950/70 backdrop-blur-xl border-zinc-200/70 dark:border-zinc-800/70 shadow-[0_1px_12px_rgba(24,22,34,0.06)]'
+          : 'bg-transparent border-transparent'
+      }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-6 pb-2.5 sm:pt-7 sm:pb-3 flex items-center justify-between gap-2 sm:gap-4">
+      <div
+        className={`max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between gap-2 sm:gap-4 transition-[padding] duration-300 ${
+          scrolled ? 'py-2.5' : 'pt-6 pb-2.5 sm:pt-7 sm:pb-3'
+        }`}
+      >
         {/* Logo & Name: PromptZ */}
         <motion.button
           type="button"
@@ -111,7 +128,12 @@ export const Header: React.FC<HeaderProps> = ({
           className="group cursor-pointer focus:outline-hidden transition-transform duration-150"
           title="PromptZ"
         >
-          <Logo size="sm" lang={lang} wordmarkClassName="hidden min-[360px]:flex" />
+          <Logo
+            size="sm"
+            lang={lang}
+            wordmarkClassName="hidden min-[360px]:flex"
+            className={`origin-left rtl:origin-right transition-transform duration-300 ${scrolled ? 'scale-90' : ''}`}
+          />
         </motion.button>
 
         {/* Right Controls: Language, Theme Appearance */}
@@ -127,13 +149,13 @@ export const Header: React.FC<HeaderProps> = ({
             />
           )}
 
-          {/* Language Toggle */}
+          {/* Language and theme share one segmented frame */}
+          <div className="inline-flex items-center h-9 p-0.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60">
           <motion.button
             type="button"
             onClick={onToggleLang}
-            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-xl text-zinc-700 dark:text-zinc-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-all duration-150 cursor-pointer text-xs font-bold focus:outline-hidden"
+            className="inline-flex items-center gap-1.5 h-full px-2 sm:px-2.5 rounded-[10px] text-zinc-700 dark:text-zinc-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-150 cursor-pointer text-xs font-bold focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
             title={isAr ? 'Switch to English' : 'التحويل للعربية'}
             aria-label="Language"
           >
@@ -143,11 +165,12 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </motion.button>
 
+          <span aria-hidden="true" className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
+
           {/* Theme Toggle (Light / Dark) */}
           <motion.button
             type="button"
             onClick={onToggleTheme}
-            whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             className={iconButtonClassName}
             title={theme === 'dark' ? t.themeLight || 'Light Mode' : t.themeDark || 'Dark Mode'}
@@ -159,6 +182,7 @@ export const Header: React.FC<HeaderProps> = ({
               <Moon className="w-4 h-4 text-zinc-700" />
             )}
           </motion.button>
+          </div>
 
           {/* Sign in / signed-in user, last */}
           <AccountMenu account={account} lang={lang} onSignIn={onSignIn} onOpenLibrary={onOpenLibrary} />
