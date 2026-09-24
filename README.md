@@ -11,11 +11,16 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
 ## How it works
 
 - **Frontend:** React 19 + Vite + Tailwind CSS (`src/`).
-- **API:** `/api/health`, `/api/models`, `/api/generate`, `/api/refine`. All four are handled by
+- **API:** `/api/health`, `/api/models`, `/api/generate`, `/api/refine`, `/api/eval`. All are handled by
   [`src/server/api.ts`](src/server/api.ts), which calls OpenRouter
   (`https://openrouter.ai/api/v1/chat/completions`) with `google/gemini-3.1-flash-lite`, falling back to
   `google/gemini-3.8-flash` if it is unavailable (`OPENROUTER_MODELS` in `src/constants.ts`).
   `/api/health?check` shows whether OpenRouter accepts the key and serves each model.
+- **Prompt pipeline:** the model only extracts what the user asked for as a JSON brief; code
+  (`composePrompt` in [`src/prompting.ts`](src/prompting.ts)) builds the prompt from it and the
+  domain and depth rules.
+- **Eval:** open `/api/eval` to run 10 fixed requests through the live model and check each prompt
+  automatically (`/api/eval?json` for JSON). Cases live in [`src/server/eval.ts`](src/server/eval.ts).
 - **Fallback:** if there is no key or OpenRouter fails, a local engine builds the prompt, so the
   user is never blocked.
 - **Hosting:** Cloudflare Workers. [`worker/index.ts`](worker/index.ts) serves `/api/*` and the
