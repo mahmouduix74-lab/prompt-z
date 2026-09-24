@@ -15,6 +15,8 @@ export interface AccountState {
   email: boolean;
   user: { name: string; email: string; picture?: string } | null;
   usage: AccountUsage | null;
+  /** Daily prompts without and with an account. */
+  limits: { anonymous: number; signedIn: number };
 }
 
 export async function fetchAccount(): Promise<AccountState | null> {
@@ -28,6 +30,10 @@ export async function fetchAccount(): Promise<AccountState | null> {
       email: Boolean(data?.email),
       user: data?.user ?? null,
       usage: data?.usage ?? null,
+      limits: {
+        anonymous: Number(data?.limits?.anonymous) || 3,
+        signedIn: Number(data?.limits?.signedIn) || 10,
+      },
     };
   } catch {
     return null;

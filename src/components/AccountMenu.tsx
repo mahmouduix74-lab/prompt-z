@@ -298,14 +298,6 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ open, lang, account,
               <p className="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">
                 {isAr ? 'سجّل الدخول لتحصل على برومبتات إضافية كل يوم.' : 'Sign in to get more prompts every day.'}
               </p>
-              {account?.usage && (
-                <p className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-700 dark:text-purple-300">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  {isAr
-                    ? `متبقٍ لك ${account.usage.remaining} من ${account.usage.limit} مجانًا اليوم`
-                    : `${account.usage.remaining} of ${account.usage.limit} free prompts left today`}
-                </p>
-              )}
             </div>
 
             {status === 'sent' ? (
