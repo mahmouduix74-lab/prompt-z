@@ -15,7 +15,7 @@ const args = [mode];
 let dir;
 
 // Build variables that the Worker needs at runtime (build variables are not runtime variables).
-const RUNTIME_SECRETS = ['OPENROUTER_API_KEY', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'];
+const RUNTIME_SECRETS = ['OPENROUTER_API_KEY', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'RESEND_API_KEY'];
 const secrets = {};
 for (const name of RUNTIME_SECRETS) {
   const value = (process.env[name] || '').trim();

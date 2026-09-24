@@ -3,3 +3,5 @@ OPENROUTER_API_KEY=
 # http://localhost:8787/api/auth/callback, so also set SITE_ORIGIN=http://localhost:8787.
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
+# Optional: emailed sign-in links through Resend.
+RESEND_API_KEY=

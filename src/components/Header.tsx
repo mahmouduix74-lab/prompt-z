@@ -18,6 +18,7 @@ interface HeaderProps {
   onScrollToBuilder?: () => void;
   onBookCall?: () => void;
   account?: AccountState | null;
+  onSignIn?: () => void;
 }
 
 const iconButtonClassName =
@@ -32,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenLibrary,
   onScrollToBuilder,
   account = null,
+  onSignIn = () => {},
 }) => {
   const t = UI_STRINGS[lang];
   const isAr = lang === 'ar';
@@ -58,8 +60,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Controls: Language, Theme Appearance */}
         <div className="flex items-center gap-1 sm:gap-2">
-          <AccountMenu account={account} lang={lang} />
-
           {/* Language Toggle */}
           <motion.button
             type="button"
@@ -92,6 +92,9 @@ export const Header: React.FC<HeaderProps> = ({
               <Moon className="w-4 h-4 text-zinc-700" />
             )}
           </motion.button>
+
+          {/* Sign in / signed-in user, last */}
+          <AccountMenu account={account} lang={lang} onSignIn={onSignIn} />
         </div>
       </div>
     </motion.header>

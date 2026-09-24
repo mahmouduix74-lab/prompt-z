@@ -10,6 +10,9 @@ export interface AccountUsage {
 
 export interface AccountState {
   authEnabled: boolean;
+  /** Which ways of signing in are configured. */
+  google: boolean;
+  email: boolean;
   user: { name: string; email: string } | null;
   usage: AccountUsage | null;
 }
@@ -19,9 +22,31 @@ export async function fetchAccount(): Promise<AccountState | null> {
     const res = await fetch('/api/me', { credentials: 'same-origin' });
     if (!res.ok) return null;
     const data = await res.json();
-    return { authEnabled: Boolean(data?.authEnabled), user: data?.user ?? null, usage: data?.usage ?? null };
+    return {
+      authEnabled: Boolean(data?.authEnabled),
+      google: Boolean(data?.google),
+      email: Boolean(data?.email),
+      user: data?.user ?? null,
+      usage: data?.usage ?? null,
+    };
   } catch {
     return null;
+  }
+}
+
+/** Asks for a one-time sign-in link by email. Resolves to an error reason, or null when sent. */
+export async function requestEmailLink(email: string, lang: string): Promise<string | null> {
+  try {
+    const res = await fetch('/api/auth/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, lang }),
+    });
+    if (res.ok) return null;
+    const data = await res.json().catch(() => null);
+    return data?.error?.reason || 'email_failed';
+  } catch {
+    return 'network';
   }
 }
 
