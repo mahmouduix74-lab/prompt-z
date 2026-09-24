@@ -38,9 +38,9 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
   automatically (`/api/eval?json` for JSON). Cases live in [`src/server/eval.ts`](src/server/eval.ts).
 - **Sign-in and daily limits:** sign-in with Google or an emailed one-time link (sent through
   [Resend](https://resend.com), `RESEND_API_KEY`), and a daily prompt limit (3 a day without an
-  account, 6 a day per account; Generate and Enhance both count) run in the Worker
+  account, 10 a day per account; Generate and Enhance both count) run in the Worker
   ([`src/server/account.ts`](src/server/account.ts)), with users and counts in the D1 database
-  `promptz`. Prompts used before signing in count toward the account's 6, and prompts used while
+  `promptz`. Prompts used before signing in count toward the account's 10, and prompts used while
   signed in count toward the connection's 3, so signing in or out never resets the day. A call
   that delivers nothing (model down, clarifying questions, Enhance fallback) is not counted. Days
   reset at 00:00 UTC. `/api/me` returns the sign-in state and today's usage, which the account menu

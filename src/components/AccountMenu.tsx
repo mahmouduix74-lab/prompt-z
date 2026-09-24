@@ -434,7 +434,7 @@ interface LimitDialogProps {
 /** Popup shown when today's prompts are used up: offers sign-in for more, or says when they renew. */
 export const LimitDialog: React.FC<LimitDialogProps> = ({ open, lang, canSignIn, limit, onSignIn, onClose }) => {
   const isAr = lang === 'ar';
-  const n = limit ?? (canSignIn ? 3 : 6);
+  const n = limit ?? (canSignIn ? 3 : 10);
   const title = canSignIn
     ? isAr
       ? 'انتهت البرومبتات المجانية لليوم'
@@ -444,8 +444,8 @@ export const LimitDialog: React.FC<LimitDialogProps> = ({ open, lang, canSignIn,
       : "You've used today's prompts";
   const body = canSignIn
     ? isAr
-      ? `استخدمت ${n} برومبتات مجانية اليوم. سجّل الدخول لتحصل على 3 برومبتات إضافية الآن.`
-      : `You've used ${n} free prompts today. Sign in to get 3 more right now.`
+      ? `استخدمت ${n} برومبتات مجانية اليوم. سجّل الدخول لتحصل على 7 برومبتات إضافية الآن (10 في اليوم).`
+      : `You've used ${n} free prompts today. Sign in to get 7 more right now (10 a day).`
     : isAr
       ? `استخدمت كل برومبتات اليوم (${n}). يتجدد العدد غدًا.`
       : `You've used all ${n} of today's prompts. They renew tomorrow.`;
