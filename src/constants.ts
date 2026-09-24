@@ -87,4 +87,7 @@ export const OUTPUT_LANGUAGES: OutputLanguageOption[] = [
 export const OPENROUTER_MODELS = ['google/gemini-3.1-flash-lite', 'google/gemini-3.8-flash'];
 export const OPENROUTER_MODEL = OPENROUTER_MODELS[0];
 
+/** YouTube link for the hero's "How it works" video; while empty, the popup shows the steps only. */
+export const HOW_IT_WORKS_VIDEO_URL = '';
+
 export { EXACT_SYSTEM_INSTRUCTION, EMPTY_TEMPLATE_PREVIEW, buildSystemInstruction } from './prompting.js';

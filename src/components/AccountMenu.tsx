@@ -11,7 +11,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 /** Same height as the language and theme controls next to it (32px). */
 const signInButtonClassName =
-  'group inline-flex items-center justify-center gap-2 h-9 px-[7px] sm:ps-3.5 sm:pe-[7px] rounded-xl text-sm font-semibold leading-none text-white bg-purple-600 hover:bg-purple-700 shadow-sm shadow-purple-600/20 transition-colors duration-150 whitespace-nowrap cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950';
+  'group inline-flex items-center justify-center gap-2 h-9 px-[7px] sm:ps-3.5 sm:pe-[7px] rounded-xl text-sm font-semibold leading-none text-white bg-purple-600/90 hover:bg-purple-600 transition-colors duration-150 whitespace-nowrap cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950';
 
 const menuItemClassName =
   'flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm text-start text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 focus:outline-hidden focus-visible:bg-zinc-100 dark:focus-visible:bg-zinc-800/70 cursor-pointer';
