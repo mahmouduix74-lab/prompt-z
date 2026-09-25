@@ -33,7 +33,7 @@ function CreditsBadge({
   onSignIn,
 }: {
   usage: NonNullable<AccountState['usage']>;
-  /** What an account gets a day (mentioned to visitors in the tooltip). */
+  /** What an account gets a day; the badge always shows this full number. */
   dailyCredits: number;
   lang: AppLang;
   signedIn: boolean;
@@ -62,7 +62,7 @@ function CreditsBadge({
         className="inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm font-medium leading-none text-zinc-900 dark:text-white hover:border-purple-400 dark:hover:border-purple-500 transition-colors duration-150 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
       >
         <span className="tabular-nums">
-          {usage.remaining} {isAr ? 'كريدت' : 'credits'}
+          {dailyCredits} {isAr ? 'كريدت' : 'credits'}
         </span>
       </button>
       <div

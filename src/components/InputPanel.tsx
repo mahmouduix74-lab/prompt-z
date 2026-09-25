@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { AppLang, UI_STRINGS } from '../utils/i18n';
+import { Modal } from './Modal';
 import { Sparkles, Trash2, ArrowUpLeft, ArrowUpRight, Loader2, Wand2, Undo2, PenLine, Info } from 'lucide-react';
 
 interface InputPanelProps {
@@ -157,86 +158,54 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             {lang === 'ar' ? 'فكرة أو متطلبات البرومبت' : 'Raw Prompt / Idea'}
           </label>
 
-          {/* Quick Tips Help Popover Icon */}
-          <div className="relative inline-flex items-center">
+          {/* Tips: a centred popup, so it is fully visible on phones too */}
+          <button
+            type="button"
+            onClick={() => setShowTips(true)}
+            className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-zinc-400 hover:text-purple-600 dark:text-zinc-500 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer focus:outline-hidden"
+            title={lang === 'ar' ? 'نصائح لكتابة برومبت فعال' : 'Tips for effective prompts'}
+            aria-label={lang === 'ar' ? 'نصائح لكتابة برومبت فعال' : 'Tips for effective prompts'}
+            aria-haspopup="dialog"
+          >
+            <Info className="w-3.5 h-3.5" />
+          </button>
+          <Modal open={showTips} lang={lang} labelledBy="tips-title" onClose={() => setShowTips(false)}>
+            <h2 id="tips-title" className="flex items-center gap-2 text-xl font-bold pe-8 text-start">
+              <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
+              {lang === 'ar' ? 'نصائح لبرومبت فعال' : 'Tips for effective prompts'}
+            </h2>
+            <ol className="mt-5 flex flex-col gap-3 text-start">
+              <li className="flex items-start gap-3">
+                <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 text-sm font-bold">1</span>
+                <div>
+                  <p className="font-semibold text-zinc-900 dark:text-zinc-100">{lang === 'ar' ? 'كن محددًا:' : 'Be specific:'}</p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">{lang === 'ar' ? 'اصف الهدف الأساسي والوظائف المطلوبة بدقة.' : 'State your core goal and details clearly.'}</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 text-sm font-bold">2</span>
+                <div>
+                  <p className="font-semibold text-zinc-900 dark:text-zinc-100">{lang === 'ar' ? 'حدّد السياق:' : 'Define context:'}</p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">{lang === 'ar' ? 'اذكر الجمهور المستهدف أو التقنيات المستخدمة.' : 'Specify target audience or stack constraints.'}</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 text-sm font-bold">3</span>
+                <div>
+                  <p className="font-semibold text-zinc-900 dark:text-zinc-100">{lang === 'ar' ? 'حدّد شكل المخرجات:' : 'Include output format:'}</p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">{lang === 'ar' ? 'اذكر التنسيق المطلوب (خطوات، كود، جداول).' : 'Mention structure (e.g., bullets, code, table).'}</p>
+                </div>
+              </li>
+            </ol>
             <button
               type="button"
-              onMouseEnter={() => setShowTips(true)}
-              onMouseLeave={() => setShowTips(false)}
-              onClick={() => setShowTips((prev) => !prev)}
-              onFocus={() => setShowTips(true)}
-              onBlur={() => setShowTips(false)}
-              className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-zinc-400 hover:text-purple-600 dark:text-zinc-500 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer focus:outline-hidden"
-              title={lang === 'ar' ? 'نصائح لكتابة برومبت فعال' : 'Tips for effective prompts'}
-              aria-label="Prompting Tips Help"
+              data-autofocus
+              onClick={() => setShowTips(false)}
+              className="mt-6 w-full h-11 rounded-xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 cursor-pointer transition-colors duration-150 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
             >
-              <Info className="w-3.5 h-3.5" />
+              {lang === 'ar' ? 'فهمت' : 'Got it'}
             </button>
-
-            <AnimatePresence>
-              {showTips && (
-                <motion.div
-                  initial={{ opacity: 0, y: 6, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 4, scale: 0.96 }}
-                  transition={{ duration: 0.15, ease: 'easeOut' }}
-                  dir={lang === 'ar' ? 'rtl' : 'ltr'}
-                  className={`absolute top-full mt-2.5 z-50 w-64 sm:w-72 p-3.5 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/90 dark:border-zinc-800/90 shadow-xl text-xs text-zinc-700 dark:text-zinc-300 pointer-events-none select-none ${
-                    lang === 'ar' ? 'start-0 text-right font-arabic' : 'start-0 text-left'
-                  }`}
-                >
-                  {/* Tooltip Arrow pointing up to Info icon */}
-                  <div
-                    className={`absolute -top-1.5 w-3 h-3 rotate-45 bg-white/95 dark:bg-zinc-900/95 border-t border-s border-zinc-200/90 dark:border-zinc-800/90 ${
-                      lang === 'ar' ? 'start-3' : 'start-3'
-                    }`}
-                  />
-
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-1.5 font-bold text-zinc-900 dark:text-zinc-100 mb-2.5 border-b border-zinc-100 dark:border-zinc-800/80 pb-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-                      <span>{lang === 'ar' ? 'نصائح لبرومبت فعال' : 'Tips for Effective Prompts'}</span>
-                    </div>
-                    <ul className="space-y-2 text-[11px] leading-relaxed">
-                      <li className="flex items-start gap-2">
-                        <span className="text-purple-600 dark:text-purple-400 font-bold shrink-0 mt-0.5">•</span>
-                        <div>
-                          <strong className="font-semibold text-zinc-900 dark:text-zinc-200">
-                            {lang === 'ar' ? 'كن محددًا:' : 'Be specific:'}
-                          </strong>{' '}
-                          {lang === 'ar'
-                            ? 'اصف الهدف الأساسي والوظائف المطلوبة بدقة.'
-                            : 'State your core goal and details clearly.'}
-                        </div>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-purple-600 dark:text-purple-400 font-bold shrink-0 mt-0.5">•</span>
-                        <div>
-                          <strong className="font-semibold text-zinc-900 dark:text-zinc-200">
-                            {lang === 'ar' ? 'حدّد السياق:' : 'Define context:'}
-                          </strong>{' '}
-                          {lang === 'ar'
-                            ? 'اذكر الجمهور المستهدف أو التقنيات المستخدمة.'
-                            : 'Specify target audience or stack constraints.'}
-                        </div>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-purple-600 dark:text-purple-400 font-bold shrink-0 mt-0.5">•</span>
-                        <div>
-                          <strong className="font-semibold text-zinc-900 dark:text-zinc-200">
-                            {lang === 'ar' ? 'حدّد شكل المخرجات:' : 'Include output format:'}
-                          </strong>{' '}
-                          {lang === 'ar'
-                            ? 'اذكر التنسيق المطلوب (خطوات، كود، جداول).'
-                            : 'Mention structure (e.g., bullets, code, table).'}
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          </Modal>
           {canUndoEnhance && onUndoEnhance && (
             <button
               type="button"
