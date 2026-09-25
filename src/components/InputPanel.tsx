@@ -162,7 +162,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
           <button
             type="button"
             onClick={() => setShowTips(true)}
-            className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-zinc-400 hover:text-purple-600 dark:text-zinc-500 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer focus:outline-hidden"
+            className="inline-flex items-center justify-center h-9 rounded-md text-zinc-400 hover:text-purple-600 dark:text-zinc-500 dark:hover:text-purple-400 transition-colors cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400"
             title={lang === 'ar' ? 'نصائح لكتابة برومبت فعال' : 'Tips for effective prompts'}
             aria-label={lang === 'ar' ? 'نصائح لكتابة برومبت فعال' : 'Tips for effective prompts'}
             aria-haspopup="dialog"
