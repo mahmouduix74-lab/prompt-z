@@ -88,7 +88,7 @@ async function withinLimit(
   const resultBody = result.body as Record<string, unknown> | null;
   // The model delivered nothing (it was down, it asked clarifying questions, or Enhance fell back
   // to the local tidy-up): not counted.
-  if (usage && (result.status >= 500 || resultBody?.clarify || resultBody?.modelFailed)) {
+  if (usage && (result.status >= 400 || resultBody?.clarify || resultBody?.modelFailed)) {
     await refundQuota(request, env, user);
   } else if (usage && result.status === 200 && resultBody && typeof resultBody === 'object') {
     resultBody.usage = usage;
