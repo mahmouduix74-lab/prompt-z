@@ -34,8 +34,12 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
   offers a retry (the call is not counted). The local engine is used only when no key is set.
 - **Feedback:** 👍 / 👎 under each prompt go to `/api/feedback` (D1 table `feedback`). Signed-in
   emails listed in `ADMIN_EMAILS` (a build variable) can read them at `/api/feedback`.
-- **Eval:** open `/api/eval` to run 13 fixed requests through the live model and check each prompt
-  automatically (`/api/eval?json` for JSON). Cases live in [`src/server/eval.ts`](src/server/eval.ts).
+- **Eval:** signed in with an `ADMIN_EMAILS` account, open `/api/eval` to run 13 fixed requests through
+  the live model and check each prompt automatically (`/api/eval?json` for JSON). Cases live in
+  [`src/server/eval.ts`](src/server/eval.ts).
+- **Security headers:** every page and API response is sent with `X-Frame-Options: DENY`,
+  `nosniff` and a strict referrer policy ([`public/_headers`](public/_headers) for the site,
+  `SECURITY_HEADERS` in [`worker/index.ts`](worker/index.ts) for `/api/*`).
 - **Sign-in and daily limits:** sign-in with Google or an emailed one-time link (sent through
   [Resend](https://resend.com), `RESEND_API_KEY`), and a daily prompt limit (3 a day without an
   account, then a popup asks the visitor to sign in; 50 a day per account as an abuse cap;
@@ -101,7 +105,7 @@ Manual deploy from a machine logged in with `npx wrangler login`: `npm run deplo
 | `/api/auth/logout` | Sign out |
 | `GET/POST/DELETE /api/history` | Signed-in user's saved prompts |
 | `POST /api/feedback`, `GET /api/feedback` | 👍 / 👎, and the admin page to read them |
-| `GET /api/eval` | Runs the eval (3 runs a day) |
+| `GET /api/eval` | Runs the eval (admins only, 3 runs a day) |
 | `GET /api/health`, `/api/models` | Status and the model in use |
 
 ## Scripts

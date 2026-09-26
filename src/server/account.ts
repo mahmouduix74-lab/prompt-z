@@ -359,6 +359,11 @@ export function accountKey(user: SessionUser): string {
   return user.email.toLowerCase() || user.sub;
 }
 
+/** The emails in ADMIN_EMAILS, however the variable was typed (quotes, spaces, commas, a label). */
+export function adminEmails(env: AccountEnv): string[] {
+  return ((env.ADMIN_EMAILS || '').match(/[^\s,;:"'<>=]+@[^\s,;:"'<>=]+/g) || []).map((e) => e.toLowerCase());
+}
+
 /** Who the request counts against, and their daily limit. */
 async function ipSubject(request: Request, env: AccountEnv): Promise<string> {
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
