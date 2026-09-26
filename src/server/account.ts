@@ -236,6 +236,7 @@ export async function handleCallback(request: Request, env: AccountEnv): Promise
     return back('?signin=error');
   }
   if (!claims?.sub || claims.aud !== env.GOOGLE_CLIENT_ID) return back('?signin=error');
+  if (claims.iss !== 'https://accounts.google.com' && claims.iss !== 'accounts.google.com') return back('?signin=error');
   // Accounts are keyed by email (accountKey), so an unverified Google email could claim someone else's history.
   if (claims.email_verified !== true && claims.email_verified !== 'true') return back('?signin=error');
 
@@ -327,14 +328,26 @@ export async function handleEmailLink(request: Request, env: AccountEnv): Promis
   return reply(200, { ok: true });
 }
 
-/** GET /api/auth/email/verify?token=…: the link from the email. Works once, then signs in. */
+/** /api/auth/email/verify: GET (the emailed link) shows a sign-in button; its same-site POST uses the token once. */
 export async function handleEmailVerify(request: Request, env: AccountEnv): Promise<Response> {
   const origin = siteOrigin(env, request);
   const back = (query: string, setCookie?: string) =>
-    new Response(null, { status: 302, headers: { Location: `${origin}/${query}`, ...(setCookie ? { 'Set-Cookie': setCookie } : {}) } });
+    new Response(null, { status: 303, headers: { Location: `${origin}/${query}`, ...(setCookie ? { 'Set-Cookie': setCookie } : {}) } });
   if (!emailEnabled(env)) return back('?signin=error');
 
-  const token = new URL(request.url).searchParams.get('token') || '';
+  // Opening the link only shows a button; the POST signs in. Mail scanners that open links would
+  // otherwise use up the one-time token, and another site could sign a visitor into its account.
+  if (request.method === 'GET') {
+    const token = new URL(request.url).searchParams.get('token') || '';
+    return /^[A-Za-z0-9_-]{20,100}$/.test(token) ? confirmPage(token) : back('?signin=error');
+  }
+  if (request.method !== 'POST') return back('?signin=error');
+  const from = request.headers.get('Origin');
+  const sameSite = from ? from === origin : request.headers.get('Sec-Fetch-Site') === 'same-origin';
+  if (!sameSite) return back('?signin=error');
+
+  const form = await request.formData().catch(() => null);
+  const token = String(form?.get('token') || '');
   if (!token) return back('?signin=error');
   const db = env.DB!;
   await ensureSchema(db);
@@ -345,6 +358,24 @@ export async function handleEmailVerify(request: Request, env: AccountEnv): Prom
   if (!row || row.expires_at < Date.now()) return back('?signin=expired');
 
   return back('?signin=ok', await startSession(request, env, { sub: `email:${row.email}`, email: row.email, name: '' }));
+}
+
+function confirmPage(token: string): Response {
+  const html = `<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer"><title>PromptZ</title>
+<style>
+:root{color-scheme:light dark;--bg:#FAFAFC;--fg:#181622;--muted:#5b5870}
+@media (prefers-color-scheme:dark){:root{--bg:#070709;--fg:#f4f4f8;--muted:#a5a3b8}}
+body{background:var(--bg);color:var(--fg);font:16px/1.7 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;margin:0;min-height:100vh;display:grid;place-items:center;padding:16px}
+main{max-width:360px;text-align:center}h1{font-size:22px;margin:0 0 6px}p{color:var(--muted);margin:0 0 20px}
+button{width:100%;height:44px;border:0;border-radius:12px;background:#7132F5;color:#fff;font:600 15px system-ui,sans-serif;cursor:pointer}
+</style></head><body><main>
+<h1>تسجيل الدخول إلى PromptZ</h1><p>Sign in to PromptZ</p>
+<form method="post" action="/api/auth/email/verify"><input type="hidden" name="token" value="${token}">
+<button type="submit">تسجيل الدخول · Sign in</button></form>
+</main></body></html>`;
+  return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
 
 /** GET /api/auth/logout */

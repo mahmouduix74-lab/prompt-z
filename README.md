@@ -37,9 +37,16 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
 - **Eval:** signed in with an `ADMIN_EMAILS` account, open `/api/eval` to run 13 fixed requests through
   the live model and check each prompt automatically (`/api/eval?json` for JSON). Cases live in
   [`src/server/eval.ts`](src/server/eval.ts).
-- **Security headers:** every page and API response is sent with `X-Frame-Options: DENY`,
-  `nosniff`, HSTS and a strict referrer policy ([`public/_headers`](public/_headers) for the site,
-  `SECURITY_HEADERS` in [`worker/index.ts`](worker/index.ts) for `/api/*`).
+- **Security headers:** the site is sent with a strict Content-Security-Policy (scripts only from
+  the site itself; fonts, YouTube and Google avatars allowlisted), `X-Frame-Options: DENY`,
+  `nosniff`, HSTS, COOP and a strict referrer policy ([`public/_headers`](public/_headers));
+  `/api/*` gets the same basics from `SECURITY_HEADERS` in [`worker/index.ts`](worker/index.ts).
+  Add any new outside script, font, image or embed to the CSP there, or the browser blocks it.
+- **Email sign-in links** open a page with a sign-in button; only its same-site POST uses the
+  one-time token, so mail scanners cannot use it up and other sites cannot sign a visitor in.
+- **Supply chain:** Dependabot ([`.github/dependabot.yml`](.github/dependabot.yml)) opens weekly
+  update PRs and CodeQL ([`.github/workflows/codeql.yml`](.github/workflows/codeql.yml)) scans
+  every PR. Vulnerability reports: [`/.well-known/security.txt`](public/.well-known/security.txt).
 - **Abuse limits:** API writes must be JSON (so other sites cannot post on a visitor's behalf);
   IPv6 addresses are counted per /64; refunded calls (clarifying questions, model errors) are
   capped at 10 a day; a database error refuses model calls instead of skipping the limits;
