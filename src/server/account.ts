@@ -41,7 +41,8 @@ export interface AccountEnv {
   ADMIN_EMAILS?: string;
 }
 
-export const LIMITS = { anonymous: 3, signedIn: 10 };
+// signedIn is a quiet abuse cap while credits are hidden (SHOW_CREDITS in constants.ts).
+export const LIMITS = { anonymous: 3, signedIn: 50 };
 /** /api/eval runs 10 model calls, so it is limited as a whole, for everyone together. */
 const EVAL_RUNS_PER_DAY = 3;
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowRight, ChevronDown, History, Hourglass, LogOut, Mail, X, CheckCircle2, Sparkles } from 'lucide-react';
+import { SHOW_CREDITS } from '../constants';
 import { Modal } from './Modal';
 import { AppLang } from '../utils/i18n';
 import { AccountState, AccountUsage, requestEmailLink } from '../services/account';
@@ -178,7 +179,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({ account, lang, onSignI
               </div>
             </div>
             <div className="h-px bg-zinc-200 dark:bg-zinc-800 mx-2 my-1" />
-            {account.usage && (
+            {SHOW_CREDITS && account.usage && (
               <>
                 <UsageMeter usage={account.usage} lang={lang} />
                 <div className="h-px bg-zinc-200 dark:bg-zinc-800 mx-2 my-1" />
@@ -306,7 +307,13 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ open, lang, account,
                 {isAr ? 'تسجيل الدخول إلى PromptZ' : 'Sign in to PromptZ'}
               </h2>
               <p className="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">
-                {isAr ? 'سجّل الدخول لتحصل على برومبتات إضافية كل يوم.' : 'Sign in to get more prompts every day.'}
+                {SHOW_CREDITS
+                  ? isAr
+                    ? 'سجّل الدخول لتحصل على برومبتات إضافية كل يوم.'
+                    : 'Sign in to get more prompts every day.'
+                  : isAr
+                    ? 'سجّل الدخول لتكمل استخدام PromptZ.'
+                    : 'Sign in to keep using PromptZ.'}
               </p>
             </div>
 
@@ -437,14 +444,26 @@ interface LimitDialogProps {
 export const LimitDialog: React.FC<LimitDialogProps> = ({ open, lang, canSignIn, limit, onSignIn, onClose }) => {
   const isAr = lang === 'ar';
   const n = limit ?? (canSignIn ? 3 : 10);
-  const title = canSignIn
+  const title = canSignIn && !SHOW_CREDITS
+    ? isAr
+      ? 'سجّل الدخول لتكمل'
+      : 'Sign in to keep going'
+    : canSignIn
     ? isAr
       ? 'انتهت البرومبتات المجانية لليوم'
       : "You've used today's free prompts"
     : isAr
       ? 'انتهت برومبتات اليوم'
       : "You've used today's prompts";
-  const body = canSignIn
+  const body = !SHOW_CREDITS
+    ? canSignIn
+      ? isAr
+        ? `جرّبت ${n} برومبتات مجانًا. سجّل الدخول عشان تكمل.`
+        : `You've tried ${n} free prompts. Sign in to keep going.`
+      : isAr
+        ? 'وصلت للحد المسموح النهارده. جرّب تاني بكرة.'
+        : "You've reached today's limit. Try again tomorrow."
+    : canSignIn
     ? isAr
       ? `استخدمت ${n} برومبتات مجانية اليوم. سجّل الدخول لتحصل على 7 برومبتات إضافية الآن (10 في اليوم).`
       : `You've used ${n} free prompts today. Sign in to get 7 more right now (10 a day).`

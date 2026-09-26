@@ -90,4 +90,7 @@ export const OPENROUTER_MODEL = OPENROUTER_MODELS[0];
 /** YouTube link for the hero's "How it works" video; while empty, the popup shows the steps only. */
 export const HOW_IT_WORKS_VIDEO_URL = '';
 
+/** Shows the daily credits (header badge, account-menu meter, counts in popups). Hidden for now. */
+export const SHOW_CREDITS = false;
+
 export { EXACT_SYSTEM_INSTRUCTION, EMPTY_TEMPLATE_PREVIEW, buildSystemInstruction } from './prompting.js';
