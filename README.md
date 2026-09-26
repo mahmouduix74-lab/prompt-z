@@ -38,8 +38,13 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
   the live model and check each prompt automatically (`/api/eval?json` for JSON). Cases live in
   [`src/server/eval.ts`](src/server/eval.ts).
 - **Security headers:** every page and API response is sent with `X-Frame-Options: DENY`,
-  `nosniff` and a strict referrer policy ([`public/_headers`](public/_headers) for the site,
+  `nosniff`, HSTS and a strict referrer policy ([`public/_headers`](public/_headers) for the site,
   `SECURITY_HEADERS` in [`worker/index.ts`](worker/index.ts) for `/api/*`).
+- **Abuse limits:** API writes must be JSON (so other sites cannot post on a visitor's behalf);
+  IPv6 addresses are counted per /64; refunded calls (clarifying questions, model errors) are
+  capped at 10 a day; a database error refuses model calls instead of skipping the limits;
+  history saves are capped at 400 a day per account; `/api/health?check` and `/api/eval` are
+  admin-only.
 - **Sign-in and daily limits:** sign-in with Google or an emailed one-time link (sent through
   [Resend](https://resend.com), `RESEND_API_KEY`), and a daily prompt limit (3 a day without an
   account, then a popup asks the visitor to sign in; 50 a day per account as an abuse cap;

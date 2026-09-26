@@ -69,6 +69,12 @@ async function withinLimit(
 
   const user = await readSession(request, env);
   const usage = await consumeQuota(request, env, user);
+  if (usage?.unavailable) {
+    return json({
+      status: 503,
+      body: { error: { code: 503, reason: 'model_unavailable', message: 'The service is busy. Try again shortly.' } },
+    });
+  }
   if (usage && !usage.allowed) {
     return json({
       status: 429,
@@ -103,17 +109,34 @@ const SECURITY_HEADERS: Record<string, string> = {
   'X-Frame-Options': 'DENY',
   'Content-Security-Policy': "frame-ancestors 'none'",
   'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Strict-Transport-Security': 'max-age=31536000',
 };
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const { pathname } = new URL(request.url);
+    // Every API write is JSON from the site's own pages. A cross-site form can only send text/plain
+    // or form data without a CORS preflight, so requiring JSON stops other sites posting on a
+    // visitor's behalf (spending their allowance and the site's credit).
+    const writes = request.method === 'POST' || request.method === 'PUT' || request.method === 'PATCH';
+    if (pathname.startsWith('/api/') && writes && !(request.headers.get('Content-Type') || '').toLowerCase().startsWith('application/json')) {
+      return withSecurityHeaders(json({ status: 415, body: { error: { code: 415, message: 'Send JSON (Content-Type: application/json).' } } }));
+    }
     const response = await route(request, env);
-    if (!new URL(request.url).pathname.startsWith('/api/')) return response;
-    const secured = new Response(response.body, response);
-    for (const [name, value] of Object.entries(SECURITY_HEADERS)) secured.headers.set(name, value);
-    return secured;
+    return pathname.startsWith('/api/') ? withSecurityHeaders(response) : response;
   },
 };
+
+async function isAdmin(request: Request, env: Env): Promise<boolean> {
+  const user = await readSession(request, env);
+  return Boolean(user && adminEmails(env).includes(user.email.toLowerCase()));
+}
+
+function withSecurityHeaders(response: Response): Response {
+  const secured = new Response(response.body, response);
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) secured.headers.set(name, value);
+  return secured;
+}
 
 async function route(request: Request, env: Env): Promise<Response> {
   const { pathname, searchParams } = new URL(request.url);
@@ -123,8 +146,11 @@ async function route(request: Request, env: Env): Promise<Response> {
   const serverKey = env.OPENROUTER_API_KEY;
 
   switch (pathname) {
-    case '/api/health':
-      return json(await handleHealth(serverKey, searchParams.has('check')));
+    case '/api/health': {
+      // ?check calls OpenRouter with the site's key; left open, it could be hammered to get the key rate-limited.
+      const check = searchParams.has('check') && (await isAdmin(request, env));
+      return json(await handleHealth(serverKey, check));
+    }
     case '/api/models':
       return json(await handleModels(userApiKey, serverKey));
     case '/api/me': {
@@ -169,8 +195,7 @@ async function route(request: Request, env: Env): Promise<Response> {
     }
     case '/api/eval': {
       // Each run makes about 20 model calls on the site's key, so only admins may start one.
-      const user = await readSession(request, env);
-      if (!user || !adminEmails(env).includes(user.email.toLowerCase())) {
+      if (!(await isAdmin(request, env))) {
         return new Response('Sign in with an admin account (ADMIN_EMAILS) to run the eval.', {
           status: 403,
           headers: { 'Content-Type': 'text/plain; charset=utf-8' },
@@ -178,8 +203,8 @@ async function route(request: Request, env: Env): Promise<Response> {
       }
       const quota = await consumeQuota(request, env, null, 'eval');
       if (quota && !quota.allowed) {
-        return new Response('The eval already ran 3 times today. Try again tomorrow (UTC).', {
-          status: 429,
+        return new Response(quota.unavailable ? 'The database is unavailable. Try again shortly.' : 'The eval already ran 3 times today. Try again tomorrow (UTC).', {
+          status: quota.unavailable ? 503 : 429,
           headers: { 'Content-Type': 'text/plain; charset=utf-8' },
         });
       }

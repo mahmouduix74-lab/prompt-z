@@ -12,8 +12,9 @@
  *
  * The session cookie is signed with a key derived from GOOGLE_CLIENT_SECRET (or RESEND_API_KEY), so
  * no extra secret is needed. With neither configured sign-in is off and everyone gets
- * LIMITS.signedIn; without the DB binding there are no limits at all (fail open, never block the
- * site on our own storage).
+ * LIMITS.signedIn; without the DB binding there are no limits at all (local runs). With the
+ * binding, a database error blocks model calls instead of skipping the limits, so the limits
+ * cannot be bypassed by overloading the database.
  */
 
 /** The subset of Cloudflare's D1 API used here. */
@@ -52,6 +53,11 @@ const SESSION_DAYS = 30;
 const EMAIL_LINK_MINUTES = 15;
 /** Sign-in emails a day, per address and per IP, so the form cannot be used to spam. */
 const EMAIL_LINKS_PER_DAY = 5;
+/**
+ * Calls given back per user or IP a day. Each refunded call still cost a model call (clarifying
+ * questions, an unusable answer), so an endless loop of them must stop being free.
+ */
+const REFUNDS_PER_DAY = 10;
 
 export interface SessionUser {
   sub: string;
@@ -65,6 +71,21 @@ export interface Usage {
   used: number;
   limit: number;
   remaining: number;
+}
+
+/**
+ * The caller's IP as counted for limits. An IPv6 connection usually controls a whole /64, so
+ * counting single IPv6 addresses would give a fresh allowance per address.
+ */
+function clientIp(request: Request): string {
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  if (!ip.includes(':')) return ip;
+  if (ip.includes('.')) return ip.slice(ip.lastIndexOf(':') + 1); // IPv4-mapped, e.g. ::ffff:1.2.3.4
+  const [head, tail] = ip.toLowerCase().split('::');
+  const left = head ? head.split(':') : [];
+  const right = tail ? tail.split(':') : [];
+  const groups = tail === undefined ? left : [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill('0'), ...right];
+  return `${groups.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, '')).join(':')}::/64`;
 }
 
 const encoder = new TextEncoder();
@@ -263,7 +284,7 @@ export async function handleEmailLink(request: Request, env: AccountEnv): Promis
 
   const db = env.DB!;
   await ensureSchema(db);
-  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const ip = clientIp(request);
   for (const subject of [`mail:${await sha256(email)}`, `mailip:${await sha256(`${siteSecret(env)}:${ip}`)}`]) {
     const row = await db
       .prepare(
@@ -366,7 +387,7 @@ export function adminEmails(env: AccountEnv): string[] {
 
 /** Who the request counts against, and their daily limit. */
 async function ipSubject(request: Request, env: AccountEnv): Promise<string> {
-  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const ip = clientIp(request);
   // Stored hashed (with the site's secret) so the database never holds raw IP addresses.
   return `ip:${await sha256(`${siteSecret(env) || 'promptz'}:${ip}`)}`;
 }
@@ -410,7 +431,7 @@ async function carryOverAnonymousUsage(request: Request, env: AccountEnv, user: 
 
 /** A hash of the caller's IP (with the site's secret), for per-IP limits without storing the address. */
 export async function ipKey(request: Request, env: AccountEnv): Promise<string> {
-  return sha256(`${siteSecret(env) || 'promptz'}:${request.headers.get('CF-Connecting-IP') || 'unknown'}`);
+  return sha256(`${siteSecret(env) || 'promptz'}:${clientIp(request)}`);
 }
 
 /** Gives back one counted call (the model was down, or it asked questions instead of answering). */
@@ -418,6 +439,13 @@ export async function refundQuota(request: Request, env: AccountEnv, user: Sessi
   if (!env.DB) return;
   try {
     const { subject } = await quotaSubject(request, env, user);
+    const refunds = await env.DB.prepare(
+      `INSERT INTO usage (subject, day, count) VALUES (?1, ?2, 1)
+       ON CONFLICT(subject, day) DO UPDATE SET count = count + 1 RETURNING count`
+    )
+      .bind(`refund:${subject}`, today())
+      .first<{ count: number }>();
+    if ((refunds?.count ?? 1) > REFUNDS_PER_DAY) return;
     await env.DB.prepare('UPDATE usage SET count = MAX(count - 1, 0) WHERE subject = ?1 AND day = ?2').bind(subject, today()).run();
     if (user) await bumpIp(request, env, -1);
   } catch (err) {
@@ -444,14 +472,15 @@ export async function readUsage(request: Request, env: AccountEnv, user: Session
 /**
  * Counts one model call. Returns the usage after counting, with allowed=false when the daily
  * limit was already reached (the attempt is still recorded, which is harmless).
- * Null means limits are unavailable (no DB or a DB error): the call goes ahead.
+ * Null means there is no DB (local runs): the call goes ahead. On a DB error the call is refused
+ * with unavailable=true, so the limits cannot be skipped by overloading the database.
  */
 export async function consumeQuota(
   request: Request,
   env: AccountEnv,
   user: SessionUser | null,
   kind: 'prompt' | 'eval' = 'prompt'
-): Promise<(Usage & { allowed: boolean }) | null> {
+): Promise<(Usage & { allowed: boolean; unavailable?: boolean }) | null> {
   if (!env.DB) return null;
   try {
     await ensureSchema(env.DB);
@@ -468,7 +497,7 @@ export async function consumeQuota(
     const used = Math.min(row?.count ?? 1, limit);
     return { allowed, used, limit, remaining: Math.max(0, limit - used) };
   } catch (err) {
-    console.warn('[Quota] Could not count usage, allowing the request:', err);
-    return null;
+    console.warn('[Quota] Could not count usage, refusing the request:', err);
+    return { allowed: false, unavailable: true, used: 0, limit: 0, remaining: 0 };
   }
 }
