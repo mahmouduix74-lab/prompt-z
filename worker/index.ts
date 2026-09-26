@@ -14,6 +14,7 @@ import { renderEvalPage, runEval } from '../src/server/eval';
 import { handleHistory } from '../src/server/history';
 import { handleFeedback } from '../src/server/feedback';
 import {
+  adminEmails,
   authEnabled,
   consumeQuota,
   emailEnabled,
@@ -96,73 +97,97 @@ async function withinLimit(
   return json(result);
 }
 
+// Static files get the same headers from public/_headers.
+const SECURITY_HEADERS: Record<string, string> = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Content-Security-Policy': "frame-ancestors 'none'",
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+};
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const { pathname, searchParams } = new URL(request.url);
-    if (!pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
-
-    const userApiKey = request.headers.get('x-api-key') || '';
-    const serverKey = env.OPENROUTER_API_KEY;
-
-    switch (pathname) {
-      case '/api/health':
-        return json(await handleHealth(serverKey, searchParams.has('check')));
-      case '/api/models':
-        return json(await handleModels(userApiKey, serverKey));
-      case '/api/me': {
-        const user = await readSession(request, env);
-        const usage = await readUsage(request, env, user);
-        return json({
-          status: 200,
-          body: {
-            authEnabled: authEnabled(env),
-            google: googleEnabled(env),
-            email: emailEnabled(env),
-            user: user && { name: user.name, email: user.email, picture: user.picture },
-            usage,
-            limits: LIMITS,
-          },
-        });
-      }
-      case '/api/auth/login':
-        return handleLogin(request, env);
-      case '/api/auth/callback':
-        return handleCallback(request, env);
-      case '/api/auth/logout':
-        return handleLogout(request, env);
-      case '/api/auth/email':
-        if (request.method !== 'POST') return methodNotAllowed('POST');
-        return handleEmailLink(request, env);
-      case '/api/auth/email/verify':
-        return handleEmailVerify(request, env);
-      case '/api/feedback':
-        return handleFeedback(request, env, await readSession(request, env));
-      case '/api/history':
-        return handleHistory(request, env, await readSession(request, env));
-      case '/api/generate': {
-        if (request.method !== 'POST') return methodNotAllowed('POST');
-        const body = await readJson(request);
-        return withinLimit(request, env, body, userApiKey, () => handleGenerate(body, userApiKey, serverKey));
-      }
-      case '/api/refine': {
-        if (request.method !== 'POST') return methodNotAllowed('POST');
-        const body = await readJson(request);
-        return withinLimit(request, env, body, userApiKey, () => handleRefine(body, userApiKey, serverKey));
-      }
-      case '/api/eval': {
-        const quota = await consumeQuota(request, env, null, 'eval');
-        if (quota && !quota.allowed) {
-          return new Response('The eval already ran 3 times today. Try again tomorrow (UTC).', {
-            status: 429,
-            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-          });
-        }
-        const run = await runEval(serverKey);
-        if (searchParams.has('json')) return json({ status: 200, body: run });
-        return new Response(renderEvalPage(run), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
-      }
-      default:
-        return json({ status: 404, body: { error: { code: 404, message: 'Not found.' } } });
-    }
+    const response = await route(request, env);
+    if (!new URL(request.url).pathname.startsWith('/api/')) return response;
+    const secured = new Response(response.body, response);
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) secured.headers.set(name, value);
+    return secured;
   },
 };
+
+async function route(request: Request, env: Env): Promise<Response> {
+  const { pathname, searchParams } = new URL(request.url);
+  if (!pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
+
+  const userApiKey = request.headers.get('x-api-key') || '';
+  const serverKey = env.OPENROUTER_API_KEY;
+
+  switch (pathname) {
+    case '/api/health':
+      return json(await handleHealth(serverKey, searchParams.has('check')));
+    case '/api/models':
+      return json(await handleModels(userApiKey, serverKey));
+    case '/api/me': {
+      const user = await readSession(request, env);
+      const usage = await readUsage(request, env, user);
+      return json({
+        status: 200,
+        body: {
+          authEnabled: authEnabled(env),
+          google: googleEnabled(env),
+          email: emailEnabled(env),
+          user: user && { name: user.name, email: user.email, picture: user.picture },
+          usage,
+          limits: LIMITS,
+        },
+      });
+    }
+    case '/api/auth/login':
+      return handleLogin(request, env);
+    case '/api/auth/callback':
+      return handleCallback(request, env);
+    case '/api/auth/logout':
+      return handleLogout(request, env);
+    case '/api/auth/email':
+      if (request.method !== 'POST') return methodNotAllowed('POST');
+      return handleEmailLink(request, env);
+    case '/api/auth/email/verify':
+      return handleEmailVerify(request, env);
+    case '/api/feedback':
+      return handleFeedback(request, env, await readSession(request, env));
+    case '/api/history':
+      return handleHistory(request, env, await readSession(request, env));
+    case '/api/generate': {
+      if (request.method !== 'POST') return methodNotAllowed('POST');
+      const body = await readJson(request);
+      return withinLimit(request, env, body, userApiKey, () => handleGenerate(body, userApiKey, serverKey));
+    }
+    case '/api/refine': {
+      if (request.method !== 'POST') return methodNotAllowed('POST');
+      const body = await readJson(request);
+      return withinLimit(request, env, body, userApiKey, () => handleRefine(body, userApiKey, serverKey));
+    }
+    case '/api/eval': {
+      // Each run makes about 20 model calls on the site's key, so only admins may start one.
+      const user = await readSession(request, env);
+      if (!user || !adminEmails(env).includes(user.email.toLowerCase())) {
+        return new Response('Sign in with an admin account (ADMIN_EMAILS) to run the eval.', {
+          status: 403,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+      }
+      const quota = await consumeQuota(request, env, null, 'eval');
+      if (quota && !quota.allowed) {
+        return new Response('The eval already ran 3 times today. Try again tomorrow (UTC).', {
+          status: 429,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+      }
+      const run = await runEval(serverKey);
+      if (searchParams.has('json')) return json({ status: 200, body: run });
+      return new Response(renderEvalPage(run), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+    default:
+      return json({ status: 404, body: { error: { code: 404, message: 'Not found.' } } });
+  }
+}
