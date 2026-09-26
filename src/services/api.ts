@@ -53,6 +53,8 @@ function parseApiError(statusCode: number, errorData: any): GenerationErrorDetai
   if (statusCode === 429) {
     result.isRateLimitMinute = true;
     result.userGuidance = 'تم تجاوز عدد الطلبات المسموح. أعد المحاولة بعد لحظات.';
+  } else if (statusCode === 413) {
+    result.userGuidance = 'النص طويل جدًا. اختصره شوية وجرب تاني.';
   } else if (statusCode === 401 || statusCode === 403) {
     result.isInvalidKey = true;
     result.userGuidance = 'OpenRouter رفض مفتاح السيرفر. راجع OPENROUTER_API_KEY في إعدادات Cloudflare.';

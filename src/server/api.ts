@@ -161,6 +161,15 @@ export async function handleModels(
   };
 }
 
+// Caps what one call can send to the model, so a single request cannot burn a large amount of tokens.
+const MAX_TEXT_CHARS = 12_000;
+const MAX_SIDE_CHARS = 3_000;
+const tooLong = (value: unknown, max: number) => typeof value === 'string' && value.length > max;
+const TOO_LONG: HandlerResult = {
+  status: 413,
+  body: { error: { code: 413, reason: 'too_long', message: 'The text is too long. Shorten it and try again.' } },
+};
+
 export interface GenerateInput {
   rawText: string;
   exclusions?: string;
@@ -183,6 +192,9 @@ export async function handleGenerate(
 
   if (!rawText || !rawText.trim()) {
     return { status: 400, body: { error: { code: 400, message: 'Text input is required.' } } };
+  }
+  if (tooLong(rawText, MAX_TEXT_CHARS) || tooLong(exclusions, MAX_SIDE_CHARS) || tooLong(systemInstruction, MAX_TEXT_CHARS)) {
+    return TOO_LONG;
   }
 
   const activeKey = resolveApiKey(userApiKey, serverKey);
@@ -285,6 +297,7 @@ export async function handleRefine(
   if (!rawText || !rawText.trim()) {
     return { status: 400, body: { error: { code: 400, message: 'Raw text is required to refine.' } } };
   }
+  if (tooLong(rawText, MAX_TEXT_CHARS)) return TOO_LONG;
 
   const activeKey = resolveApiKey(userApiKey, serverKey);
 

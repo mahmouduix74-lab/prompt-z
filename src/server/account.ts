@@ -215,6 +215,8 @@ export async function handleCallback(request: Request, env: AccountEnv): Promise
     return back('?signin=error');
   }
   if (!claims?.sub || claims.aud !== env.GOOGLE_CLIENT_ID) return back('?signin=error');
+  // Accounts are keyed by email (accountKey), so an unverified Google email could claim someone else's history.
+  if (claims.email_verified !== true && claims.email_verified !== 'true') return back('?signin=error');
 
   const picture = typeof claims.picture === 'string' && claims.picture.startsWith('https://') ? claims.picture : undefined;
   const user: SessionUser = { sub: String(claims.sub), email: String(claims.email || ''), name: String(claims.name || ''), picture };
