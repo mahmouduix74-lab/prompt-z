@@ -5,6 +5,7 @@ import { Theme, AppLang, UI_STRINGS } from '../utils/i18n';
 import { Logo } from './Logo';
 import { AccountMenu } from './AccountMenu';
 import { AccountState } from '../services/account';
+import { SHOW_CREDITS } from '../constants';
 
 interface HeaderProps {
   activeModel?: string;
@@ -138,7 +139,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Right Controls: Language, Theme Appearance */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Today's free prompts left, in a small outlined frame next to the language toggle */}
-          {account?.usage && (
+          {SHOW_CREDITS && account?.usage && (
             <CreditsBadge
               usage={account.usage}
               dailyCredits={account.limits.signedIn}
