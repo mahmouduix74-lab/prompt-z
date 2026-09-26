@@ -13,6 +13,8 @@ const MAX_ITEMS = 100;
 /** Largest single saved prompt, in characters of JSON. */
 const MAX_ITEM_CHARS = 60_000;
 const MAX_ITEMS_PER_POST = 100;
+/** Saved prompts an account may write a day (a sign-in import is up to 100), so a loop cannot flood the database. */
+const MAX_WRITES_PER_DAY = 400;
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
@@ -79,6 +81,17 @@ export async function handleHistory(request: Request, env: AccountEnv, user: Ses
     if (request.method === 'POST') {
       const body: any = await request.json().catch(() => ({}));
       const items = (Array.isArray(body?.items) ? body.items : []).slice(0, MAX_ITEMS_PER_POST).map(cleanItem).filter(Boolean);
+      if (!items.length) return json(200, { saved: 0 });
+      const written = await db
+        .prepare(
+          `INSERT INTO usage (subject, day, count) VALUES (?1, ?2, ?3)
+           ON CONFLICT(subject, day) DO UPDATE SET count = count + excluded.count RETURNING count`
+        )
+        .bind(`hist:${owner}`, new Date().toISOString().slice(0, 10), items.length)
+        .first<{ count: number }>();
+      if ((written?.count ?? 0) > MAX_WRITES_PER_DAY) {
+        return json(429, { error: { code: 429, message: 'Too many saves today. Try again tomorrow.' } });
+      }
       for (const item of items as { id: string; timestamp: number; data: string }[]) {
         await db
           .prepare(
