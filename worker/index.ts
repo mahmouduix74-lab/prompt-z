@@ -119,7 +119,9 @@ export default {
     // or form data without a CORS preflight, so requiring JSON stops other sites posting on a
     // visitor's behalf (spending their allowance and the site's credit).
     const writes = request.method === 'POST' || request.method === 'PUT' || request.method === 'PATCH';
-    if (pathname.startsWith('/api/') && writes && !(request.headers.get('Content-Type') || '').toLowerCase().startsWith('application/json')) {
+    // The emailed sign-in button is a plain form; that route checks the Origin header instead.
+    const formRoute = pathname === '/api/auth/email/verify';
+    if (pathname.startsWith('/api/') && writes && !formRoute && !(request.headers.get('Content-Type') || '').toLowerCase().startsWith('application/json')) {
       return withSecurityHeaders(json({ status: 415, body: { error: { code: 415, message: 'Send JSON (Content-Type: application/json).' } } }));
     }
     const response = await route(request, env);

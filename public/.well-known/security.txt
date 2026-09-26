@@ -1,0 +1,4 @@
+Contact: https://github.com/mahmouduix74-lab/prompt-z/security/advisories/new
+Expires: 2027-09-26T00:00:00.000Z
+Preferred-Languages: ar, en
+Canonical: https://prpmtz.online/.well-known/security.txt
