@@ -22,11 +22,13 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
   depth, approach, acceptance criteria and open questions, all from the request. The domain only
   says whose expertise answers it (its standards are candidates for requests that create
   something). Code (`composePrompt` in [`src/prompting.ts`](src/prompting.ts)) lays the brief out in
-  the depth's sections.
+  the depth's sections. Constraints may shape the work but never ban something the user did not
+  rule out, and an image or video gets no "Respond in <language>" line.
 - **Auto-check:** before composing, `checkBrief` ([`src/briefCheck.ts`](src/briefCheck.ts)) checks the
   brief against the request: every line of the request is covered by a task, no constraint limits
   the work to some of the tasks ("navbar only"), outOfDomain holds only what the user wrote, and
-  exclusions stay out of the tasks. On a problem the model is asked once to fix its brief; the fix
+  exclusions stay out of the tasks, no prompt appears unless the user asked for one, and a
+  request to make something gets that thing (not a description or concept of it). On a problem the model is asked once to fix its brief; the fix
   is kept only if it leaves fewer problems. The eval page shows what was auto-fixed.
 - **Clarifying questions:** when a request is too vague, `/api/generate` returns up to 3 optional
   questions (`clarify`) instead of a prompt; the answers are added to the request (`skipClarify`).

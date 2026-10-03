@@ -190,7 +190,9 @@ const CASES: EvalCase[] = [
     domain: 'media',
     depth: 'detailed',
     language: 'en',
-    forbidden: /\bprompts?\b/i,
+    // Nothing the user did not rule out is banned, the result is the image (not a description of
+    // it), and there is no "Respond in English" for a picture.
+    forbidden: /\bprompts?\b|UI elements|clutter|descri(be|ption)|\bconcept\b|Respond in English/i,
     expected: /isometric/i,
     requiredInTasks: [/artwork|illustration|image|visual/i],
   },
