@@ -4,7 +4,7 @@
  * for appears). Open it in a browser after a deploy to see whether prompt quality held up.
  * Costs one OpenRouter call per case, about the same as generating that many prompts on the site.
  */
-import { detectRequestLanguage } from '../prompting.js';
+import { DEPTH_SPECS, SUGGESTIONS, detectRequestLanguage } from '../prompting.js';
 import { DepthType, DomainType, OutputLanguage } from '../types.js';
 import { handleGenerate } from './api.js';
 
@@ -244,7 +244,13 @@ function check(c: EvalCase, body: any): EvalResult {
   const language = detectRequestLanguage(tasks.replace(/"[^"]*"/g, ''));
   if (language !== c.language) problems.push(`Wrong language: expected ${c.language}, got ${language}`);
 
-  const found = c.forbidden && prompt.match(c.forbidden);
+  // Suggestions are where ideas the user did not ask for belong, so "forbidden" skips them; Short
+  // and Medium must have none.
+  const suggestionsAt = prompt.indexOf(`# ${SUGGESTIONS}`);
+  const work = suggestionsAt >= 0 ? prompt.slice(0, suggestionsAt) : prompt;
+  if (suggestionsAt >= 0 && !DEPTH_SPECS[c.depth].sections.includes(SUGGESTIONS)) problems.push(`Suggestions in ${c.depth}`);
+
+  const found = c.forbidden && work.match(c.forbidden);
   if (found) problems.push(`Added something not requested: "${found[0]}"`);
   const foundInTasks = c.forbiddenInTasks && tasks.match(c.forbiddenInTasks);
   if (foundInTasks) problems.push(`Task not requested: "${foundInTasks[0]}"`);

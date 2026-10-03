@@ -440,6 +440,12 @@ export interface DepthSpec {
   constraints: number;
 }
 
+/**
+ * Ideas the user did not ask for, kept apart from the work: only Detailed and Ultra have this
+ * section, so Short and Medium stay strictly to the request.
+ */
+export const SUGGESTIONS = 'SUGGESTIONS (OPTIONAL)';
+
 export const DEPTH_SPECS: Record<DepthType, DepthSpec> = {
   short: {
     sections: ['ROLE', 'OBJECTIVE', 'TASKS', 'CONSTRAINTS'],
@@ -452,7 +458,7 @@ export const DEPTH_SPECS: Record<DepthType, DepthSpec> = {
     constraints: 5,
   },
   detailed: {
-    sections: ['ROLE', 'CONTEXT', 'OBJECTIVE', 'TASKS', 'CONSTRAINTS', 'OUTPUT FORMAT', 'ACCEPTANCE CRITERIA'],
+    sections: ['ROLE', 'CONTEXT', 'OBJECTIVE', 'TASKS', 'CONSTRAINTS', 'OUTPUT FORMAT', 'ACCEPTANCE CRITERIA', SUGGESTIONS],
     inherentParts: 4,
     constraints: 7,
   },
@@ -468,6 +474,7 @@ export const DEPTH_SPECS: Record<DepthType, DepthSpec> = {
       'OUTPUT FORMAT',
       'ACCEPTANCE CRITERIA',
       'ASSUMPTIONS & OPEN QUESTIONS',
+      SUGGESTIONS,
     ],
     inherentParts: 5,
     constraints: 9,
@@ -496,6 +503,8 @@ export interface PromptBrief {
   edgeCases: string[];
   acceptanceCriteria: string[];
   openQuestions: string[];
+  /** Optional ideas the user did not ask for (Detailed and Ultra only). */
+  suggestions: string[];
   outOfDomain: string[];
   /** Asked before generating when the request is too vague for a useful prompt; usually empty. */
   clarifyingQuestions: ClarifyingQuestion[];
@@ -532,6 +541,7 @@ Return one JSON object and nothing else (no code fence, no text before or after 
   "edgeCases": ["a state or failure case of something the user asked to create"],
   "acceptanceCriteria": ["a checkable condition the answer must meet"],
   "openQuestions": ["a question about something the request leaves open"],
+  "suggestions": ["an optional idea that would improve the result, which the user did not ask for"],
   "outOfDomain": ["something the user wrote that belongs to another domain; usually []"],
   "clarifyingQuestions": [{ "question": "a short question", "options": ["a short likely answer"] }],
   "coverage": [{ "item": "one separate item of the request, copied word for word", "task": 1 }]
@@ -561,7 +571,9 @@ Never forbid content, elements or styles the user did not rule out (such as "do 
 
 outputFormat: how to deliver this particular answer. Follow any format, count or length the user gave; otherwise choose the simplest format that fits the answer (a numbered list for names). Use the DOMAIN's typical formats only when kind is create and they fit. When kind is create, it delivers the made thing itself (the image, the video, the design, the code), never a description, concept or plan of it unless the user asked for one.
 
-approach: ordered steps for carrying out the tasks, with no new work. acceptanceCriteria: checkable conditions tied to the tasks and constraints. edgeCases: only for create or edit, and only states or failures of things the user named (empty, invalid, loading, error). openQuestions: what the request leaves open; never answer them. An idea the user did not ask for may appear only as an open question.
+approach: ordered steps for carrying out the tasks, with no new work. acceptanceCriteria: checkable conditions tied to the tasks and constraints. edgeCases: only for create or edit, and only states or failures of things the user named (empty, invalid, loading, error). openQuestions: what the request leaves open; never answer them. An idea the user did not ask for may appear only in suggestions or as an open question.
+
+suggestions: only where LIMITS allows. Ideas the user did not ask for that would make this result better, drawn from what it plainly needs (for example, room for the headline in a hero image, or a second option to compare). Each is one short sentence offered as an option the executing AI may adopt when it fits ("Consider ..."). Never put a suggestion in tasks, parts, constraints or outputFormat, and never let one change what the user asked for.
 
 clarifyingQuestions: only when the request is too vague to plan a useful prompt, because something missing would change the answer a lot (what is being made, for whom, on which platform, the goal). Ask at most 3 short questions, each with 2 to 4 short likely answers, about the missing essentials only. A request that is clear enough gets []; most requests are. Still fill every other field as well as you can.
 
@@ -617,7 +629,8 @@ LIMITS (${depth}):
 - constraints: up to ${d.constraints}
 - outputFormat: ${upTo('OUTPUT FORMAT', 3)}; context: ${has('CONTEXT') ? 'one or two sentences' : 'always ""'}
 - approach: ${upTo('APPROACH', 6)}; acceptanceCriteria: ${upTo('ACCEPTANCE CRITERIA', 6)}
-- edgeCases: ${upTo('EDGE CASES & STATES', 5)}; openQuestions: ${upTo('ASSUMPTIONS & OPEN QUESTIONS', 5)}`;
+- edgeCases: ${upTo('EDGE CASES & STATES', 5)}; openQuestions: ${upTo('ASSUMPTIONS & OPEN QUESTIONS', 5)}
+- suggestions: ${upTo(SUGGESTIONS, depth === 'ultra' ? 5 : 3)}`;
 }
 
 /**
@@ -719,6 +732,7 @@ export function parseBrief(text: string): PromptBrief | null {
     edgeCases: strs(data.edgeCases),
     acceptanceCriteria: strs(data.acceptanceCriteria),
     openQuestions: strs(data.openQuestions),
+    suggestions: strs(data.suggestions),
     outOfDomain: strs(data.outOfDomain),
     clarifyingQuestions: (Array.isArray(data.clarifyingQuestions) ? data.clarifyingQuestions : [])
       .map((q: any) => ({ question: str(q?.question).slice(0, 200), options: strs(q?.options, 4).map((o) => o.slice(0, 60)) }))
@@ -760,6 +774,7 @@ export function localBrief(rawText: string, domain: DomainType, language: 'ar' |
       ? ['الناتج يحقق الطلب بالضبط', 'لا يوجد في الناتج شيء لم يُطلب']
       : ['The answer fulfils the request exactly', 'Nothing the request did not ask for was added'],
     openQuestions: [],
+    suggestions: [],
     outOfDomain: [],
     clarifyingQuestions: [],
     coverage: [],
@@ -815,6 +830,7 @@ export function composePrompt(params: {
     'OUTPUT FORMAT': list(brief.outputFormat),
     'ACCEPTANCE CRITERIA': list(brief.acceptanceCriteria),
     'ASSUMPTIONS & OPEN QUESTIONS': list(brief.openQuestions),
+    [SUGGESTIONS]: list(brief.suggestions),
   };
 
   // Sections the brief has nothing for are left out, never padded.

@@ -133,7 +133,8 @@ export function checkBrief(brief: PromptBrief, requestText: string, exclusions =
 
   // 5. Every answer to a clarifying question is used somewhere. The coverage list maps lines to
   // tasks but cannot tell that the answer itself ("take it from the Figma file") was dropped.
-  const briefText = JSON.stringify({ ...brief, coverage: [], clarifyingQuestions: [] });
+  // A suggestion is optional, so an answer used only there still counts as dropped.
+  const briefText = JSON.stringify({ ...brief, coverage: [], clarifyingQuestions: [], suggestions: [] });
   for (const answer of clarifyAnswers(requestText)) {
     if (detectRequestLanguage(answer) !== language) continue;
     const numbers = answer.match(/\d+(?:[:.,/x×]\d+)*/g) || [];
