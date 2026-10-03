@@ -7,7 +7,7 @@
 import { PromptBrief, detectRequestLanguage } from './prompting.js';
 
 export interface BriefIssue {
-  kind: 'missing_item' | 'narrowing_constraint' | 'invented_out_of_domain' | 'excluded_in_tasks' | 'missing_answer' | 'unrequested_prompt';
+  kind: 'missing_item' | 'narrowing_constraint' | 'invented_out_of_domain' | 'excluded_in_tasks' | 'missing_answer' | 'unrequested_prompt' | 'description_instead';
   message: string;
 }
 
@@ -72,6 +72,7 @@ export function clarifyAnswers(text: string): string[] {
 }
 
 const PROMPT_WORD = /\bprompts?\b|برومبت/i;
+const DESCRIPTION_WORD = /\bdescri(?:be|bes|bing|ptions?)\b|\bconcepts?\b|وصف|تصور/i;
 
 const ONLY = /\b(only|solely|exclusively|just)\b|فقط|وحده|وحدها|حصر[اًيا]*|دون غيره/i;
 const taskText = (t: PromptBrief['tasks'][number]) => [t.task, ...t.parts].join(' ');
@@ -132,7 +133,8 @@ export function checkBrief(brief: PromptBrief, requestText: string, exclusions =
 
   // 5. Every answer to a clarifying question is used somewhere. The coverage list maps lines to
   // tasks but cannot tell that the answer itself ("take it from the Figma file") was dropped.
-  const briefText = JSON.stringify({ ...brief, coverage: [], clarifyingQuestions: [] });
+  // A suggestion is optional, so an answer used only there still counts as dropped.
+  const briefText = JSON.stringify({ ...brief, coverage: [], clarifyingQuestions: [], suggestions: [] });
   for (const answer of clarifyAnswers(requestText)) {
     if (detectRequestLanguage(answer) !== language) continue;
     const numbers = answer.match(/\d+(?:[:.,/x×]\d+)*/g) || [];
@@ -149,6 +151,15 @@ export function checkBrief(brief: PromptBrief, requestText: string, exclusions =
     const found = JSON.stringify(planned).match(PROMPT_WORD);
     if (found) {
       issues.push({ kind: 'unrequested_prompt', message: `The user did not ask for a prompt, but the JSON asks for one ("${found[0]}"). Ask for the thing the user asked for itself (the artwork, the video, the design), and remove every mention of a prompt, a negative prompt or generation parameters.` });
+    }
+  }
+
+  // 7. Asked to make something, the answer is that thing, not a description or concept of it
+  // ("a rendered image description" instead of the image).
+  if (brief.kind === 'create' && !DESCRIPTION_WORD.test(requestText)) {
+    const found = brief.outputFormat.join(' ').match(DESCRIPTION_WORD);
+    if (found) {
+      issues.push({ kind: 'description_instead', message: `The user asked for the thing itself, but outputFormat asks for a ${found[0]} of it. Make outputFormat deliver the thing itself (the image, the video, the design, the code).` });
     }
   }
 

@@ -207,15 +207,14 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
     ],
     outOfScope: [
       {
-        en: 'Do not add subjects, brands or on-image text that were not requested',
-        ar: 'لا تضف عناصر أو علامات تجارية أو نصوصًا على الصورة غير مطلوبة',
+        en: 'Do not add subjects or brands that were not requested',
+        ar: 'لا تضف عناصر أو علامات تجارية غير مطلوبة',
       },
     ],
     otherDomains: 'articles, captions and code',
     standards: [
       { en: 'Use concrete visual nouns and adjectives and one clear main subject', ar: 'استخدم أسماء وصفات بصرية محددة وعنصرًا رئيسيًا واحدًا واضحًا' },
       { en: 'State the style, lighting and aspect ratio the user gave', ar: 'اذكر الأسلوب والإضاءة ونسبة الأبعاد التي حددها المستخدم' },
-      { en: 'Name what to keep out of the visuals', ar: 'اذكر ما يجب أن يغيب عن الصورة أو الفيديو' },
     ],
     outputFormat: [
       { en: 'The image or video at the aspect ratio, size and duration the user gave', ar: 'الصورة أو الفيديو بنسبة الأبعاد والحجم والمدة التي حددها المستخدم' },
@@ -441,6 +440,12 @@ export interface DepthSpec {
   constraints: number;
 }
 
+/**
+ * Ideas the user did not ask for, kept apart from the work: only Detailed and Ultra have this
+ * section, so Short and Medium stay strictly to the request.
+ */
+export const SUGGESTIONS = 'SUGGESTIONS (OPTIONAL)';
+
 export const DEPTH_SPECS: Record<DepthType, DepthSpec> = {
   short: {
     sections: ['ROLE', 'OBJECTIVE', 'TASKS', 'CONSTRAINTS'],
@@ -453,7 +458,7 @@ export const DEPTH_SPECS: Record<DepthType, DepthSpec> = {
     constraints: 5,
   },
   detailed: {
-    sections: ['ROLE', 'CONTEXT', 'OBJECTIVE', 'TASKS', 'CONSTRAINTS', 'OUTPUT FORMAT', 'ACCEPTANCE CRITERIA'],
+    sections: ['ROLE', 'CONTEXT', 'OBJECTIVE', 'TASKS', 'CONSTRAINTS', 'OUTPUT FORMAT', 'ACCEPTANCE CRITERIA', SUGGESTIONS],
     inherentParts: 4,
     constraints: 7,
   },
@@ -469,6 +474,7 @@ export const DEPTH_SPECS: Record<DepthType, DepthSpec> = {
       'OUTPUT FORMAT',
       'ACCEPTANCE CRITERIA',
       'ASSUMPTIONS & OPEN QUESTIONS',
+      SUGGESTIONS,
     ],
     inherentParts: 5,
     constraints: 9,
@@ -485,6 +491,8 @@ export type RequestKind = 'create' | 'information' | 'review' | 'edit' | 'other'
  */
 export interface PromptBrief {
   kind: RequestKind;
+  /** visual: the executing AI makes an image or video, so no "respond in <language>" line. */
+  result: 'text' | 'visual';
   role: string;
   context: string;
   objective: string;
@@ -495,6 +503,8 @@ export interface PromptBrief {
   edgeCases: string[];
   acceptanceCriteria: string[];
   openQuestions: string[];
+  /** Optional ideas the user did not ask for (Detailed and Ultra only). */
+  suggestions: string[];
   outOfDomain: string[];
   /** Asked before generating when the request is too vague for a useful prompt; usually empty. */
   clarifyingQuestions: ClarifyingQuestion[];
@@ -520,6 +530,7 @@ export const EXACT_SYSTEM_INSTRUCTION = `You are PromptZ's prompt analyst. Read 
 Return one JSON object and nothing else (no code fence, no text before or after it):
 {
   "kind": "create | information | review | edit | other",
+  "result": "text | visual",
   "role": "one line: who should answer, as seniority plus specialty",
   "context": "only background the user actually gave (audience, platform, tools, current state), or \\"\\"",
   "objective": "one sentence: the concrete outcome the user wants",
@@ -530,6 +541,7 @@ Return one JSON object and nothing else (no code fence, no text before or after 
   "edgeCases": ["a state or failure case of something the user asked to create"],
   "acceptanceCriteria": ["a checkable condition the answer must meet"],
   "openQuestions": ["a question about something the request leaves open"],
+  "suggestions": ["an optional idea that would improve the result, which the user did not ask for"],
   "outOfDomain": ["something the user wrote that belongs to another domain; usually []"],
   "clarifyingQuestions": [{ "question": "a short question", "options": ["a short likely answer"] }],
   "coverage": [{ "item": "one separate item of the request, copied word for word", "task": 1 }]
@@ -542,6 +554,8 @@ kind:
 - information: names, lists, ideas, examples, explanations, comparisons or recommendations. For example, a designer asking for a list of apps to use as inspiration wants names, not designs.
 - review: an evaluation or critique of existing work. edit: changes to existing work. other: anything else.
 
+result: "visual" when the executing AI is asked to make an image, illustration, artwork or video; "text" for everything else (code, copy, a list, an explanation, a prompt, even a prompt for an image).
+
 role: seniority plus the specialty this request needs, taken from the DOMAIN and adapted to its subject (e.g. "Senior Product Designer who knows food-delivery apps well").
 
 tasks: one per thing the user asked for, each asking for that thing itself (what the user asked to be made is what the task makes). Every separate item the user wrote (each bullet, numbered point, line or sentence that asks for something) becomes its own task, or a part of a task it clearly belongs to; count them, and none may be missing. Never split one item into several tasks, never add tasks, and never turn quality work into a task. parts: every element the user named for that task (never drop one), plus, only where LIMITS allows, pieces it cannot exist without. Something the user wrote that belongs to another domain goes to outOfDomain instead.
@@ -553,11 +567,13 @@ constraints: only rules that follow from this request, each starting with a verb
 - guards that keep the answer to exactly what was asked (for a list of names: give the names only, no designs or descriptions);
 - accuracy guards the answer needs (only real, existing products; no invented facts, names, numbers or quotes; cite sources for research claims);
 - only when kind is create: the DOMAIN's professional standards that directly apply to what is being created.
-Never add features, policies, rules, limits, numbers, technologies or audiences the user did not mention, and never write constraints about things the request does not involve. A constraint must never contradict or narrow the tasks (for example, limiting the work to one area when the tasks cover others).
+Never forbid content, elements or styles the user did not rule out (such as "do not include text or UI elements" or "avoid clutter"): a constraint may shape how the requested thing is made, never take something out of it. Never add features, policies, rules, limits, numbers, technologies or audiences the user did not mention, and never write constraints about things the request does not involve. A constraint must never contradict or narrow the tasks (for example, limiting the work to one area when the tasks cover others).
 
-outputFormat: how to deliver this particular answer. Follow any format, count or length the user gave; otherwise choose the simplest format that fits the answer (a numbered list for names). Use the DOMAIN's typical formats only when kind is create and they fit.
+outputFormat: how to deliver this particular answer. Follow any format, count or length the user gave; otherwise choose the simplest format that fits the answer (a numbered list for names). Use the DOMAIN's typical formats only when kind is create and they fit. When kind is create, it delivers the made thing itself (the image, the video, the design, the code), never a description, concept or plan of it unless the user asked for one.
 
-approach: ordered steps for carrying out the tasks, with no new work. acceptanceCriteria: checkable conditions tied to the tasks and constraints. edgeCases: only for create or edit, and only states or failures of things the user named (empty, invalid, loading, error). openQuestions: what the request leaves open; never answer them. An idea the user did not ask for may appear only as an open question.
+approach: ordered steps for carrying out the tasks, with no new work. acceptanceCriteria: checkable conditions tied to the tasks and constraints. edgeCases: only for create or edit, and only states or failures of things the user named (empty, invalid, loading, error). openQuestions: what the request leaves open; never answer them. An idea the user did not ask for may appear only in suggestions or as an open question.
+
+suggestions: only where LIMITS allows. Ideas the user did not ask for that would make this result better, drawn from what it plainly needs (for example, room for the headline in a hero image, or a second option to compare). Each is one short sentence offered as an option the executing AI may adopt when it fits ("Consider ..."). Never put a suggestion in tasks, parts, constraints or outputFormat, and never let one change what the user asked for.
 
 clarifyingQuestions: only when the request is too vague to plan a useful prompt, because something missing would change the answer a lot (what is being made, for whom, on which platform, the goal). Ask at most 3 short questions, each with 2 to 4 short likely answers, about the missing essentials only. A request that is clear enough gets []; most requests are. Still fill every other field as well as you can.
 
@@ -613,7 +629,8 @@ LIMITS (${depth}):
 - constraints: up to ${d.constraints}
 - outputFormat: ${upTo('OUTPUT FORMAT', 3)}; context: ${has('CONTEXT') ? 'one or two sentences' : 'always ""'}
 - approach: ${upTo('APPROACH', 6)}; acceptanceCriteria: ${upTo('ACCEPTANCE CRITERIA', 6)}
-- edgeCases: ${upTo('EDGE CASES & STATES', 5)}; openQuestions: ${upTo('ASSUMPTIONS & OPEN QUESTIONS', 5)}`;
+- edgeCases: ${upTo('EDGE CASES & STATES', 5)}; openQuestions: ${upTo('ASSUMPTIONS & OPEN QUESTIONS', 5)}
+- suggestions: ${upTo(SUGGESTIONS, depth === 'ultra' ? 5 : 3)}`;
 }
 
 /**
@@ -704,6 +721,7 @@ export function parseBrief(text: string): PromptBrief | null {
   const kind = KINDS.includes(data.kind) ? (data.kind as RequestKind) : 'other';
   return {
     kind,
+    result: data.result === 'visual' ? 'visual' : 'text',
     role: str(data.role),
     context: str(data.context),
     objective: str(data.objective),
@@ -714,6 +732,7 @@ export function parseBrief(text: string): PromptBrief | null {
     edgeCases: strs(data.edgeCases),
     acceptanceCriteria: strs(data.acceptanceCriteria),
     openQuestions: strs(data.openQuestions),
+    suggestions: strs(data.suggestions),
     outOfDomain: strs(data.outOfDomain),
     clarifyingQuestions: (Array.isArray(data.clarifyingQuestions) ? data.clarifyingQuestions : [])
       .map((q: any) => ({ question: str(q?.question).slice(0, 200), options: strs(q?.options, 4).map((o) => o.slice(0, 60)) }))
@@ -736,6 +755,7 @@ export function localBrief(rawText: string, domain: DomainType, language: 'ar' |
   const quoted = `"${rawText.trim()}"`;
   return {
     kind: 'other',
+    result: 'text',
     role: ar ? profile.role.ar : profile.role.en,
     context: ar ? `طلب المستخدم كما كتبه: ${quoted}.` : `The user's request, as written: ${quoted}.`,
     objective: ar ? 'تنفيذ الطلب أدناه كما هو بالضبط.' : 'Fulfil the request below exactly as written.',
@@ -754,6 +774,7 @@ export function localBrief(rawText: string, domain: DomainType, language: 'ar' |
       ? ['الناتج يحقق الطلب بالضبط', 'لا يوجد في الناتج شيء لم يُطلب']
       : ['The answer fulfils the request exactly', 'Nothing the request did not ask for was added'],
     openQuestions: [],
+    suggestions: [],
     outOfDomain: [],
     clarifyingQuestions: [],
     coverage: [],
@@ -794,7 +815,8 @@ export function composePrompt(params: {
   const constraints = [
     ...brief.constraints.slice(0, spec.constraints),
     ...exclusionLines(params.exclusions).map((e) => (ar ? `المستخدم لا يريد: ${plain(e)}` : `The user does not want: ${plain(e)}`)),
-    ar ? 'اكتب الرد بالعربية.' : 'Respond in English.',
+    // An image or video has no written reply to set the language of.
+    ...(brief.result === 'visual' ? [] : [ar ? 'اكتب الرد بالعربية.' : 'Respond in English.']),
   ];
 
   const sections: Record<string, string> = {
@@ -808,6 +830,7 @@ export function composePrompt(params: {
     'OUTPUT FORMAT': list(brief.outputFormat),
     'ACCEPTANCE CRITERIA': list(brief.acceptanceCriteria),
     'ASSUMPTIONS & OPEN QUESTIONS': list(brief.openQuestions),
+    [SUGGESTIONS]: list(brief.suggestions),
   };
 
   // Sections the brief has nothing for are left out, never padded.
