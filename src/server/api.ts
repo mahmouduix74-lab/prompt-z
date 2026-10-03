@@ -177,6 +177,7 @@ export interface GenerateInput {
   depth?: DepthType;
   /** Sent by the client; ignored — generation always uses OPENROUTER_MODEL. */
   model?: string;
+  /** Sent by older clients; ignored — the server's own EXACT_SYSTEM_INSTRUCTION is always used. */
   systemInstruction?: string;
   outputLanguage?: OutputLanguage;
   /** True when the user already answered (or skipped) the clarifying questions. */
@@ -188,12 +189,12 @@ export async function handleGenerate(
   userApiKey: string | undefined,
   serverKey = nodeServerKey()
 ): Promise<HandlerResult> {
-  const { rawText, exclusions, domain, depth, systemInstruction, outputLanguage, skipClarify } = input || ({} as GenerateInput);
+  const { rawText, exclusions, domain, depth, outputLanguage, skipClarify } = input || ({} as GenerateInput);
 
   if (!rawText || !rawText.trim()) {
     return { status: 400, body: { error: { code: 400, message: 'Text input is required.' } } };
   }
-  if (tooLong(rawText, MAX_TEXT_CHARS) || tooLong(exclusions, MAX_SIDE_CHARS) || tooLong(systemInstruction, MAX_TEXT_CHARS)) {
+  if (tooLong(rawText, MAX_TEXT_CHARS) || tooLong(exclusions, MAX_SIDE_CHARS)) {
     return TOO_LONG;
   }
 
@@ -214,7 +215,8 @@ export async function handleGenerate(
   try {
     // Step 1: the model extracts what the user asked for as a JSON brief.
     const extractionInstruction = buildSystemInstruction({
-      baseInstruction: (systemInstruction || EXACT_SYSTEM_INSTRUCTION).trim(),
+      // Never the client's copy: a cached page or an old saved one would bring back outdated rules.
+      baseInstruction: EXACT_SYSTEM_INSTRUCTION,
       domain,
       depth,
       outputLanguage,

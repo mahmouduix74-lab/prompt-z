@@ -198,7 +198,7 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
   },
 
   media: {
-    role: { en: 'Art Director for AI image and video generation', ar: 'مخرج فني لتوليد الصور والفيديو بالذكاء الاصطناعي' },
+    role: { en: 'Art Director for images and video', ar: 'مخرج فني للصور والفيديو' },
     deliverable: { en: 'the requested image or video', ar: 'الصورة أو الفيديو المطلوب' },
     inScope: [
       { en: 'subject, composition and camera or shot', ar: 'العنصر الرئيسي والتكوين وزاوية الكاميرا أو اللقطة' },
@@ -219,7 +219,6 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
     ],
     outputFormat: [
       { en: 'The image or video at the aspect ratio, size and duration the user gave', ar: 'الصورة أو الفيديو بنسبة الأبعاد والحجم والمدة التي حددها المستخدم' },
-      { en: 'When the user asked for a prompt: one paragraph, then a negative prompt and parameters', ar: 'إذا طلب المستخدم برومبت: فقرة واحدة، ثم برومبت سلبي والإعدادات' },
     ],
   },
 

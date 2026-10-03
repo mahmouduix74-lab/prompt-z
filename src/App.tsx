@@ -372,7 +372,6 @@ export default function App() {
         domain,
         depth,
         outputLanguage,
-        baseSystemInstruction: systemInstruction,
         skipClarify,
         onRetry: (attempt, delaySeconds, isPerMinute) => {
           setRetryNotice(

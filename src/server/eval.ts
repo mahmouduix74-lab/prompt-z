@@ -184,6 +184,17 @@ const CASES: EvalCase[] = [
     requiredInTasks: [/video/i, /laptop/i],
   },
   {
+    name: '"Need an artwork" asks for the artwork, never a prompt',
+    rawText:
+      'Need an artwork for financial website herosection.\n\nMore details:\n- What visual style do you want? Isometric data visualization\n- What is the theme? Fintech and Crypto',
+    domain: 'media',
+    depth: 'detailed',
+    language: 'en',
+    forbidden: /\bprompts?\b/i,
+    expected: /isometric/i,
+    requiredInTasks: [/artwork|illustration|image|visual/i],
+  },
+  {
     name: '"Write me a prompt" keeps the prompt',
     rawText: 'اكتبلي برومبت لصفحة هبوط لتطبيق توصيل طلبات فيها نموذج تسجيل',
     domain: 'ui_ux',

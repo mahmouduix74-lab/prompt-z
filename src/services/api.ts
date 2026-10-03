@@ -5,7 +5,6 @@ import {
   ModelInfo,
   GenerationErrorDetails,
 } from '../types';
-import { EXACT_SYSTEM_INSTRUCTION } from '../constants';
 import type { ClarifyingQuestion } from '../prompting';
 import { refineLocalPromptText } from './localRefiner';
 import { dailyLimitError } from './account';
@@ -145,7 +144,6 @@ export async function generateStructuredPrompt(params: {
   depth: DepthType;
   outputLanguage: OutputLanguage;
   exclusions?: string;
-  baseSystemInstruction?: string;
   /** True once the user answered or skipped the clarifying questions. */
   skipClarify?: boolean;
   onRetry?: (attempt: number, delaySeconds: number, isPerMinute: boolean) => void;
@@ -157,7 +155,6 @@ export async function generateStructuredPrompt(params: {
     depth,
     outputLanguage,
     exclusions,
-    baseSystemInstruction = EXACT_SYSTEM_INSTRUCTION,
     skipClarify = false,
     onRetry,
   } = params;
@@ -177,7 +174,6 @@ export async function generateStructuredPrompt(params: {
       ({ res, data } = await postJson('/api/generate', {
         rawText: rawText.trim(),
         model,
-        systemInstruction: baseSystemInstruction,
         domain,
         depth,
         outputLanguage,
