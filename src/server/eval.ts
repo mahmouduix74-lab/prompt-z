@@ -172,22 +172,33 @@ const CASES: EvalCase[] = [
     maxTasks: 1,
   },
   {
-    name: '"Make me a prompt" plans the work, not a prompt',
-    rawText: 'اعملي برومبت لصفحة هبوط لتطبيق توصيل طلبات فيها نموذج تسجيل',
+    name: '"Make a video" asks for the video, not a prompt',
+    rawText:
+      'Create a professional, modern promotional 10s video for this website. Incorporate laptop mockups and integrate supporting patterns throughout the visuals.\n\nMore details:\n- What is the primary color palette for the website? take it from figma file\n- What is the preferred aspect ratio for the video? 1:1 (Square)',
+    domain: 'media',
+    depth: 'detailed',
+    language: 'en',
+    forbiddenInTasks: /prompt/i,
+    // The clarifying answers must be used, not just mapped to a task.
+    expected: /figma/i,
+    requiredInTasks: [/video/i, /laptop/i],
+  },
+  {
+    name: '"Write me a prompt" keeps the prompt',
+    rawText: 'اكتبلي برومبت لصفحة هبوط لتطبيق توصيل طلبات فيها نموذج تسجيل',
+    domain: 'ui_ux',
+    depth: 'medium',
+    language: 'ar',
+    requiredInTasks: [/برومبت|prompt/i, /صفحة هبوط|landing/i],
+  },
+  {
+    name: '"Design a page" is not turned into a prompt',
+    rawText: 'صمم صفحة هبوط لتطبيق توصيل طلبات فيها نموذج تسجيل',
     domain: 'ui_ux',
     depth: 'medium',
     language: 'ar',
     forbiddenInTasks: /برومبت|prompt/i,
     requiredInTasks: [/صفحة هبوط|landing/i, /تسجيل|sign.?up|register/i],
-  },
-  {
-    name: '"Write a prompt" in English plans the work, not a prompt',
-    rawText: 'Write me a prompt for a REST endpoint that lists a user\'s orders',
-    domain: 'backend',
-    depth: 'short',
-    language: 'en',
-    forbiddenInTasks: /prompt/i,
-    requiredInTasks: [/orders?/i],
   },
 ];
 

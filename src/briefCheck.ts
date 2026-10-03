@@ -7,7 +7,7 @@
 import { PromptBrief, detectRequestLanguage } from './prompting.js';
 
 export interface BriefIssue {
-  kind: 'missing_item' | 'narrowing_constraint' | 'invented_out_of_domain' | 'excluded_in_tasks';
+  kind: 'missing_item' | 'narrowing_constraint' | 'invented_out_of_domain' | 'excluded_in_tasks' | 'missing_answer';
   message: string;
 }
 
@@ -50,6 +50,25 @@ export function requestItems(text: string): string[] {
     .split(/\r?\n/)
     .map((line) => line.replace(/^\s*(?:[-*•▪◦]|[0-9٠-٩]+[.)\-–]|[a-zA-Z][.)])\s*/, '').trim())
     .filter((line) => line && !/[:：]$/.test(line) && words(line).length >= 2);
+}
+
+/**
+ * The answers the user gave to clarifying questions: the site adds them under "More details:" /
+ * "تفاصيل إضافية:" as "- <question> <answer>". Only the answer part, after the question mark.
+ */
+export function clarifyAnswers(text: string): string[] {
+  const lines = text.split(/\r?\n/);
+  const start = lines.findIndex((l) => /^\s*(more details|تفاصيل إضافية)\s*:\s*$/i.test(l));
+  if (start < 0) return [];
+  return lines
+    .slice(start + 1)
+    .filter((l) => /^\s*-\s+/.test(l))
+    .map((l) => {
+      const line = l.replace(/^\s*-\s+/, '');
+      const mark = Math.max(line.lastIndexOf('?'), line.lastIndexOf('؟'));
+      return (mark >= 0 ? line.slice(mark + 1) : line).trim();
+    })
+    .filter(Boolean);
 }
 
 const ONLY = /\b(only|solely|exclusively|just)\b|فقط|وحده|وحدها|حصر[اًيا]*|دون غيره/i;
@@ -106,6 +125,18 @@ export function checkBrief(brief: PromptBrief, requestText: string, exclusions =
       if (overlap(line, taskText(t)) >= 0.99) {
         issues.push({ kind: 'excluded_in_tasks', message: `The user does not want "${line}", but the task "${t.task}" includes it. Take it out of the tasks and parts.` });
       }
+    }
+  }
+
+  // 5. Every answer to a clarifying question is used somewhere. The coverage list maps lines to
+  // tasks but cannot tell that the answer itself ("take it from the Figma file") was dropped.
+  const briefText = JSON.stringify({ ...brief, coverage: [], clarifyingQuestions: [] });
+  for (const answer of clarifyAnswers(requestText)) {
+    if (detectRequestLanguage(answer) !== language) continue;
+    const numbers = answer.match(/\d+(?:[:.,/x×]\d+)*/g) || [];
+    const used = overlap(answer, briefText) > 0 || numbers.some((n) => briefText.includes(n));
+    if (!used && (words(answer).length || numbers.length)) {
+      issues.push({ kind: 'missing_answer', message: `The user answered a clarifying question with "${answer}", but nothing in the JSON uses that answer. Put it where it belongs (context, a task part or a constraint).` });
     }
   }
 
