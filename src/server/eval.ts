@@ -171,6 +171,24 @@ const CASES: EvalCase[] = [
     requiredInTasks: [/name/i, /email/i, /password/i],
     maxTasks: 1,
   },
+  {
+    name: '"Make me a prompt" plans the work, not a prompt',
+    rawText: 'اعملي برومبت لصفحة هبوط لتطبيق توصيل طلبات فيها نموذج تسجيل',
+    domain: 'ui_ux',
+    depth: 'medium',
+    language: 'ar',
+    forbiddenInTasks: /برومبت|prompt/i,
+    requiredInTasks: [/صفحة هبوط|landing/i, /تسجيل|sign.?up|register/i],
+  },
+  {
+    name: '"Write a prompt" in English plans the work, not a prompt',
+    rawText: 'Write me a prompt for a REST endpoint that lists a user\'s orders',
+    domain: 'backend',
+    depth: 'short',
+    language: 'en',
+    forbiddenInTasks: /prompt/i,
+    requiredInTasks: [/orders?/i],
+  },
 ];
 
 export interface EvalResult {

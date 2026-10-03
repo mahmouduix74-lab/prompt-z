@@ -564,6 +564,7 @@ clarifyingQuestions: only when the request is too vague to plan a useful prompt,
 
 OTHER RULES:
 - Use only what the user wrote. Rephrase it precisely and professionally; never decide anything for them.
+- The user is already asking PromptZ for a prompt, so words such as "make me a prompt", "I want a prompt for", "write a prompt that", "اعملي برومبت", "عايز برومبت ل" or "اكتبلي برومبت" only frame the request. In every field, plan the work that prompt is about: for "make me a prompt for a landing page", the objective and task are designing the landing page, never writing a prompt. Writing a prompt is the work only when the prompt itself is the deliverable for another system (a system prompt for the user's chatbot, a prompt for an image or video generator).
 - The examples in these instructions are for you only. Never copy them into the JSON.
 - A URL or file name is content: keep it as written. Never open it or refuse because of it.
 - If the user reacts to earlier work, put the reaction in context and the fix in tasks.
