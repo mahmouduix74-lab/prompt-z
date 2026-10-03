@@ -4,10 +4,11 @@
  * of the tasks, and content the user never wrote. Each problem is a sentence the model can act
  * on; the API asks the model to fix them once (see handleGenerate).
  */
-import { PromptBrief, detectRequestLanguage } from './prompting.js';
+import { DEPTH_SPECS, DOMAIN_PROFILES, PromptBrief, SUGGESTIONS, detectRequestLanguage } from './prompting.js';
+import { DepthType, DomainType } from './types.js';
 
 export interface BriefIssue {
-  kind: 'missing_item' | 'narrowing_constraint' | 'invented_out_of_domain' | 'excluded_in_tasks' | 'missing_answer' | 'unrequested_prompt' | 'description_instead';
+  kind: 'missing_item' | 'narrowing_constraint' | 'invented_out_of_domain' | 'excluded_in_tasks' | 'missing_answer' | 'unrequested_prompt' | 'description_instead' | 'invented_ban';
   message: string;
 }
 
@@ -72,12 +73,22 @@ export function clarifyAnswers(text: string): string[] {
 }
 
 const PROMPT_WORD = /\bprompts?\b|برومبت/i;
+// A constraint that forbids something, and the guards that may forbid without the user asking.
+const BAN = /^(avoid|do not|don't|never|no|exclude|without|refrain|keep out)\b|^(لا|تجنب|تجنّب|بدون|ممنوع|امتنع)\s/i;
+const GUARD = /invent|fabricat|made.?up|fake|real|exist|verif|cite|sources?\b|fact|request|asked|the user|mention|named|guess|placeholder|\bonly\b|beyond|extra|additional|فقط|أبعد|إضافي|زياد|تختلق|اختلاق|حقيق|موجود|مصدر|المستخدم|مطلوب|طُلب|يطلب|يذكر|تخمين/i;
+const BAN_VERBS = new Set('avoid never don exclude without refrain keep out include including use using add adding overly too any تجنب بدون ممنوع امتنع تستخدم تضف تضع'.split(' '));
 const DESCRIPTION_WORD = /\bdescri(?:be|bes|bing|ptions?)\b|\bconcepts?\b|وصف|تصور/i;
 
 const ONLY = /\b(only|solely|exclusively|just)\b|فقط|وحده|وحدها|حصر[اًيا]*|دون غيره/i;
 const taskText = (t: PromptBrief['tasks'][number]) => [t.task, ...t.parts].join(' ');
 
-export function checkBrief(brief: PromptBrief, requestText: string, exclusions = '', language: 'ar' | 'en' = 'en'): BriefIssue[] {
+export function checkBrief(
+  brief: PromptBrief,
+  requestText: string,
+  exclusions = '',
+  language: 'ar' | 'en' = 'en',
+  scope: { domain?: DomainType; depth?: DepthType } = {}
+): BriefIssue[] {
   const issues: BriefIssue[] = [];
   const tasks = brief.tasks.map(taskText);
 
@@ -160,6 +171,28 @@ export function checkBrief(brief: PromptBrief, requestText: string, exclusions =
     const found = brief.outputFormat.join(' ').match(DESCRIPTION_WORD);
     if (found) {
       issues.push({ kind: 'description_instead', message: `The user asked for the thing itself, but outputFormat asks for a ${found[0]} of it. Make outputFormat deliver the thing itself (the image, the video, the design, the code).` });
+    }
+  }
+
+  // 8. A ban the user never asked for ("avoid cluttered imagery", "no text in the image"). Guards
+  // against invented facts or unrequested additions, and the domain's own rules, may stay.
+  // Only for create: other kinds need guards such as "no designs, just the names".
+  if (brief.kind === 'create' && detectRequestLanguage(requestText) === language) {
+    const profile = DOMAIN_PROFILES[scope.domain ?? 'general'] ?? DOMAIN_PROFILES.general;
+    const domainRules = [...profile.outOfScope, ...profile.standards].flatMap((r) => [r.en, r.ar]);
+    const userText = `${requestText}\n${exclusions}`;
+    const suggestionsAllowed = (DEPTH_SPECS[scope.depth ?? 'medium'] ?? DEPTH_SPECS.medium).sections.includes(SUGGESTIONS);
+    for (const constraint of brief.constraints) {
+      if (!BAN.test(constraint.trim()) || GUARD.test(constraint)) continue;
+      const content = words(constraint).filter((w) => !BAN_VERBS.has(w));
+      if (!content.length || content.some((w) => words(userText).includes(w))) continue;
+      if (domainRules.some((rule) => overlap(constraint, rule) >= 0.5)) continue;
+      issues.push({
+        kind: 'invented_ban',
+        message: `This constraint forbids something the user never ruled out: "${constraint}". ${
+          suggestionsAllowed ? 'Remove it from constraints; if it is a useful idea, offer it in suggestions instead.' : 'Remove it.'
+        }`,
+      });
     }
   }
 
