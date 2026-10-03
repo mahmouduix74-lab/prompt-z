@@ -7,7 +7,7 @@
 import { PromptBrief, detectRequestLanguage } from './prompting.js';
 
 export interface BriefIssue {
-  kind: 'missing_item' | 'narrowing_constraint' | 'invented_out_of_domain' | 'excluded_in_tasks' | 'missing_answer';
+  kind: 'missing_item' | 'narrowing_constraint' | 'invented_out_of_domain' | 'excluded_in_tasks' | 'missing_answer' | 'unrequested_prompt';
   message: string;
 }
 
@@ -70,6 +70,8 @@ export function clarifyAnswers(text: string): string[] {
     })
     .filter(Boolean);
 }
+
+const PROMPT_WORD = /\bprompts?\b|برومبت/i;
 
 const ONLY = /\b(only|solely|exclusively|just)\b|فقط|وحده|وحدها|حصر[اًيا]*|دون غيره/i;
 const taskText = (t: PromptBrief['tasks'][number]) => [t.task, ...t.parts].join(' ');
@@ -137,6 +139,16 @@ export function checkBrief(brief: PromptBrief, requestText: string, exclusions =
     const used = overlap(answer, briefText) > 0 || numbers.some((n) => briefText.includes(n));
     if (!used && (words(answer).length || numbers.length)) {
       issues.push({ kind: 'missing_answer', message: `The user answered a clarifying question with "${answer}", but nothing in the JSON uses that answer. Put it where it belongs (context, a task part or a constraint).` });
+    }
+  }
+
+  // 6. A prompt only when the user asked for one: "make an artwork" must not become "write a
+  // prompt for an artwork" (or a negative prompt and generation parameters).
+  if (!PROMPT_WORD.test(requestText)) {
+    const { coverage, clarifyingQuestions, ...planned } = brief;
+    const found = JSON.stringify(planned).match(PROMPT_WORD);
+    if (found) {
+      issues.push({ kind: 'unrequested_prompt', message: `The user did not ask for a prompt, but the JSON asks for one ("${found[0]}"). Ask for the thing the user asked for itself (the artwork, the video, the design), and remove every mention of a prompt, a negative prompt or generation parameters.` });
     }
   }
 
