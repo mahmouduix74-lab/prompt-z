@@ -34,7 +34,7 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
   offers a retry (the call is not counted). The local engine is used only when no key is set.
 - **Feedback:** 👍 / 👎 under each prompt go to `/api/feedback` (D1 table `feedback`). Signed-in
   emails listed in `ADMIN_EMAILS` (a build variable) can read them at `/api/feedback`.
-- **Eval:** signed in with an `ADMIN_EMAILS` account, open `/api/eval` to run 13 fixed requests through
+- **Eval:** signed in with an `ADMIN_EMAILS` account, open `/api/eval` to run 16 fixed requests through
   the live model and check each prompt automatically (`/api/eval?json` for JSON). Cases live in
   [`src/server/eval.ts`](src/server/eval.ts).
 - **Security headers:** the site is sent with a strict Content-Security-Policy (scripts only from

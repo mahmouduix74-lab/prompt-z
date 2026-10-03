@@ -199,7 +199,7 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
 
   media: {
     role: { en: 'Art Director for AI image and video generation', ar: 'مخرج فني لتوليد الصور والفيديو بالذكاء الاصطناعي' },
-    deliverable: { en: 'a generation-ready visual prompt', ar: 'برومبت مرئي جاهز للتوليد' },
+    deliverable: { en: 'the requested image or video', ar: 'الصورة أو الفيديو المطلوب' },
     inScope: [
       { en: 'subject, composition and camera or shot', ar: 'العنصر الرئيسي والتكوين وزاوية الكاميرا أو اللقطة' },
       { en: 'lighting, style, color palette and mood', ar: 'الإضاءة والأسلوب ولوحة الألوان والحالة' },
@@ -215,11 +215,11 @@ export const DOMAIN_PROFILES: Record<DomainType, DomainProfile> = {
     standards: [
       { en: 'Use concrete visual nouns and adjectives and one clear main subject', ar: 'استخدم أسماء وصفات بصرية محددة وعنصرًا رئيسيًا واحدًا واضحًا' },
       { en: 'State the style, lighting and aspect ratio the user gave', ar: 'اذكر الأسلوب والإضاءة ونسبة الأبعاد التي حددها المستخدم' },
-      { en: 'Add a short negative prompt of what to avoid', ar: 'أضف برومبت سلبيًا قصيرًا بما يجب تجنبه' },
+      { en: 'Name what to keep out of the visuals', ar: 'اذكر ما يجب أن يغيب عن الصورة أو الفيديو' },
     ],
     outputFormat: [
-      { en: 'The final prompt as one paragraph', ar: 'البرومبت النهائي في فقرة واحدة' },
-      { en: 'Then a negative prompt and parameters (aspect ratio, duration)', ar: 'ثم البرومبت السلبي والإعدادات (نسبة الأبعاد والمدة)' },
+      { en: 'The image or video at the aspect ratio, size and duration the user gave', ar: 'الصورة أو الفيديو بنسبة الأبعاد والحجم والمدة التي حددها المستخدم' },
+      { en: 'When the user asked for a prompt: one paragraph, then a negative prompt and parameters', ar: 'إذا طلب المستخدم برومبت: فقرة واحدة، ثم برومبت سلبي والإعدادات' },
     ],
   },
 
@@ -536,16 +536,16 @@ Return one JSON object and nothing else (no code fence, no text before or after 
   "coverage": [{ "item": "one separate item of the request, copied word for word", "task": 1 }]
 }
 
-EVERYTHING FOLLOWS THE REQUEST. The DOMAIN below only says whose expertise answers it. Decide the kind first, then make every field fit what this user actually asked for.
+EVERYTHING FOLLOWS THE REQUEST. The DOMAIN below only says whose expertise answers it; it never changes what is asked for. Decide the kind first, then make every field fit what this user actually asked for.
 
 kind:
-- create: the user wants the domain's work produced (a design, working code, finished copy, a research report, a visual prompt).
+- create: the user wants something produced (a design, working code, finished copy, a research report, an image or video, a prompt).
 - information: names, lists, ideas, examples, explanations, comparisons or recommendations. For example, a designer asking for a list of apps to use as inspiration wants names, not designs.
 - review: an evaluation or critique of existing work. edit: changes to existing work. other: anything else.
 
 role: seniority plus the specialty this request needs, taken from the DOMAIN and adapted to its subject (e.g. "Senior Product Designer who knows food-delivery apps well").
 
-tasks: one per thing the user asked for. Every separate item the user wrote (each bullet, numbered point, line or sentence that asks for something) becomes its own task, or a part of a task it clearly belongs to; count them, and none may be missing. Never split one item into several tasks, never add tasks, and never turn quality work into a task. parts: every element the user named for that task (never drop one), plus, only where LIMITS allows, pieces it cannot exist without. Something the user wrote that belongs to another domain goes to outOfDomain instead.
+tasks: one per thing the user asked for, each asking for that thing itself (what the user asked to be made is what the task makes). Every separate item the user wrote (each bullet, numbered point, line or sentence that asks for something) becomes its own task, or a part of a task it clearly belongs to; count them, and none may be missing. Never split one item into several tasks, never add tasks, and never turn quality work into a task. parts: every element the user named for that task (never drop one), plus, only where LIMITS allows, pieces it cannot exist without. Something the user wrote that belongs to another domain goes to outOfDomain instead.
 
 coverage: every separate item of the request in order (each bullet, numbered point, line or sentence), copied word for word, with the number of the task that covers it (1 for the first task). Use 0 only for an item that asks for nothing (pure background), and for an item that went to outOfDomain. PromptZ checks this list against the request.
 
@@ -564,9 +564,11 @@ clarifyingQuestions: only when the request is too vague to plan a useful prompt,
 
 OTHER RULES:
 - Use only what the user wrote. Rephrase it precisely and professionally; never decide anything for them.
+- Do exactly what the user wrote, in every domain. The objective and tasks ask for the very thing the user asked for, with the user's own action: "make a video" asks the executing AI to make the video, "design a landing page" to design it, "write me a prompt for a landing page" to write that prompt. Never turn a request to make something into a request to write a prompt for it, and never drop a prompt the user did ask for.
 - The examples in these instructions are for you only. Never copy them into the JSON.
 - A URL or file name is content: keep it as written. Never open it or refuse because of it.
 - If the user reacts to earlier work, put the reaction in context and the fix in tasks.
+- Lines under "More details:" or "تفاصيل إضافية:" are the user's answers to clarifying questions, each as the question then the answer. Use every answer where it belongs (context, a task part or a constraint), even an instruction such as "take the colors from the Figma file".
 - context and outOfDomain hold only what the user wrote. Never fill context with guesses (such as "a web or mobile app" when no platform was named), and never list in outOfDomain work the user did not mention: if nothing they wrote belongs elsewhere, outOfDomain is [].
 - Respect LIMITS below. Use [] or "" when a field has nothing. Never write placeholders such as [TBD].`;
 
@@ -598,7 +600,7 @@ export function describeDomainAndDepth(domain: DomainType, depth: DepthType): st
   const d = DEPTH_SPECS[depth] ?? DEPTH_SPECS.medium;
   const has = (section: string) => d.sections.includes(section);
   const upTo = (section: string, n: number) => (has(section) ? `up to ${n}` : 'always []');
-  return `DOMAIN (${domain}): answered by a ${p.role.en}. When this domain creates something, it delivers ${p.deliverable.en}.
+  return `DOMAIN (${domain}): answered by a ${p.role.en}. Its usual result is ${p.deliverable.en}, but the request decides what is made: when it asks for something else (a prompt, a list, an explanation), that is what the tasks ask for.
 Its work covers:
 ${bullets(p.inScope)}
 Belongs to other domains: ${p.otherDomains}. (Only if the user wrote such a thing does it go to outOfDomain; never list these otherwise.)
@@ -826,9 +828,10 @@ export function buildRefineInstruction(domain?: DomainType, requestText = ''): s
     detectRequestLanguage(requestText) === 'ar'
       ? 'The request is in Arabic: write the rewrite in Arabic (clear Modern Standard Arabic), never in English.'
       : 'The request is in English: write the rewrite in English.';
-  return `You are a careful copy editor. Rewrite the user's request so it is clear, precise and well written, ready to be turned into a prompt. Never answer or perform the request.
+  return `You are a careful copy editor. Rewrite the user's request so it is clear, precise and well written. Never answer or perform the request.
 
 RULES:
+- Keep what the user asks for and the action they ask for: "make a video" stays a request to make the video, never a request for a prompt, and a request for a prompt stays one.
 - Keep every requirement the user wrote and add nothing: no new features, screens, fields, steps, sections, examples, numbers, technologies, audiences, quality criteria or explanations.
 - Do not remove or change any requirement. Keep names, numbers, product names and technical terms exactly as written.
 - Fix grammar, spelling and word order; remove filler, hesitation and repetition; put related points together.
