@@ -240,7 +240,8 @@ export async function handleGenerate(
 
     // Check the brief against the request; on a problem, the model fixes its own brief once.
     const language = resolveOutputLanguage(outputLanguage, rawText);
-    const issues = checkBrief(brief, rawText, exclusions, language);
+    const scope = { domain, depth };
+    const issues = checkBrief(brief, rawText, exclusions, language, scope);
     let repaired = false;
     if (issues.length) {
       try {
@@ -255,7 +256,7 @@ export async function handleGenerate(
         });
         const fixed = parseBrief(fix.text);
         // Keep the fix only when it is readable and leaves fewer problems.
-        if (fixed && checkBrief(fixed, rawText, exclusions, language).length < issues.length) {
+        if (fixed && checkBrief(fixed, rawText, exclusions, language, scope).length < issues.length) {
           brief = fixed;
           repaired = true;
         }

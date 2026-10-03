@@ -21,6 +21,8 @@ interface EvalCase {
   forbidden?: RegExp;
   /** Must not appear in TASKS (for words the user used in exclusions, which do appear in CONSTRAINTS). */
   forbiddenInTasks?: RegExp;
+  /** Must not appear in CONSTRAINTS (ideas that belong in suggestions, if anywhere). */
+  forbiddenInConstraints?: RegExp;
   /** Must appear somewhere in the prompt. */
   expected?: RegExp;
   /** Everything the user named: each must appear in TASKS, so nothing requested is dropped. */
@@ -193,6 +195,8 @@ const CASES: EvalCase[] = [
     // Nothing the user did not rule out is banned, the result is the image (not a description of
     // it), and there is no "Respond in English" for a picture.
     forbidden: /\bprompts?\b|UI elements|clutter|descri(be|ption)|\bconcept\b|Respond in English/i,
+    // Ideas the user did not ask for (room for text, a theme) are suggestions, never rules.
+    forbiddenInConstraints: /clutter|overlay|room for|space for|growth|stability|trust/i,
     expected: /isometric/i,
     requiredInTasks: [/artwork|illustration|image|visual/i],
   },
@@ -254,6 +258,8 @@ function check(c: EvalCase, body: any): EvalResult {
   if (found) problems.push(`Added something not requested: "${found[0]}"`);
   const foundInTasks = c.forbiddenInTasks && tasks.match(c.forbiddenInTasks);
   if (foundInTasks) problems.push(`Task not requested: "${foundInTasks[0]}"`);
+  const foundInConstraints = c.forbiddenInConstraints && section(prompt, 'CONSTRAINTS').match(c.forbiddenInConstraints);
+  if (foundInConstraints) problems.push(`Rule not requested: "${foundInConstraints[0]}"`);
   if (c.expected && !c.expected.test(prompt)) problems.push(`Missing: ${c.expected.source}`);
   for (const required of c.requiredInTasks || []) {
     if (!required.test(tasks)) problems.push(`Requested but missing from TASKS: ${required.source}`);
