@@ -28,25 +28,16 @@ const STORAGE_KEYS = {
   THEME: 'v2_theme',
 };
 
-/** The field's colors per theme: greys only, so the page stays black and white. */
-/**
- * Soft light over the field, in greys: a linear fade from the top and a halo behind the request
- * box. Light on the dark theme; on the light theme a faint grey shade.
- */
+/** A soft halo behind the request box: light on the dark theme, a faint grey shade on the light one. */
 const GLOW: Record<Theme, string> = {
-  dark: [
-    'linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 35%, transparent 70%)',
-    'radial-gradient(ellipse 45% 35% at 50% 62%, rgba(255,255,255,0.14), transparent 70%)',
-  ].join(', '),
-  light: [
-    'linear-gradient(180deg, rgba(24,24,27,0.05) 0%, rgba(24,24,27,0.015) 35%, transparent 70%)',
-    'radial-gradient(ellipse 45% 35% at 50% 62%, rgba(24,24,27,0.09), transparent 70%)',
-  ].join(', '),
+  dark: 'radial-gradient(ellipse 45% 35% at 50% 62%, rgba(255,255,255,0.14), transparent 70%)',
+  light: 'radial-gradient(ellipse 45% 35% at 50% 62%, rgba(24,24,27,0.09), transparent 70%)',
 };
 
+/** The field's colors per theme: greys only, on pure white or pure black. */
 const FIELD_THEME: Record<Theme, { background: string; colors: string[] }> = {
-  light: { background: '#fafafa', colors: ['#52525b', '#71717a', '#a1a1aa'] },
-  dark: { background: '#09090b', colors: ['#d4d4d8', '#a1a1aa', '#52525b'] },
+  light: { background: '#ffffff', colors: ['#52525b', '#71717a', '#a1a1aa'] },
+  dark: { background: '#000000', colors: ['#d4d4d8', '#a1a1aa', '#52525b'] },
 };
 
 /**
@@ -330,7 +321,7 @@ export default function AppV2() {
   return (
     <div
       dir={isAr ? 'rtl' : 'ltr'}
-      className="relative min-h-screen flex flex-col bg-[#fafafa] dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 overflow-x-clip"
+      className="relative min-h-screen flex flex-col bg-white dark:bg-black text-zinc-900 dark:text-zinc-100 overflow-x-clip"
     >
       {/* The field fills the first screen and fades into the page below it. */}
       <div className="absolute inset-x-0 top-0 h-[100svh] pointer-events-none select-none" aria-hidden="true">
@@ -344,7 +335,7 @@ export default function AppV2() {
           className="absolute inset-0"
         />
         <div className="absolute inset-0" style={{ background: GLOW[theme] }} />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-[#fafafa] dark:to-[#09090b]" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-white dark:to-black" />
       </div>
 
       <header className="relative z-10 w-full">
