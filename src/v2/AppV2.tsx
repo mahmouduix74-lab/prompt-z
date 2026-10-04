@@ -17,7 +17,6 @@ import CursorRingField from './CursorRingField';
 import { Composer } from './Composer';
 import { ResultCard } from './ResultCard';
 import { TypingTitle } from './TypingTitle';
-import { PixelWordmark } from './PixelWordmark';
 
 // History, depth, language and the UI language are shared with the classic page; the theme is not,
 // because this page follows the device by default.
@@ -367,8 +366,7 @@ export default function AppV2() {
 
       <main className="relative z-10 flex-1 w-full">
         <section className="mx-auto max-w-3xl px-4 sm:px-6 min-h-[calc(100svh-4rem)] flex flex-col justify-center items-center text-center pb-16">
-          <PixelWordmark className="w-full max-w-[560px] h-auto" />
-          <h1 className="mt-5 text-balance text-[22px] sm:text-[30px] leading-[1.2] font-bold tracking-[-0.03em] text-zinc-950 dark:text-white">
+          <h1 className="text-balance text-[34px] sm:text-[52px] leading-[1.15] font-extrabold tracking-[-0.03em] text-zinc-950 dark:text-white">
             <TypingTitle prefix={t.heroPrefix} words={t.heroWords} suffix={t.heroSuffix} still={reducedMotion} />
           </h1>
           <p className="mt-4 max-w-xl text-balance text-[16px] sm:text-[18px] leading-relaxed text-zinc-600 dark:text-zinc-400">
