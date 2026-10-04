@@ -72,6 +72,13 @@ Live: https://prpmtz.online (also https://prompt-z.mahmouduix74.workers.dev)
   (History) are stored per account through `/api/history` ([`src/server/history.ts`](src/server/history.ts));
   prompts saved in the browser before signing in move into the account. The local Express server has no
   limits.
+- **New design at `/v2`:** a separate black-and-white page ([`src/v2/`](src/v2)) with light and dark
+  modes: a ChatGPT-style request box in the middle of the hero, over the animated Cursor Ring Field
+  (Originkit), and the prompt under it. It loads only on `/v2` (`src/main.tsx`) and uses the same API,
+  accounts, limits and history as the classic page at `/`. The `pz-mono` class turns the brand colour
+  grey there, so the dialogs both pages share match. Sign-in and sign-out started on `/v2` return
+  there (`RETURN_PAGES` in [`src/server/account.ts`](src/server/account.ts)). The field pauses off
+  screen, is lighter on phones, and stays still when the device asks for reduced motion.
 - **Hosting:** Cloudflare Workers. [`worker/index.ts`](worker/index.ts) serves `/api/*` and the
   built site in `dist/` (see [`wrangler.jsonc`](wrangler.jsonc)).
 
