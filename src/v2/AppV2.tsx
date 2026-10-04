@@ -33,6 +33,9 @@ const FIELD_THEME: Record<Theme, { background: string; colors: string[] }> = {
   dark: { background: '#09090b', colors: ['#fafafa', '#a1a1aa', '#3f3f46'] },
 };
 
+/** Dot size for the field (the component's default is 120): smaller dots read as texture, not shapes. */
+const DOT_SIZE = 55;
+
 const headerButton =
   'inline-flex items-center justify-center gap-1.5 h-9 min-w-9 px-2.5 rounded-full text-[13px] font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-900/5 dark:hover:bg-white/10 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400';
 
@@ -313,6 +316,7 @@ export default function AppV2() {
           background={field.background}
           colors={field.colors}
           density={density}
+          dotSize={DOT_SIZE}
           paused={reducedMotion}
           className="absolute inset-0"
         />
