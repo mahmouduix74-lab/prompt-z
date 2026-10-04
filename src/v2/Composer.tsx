@@ -25,7 +25,7 @@ interface ComposerProps {
 }
 
 const focusRing = 'focus:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500';
-const iconButton = `inline-flex items-center justify-center h-9 rounded-full text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:pointer-events-none cursor-pointer ${focusRing}`;
+const iconButton = `inline-flex items-center justify-center h-9 rounded-full text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:pointer-events-none cursor-pointer ${focusRing}`;
 
 /** A pill-shaped native select: accessible and comfortable on phones. */
 const Pill: React.FC<{
@@ -42,7 +42,7 @@ const Pill: React.FC<{
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       title={label}
-      className={`appearance-none [field-sizing:content] max-w-[60vw] h-9 ps-3.5 pe-8 rounded-full border border-zinc-200 dark:border-zinc-700/80 bg-transparent text-[13px] font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-50 cursor-pointer ${focusRing}`}
+      className={`appearance-none [field-sizing:content] max-w-[60vw] h-9 ps-3.5 pe-8 rounded-full border border-zinc-300 dark:border-zinc-700/80 bg-transparent text-[13px] font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 disabled:opacity-50 cursor-pointer ${focusRing}`}
     >
       {options.map((o) => (
         <option key={o.id} value={o.id} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">
@@ -85,7 +85,7 @@ export const Composer: React.FC<ComposerProps> = (props) => {
         e.preventDefault();
         submit();
       }}
-      className="w-full rounded-[28px] border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/85 backdrop-blur-xl p-3 sm:p-4 text-start"
+      className="w-full rounded-[28px] bg-zinc-100 dark:bg-zinc-900 p-3 sm:p-4 text-start"
     >
       <label htmlFor="v2-request" className="sr-only">
         {isAr ? 'اكتب طلبك' : 'Describe what you need'}
@@ -108,7 +108,7 @@ export const Composer: React.FC<ComposerProps> = (props) => {
       />
 
       {showExclusions && (
-        <div className="mx-1 mb-2 flex items-center gap-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800/70 px-3">
+        <div className="mx-1 mb-2 flex items-center gap-2 rounded-2xl bg-white dark:bg-zinc-800/70 px-3">
           <span className="text-[13px] font-medium text-zinc-500 dark:text-zinc-400 shrink-0">{isAr ? 'من غير:' : 'Without:'}</span>
           <input
             type="text"
@@ -160,7 +160,7 @@ export const Composer: React.FC<ComposerProps> = (props) => {
             type="button"
             onClick={() => setShowExclusions(true)}
             disabled={busy}
-            className={`h-9 px-3.5 rounded-full border border-dashed border-zinc-300 dark:border-zinc-700 text-[13px] font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer ${focusRing}`}
+            className={`h-9 px-3.5 rounded-full border border-dashed border-zinc-300 dark:border-zinc-700 text-[13px] font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer ${focusRing}`}
           >
             {isAr ? '+ من غير…' : '+ Without…'}
           </button>
