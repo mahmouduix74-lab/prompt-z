@@ -3,7 +3,7 @@ import { Clock, Languages, Moon, Sun } from 'lucide-react';
 import { DepthType, DomainType, GenerationErrorDetails, OutputLanguage, SavedPromptItem } from '../types';
 import { DEPTHS, OPENROUTER_MODEL, OUTPUT_LANGUAGES } from '../constants';
 import { safeStorage } from '../utils/storage';
-import { AppLang, Theme } from '../utils/i18n';
+import { AppLang, Theme, UI_STRINGS } from '../utils/i18n';
 import { generateStructuredPrompt, refinePromptText } from '../services/api';
 import { refineLocalPromptText } from '../services/localRefiner';
 import { AccountState, DailyLimitError, fetchAccount, sendFeedback } from '../services/account';
@@ -16,6 +16,7 @@ import { LibraryDrawer } from '../components/LibraryDrawer';
 import CursorRingField from './CursorRingField';
 import { Composer } from './Composer';
 import { ResultCard } from './ResultCard';
+import { TypingTitle } from './TypingTitle';
 
 // History, depth, language and the UI language are shared with the classic page; the theme is not,
 // because this page follows the device by default.
@@ -53,6 +54,8 @@ export default function AppV2() {
   });
   const [lang, setLang] = useState<AppLang>(() => (safeStorage.getItem(STORAGE_KEYS.LANG) === 'en' ? 'en' : 'ar'));
   const isAr = lang === 'ar';
+  // Hero title and lead come from the classic page's strings, so both pages say the same thing.
+  const t = UI_STRINGS[lang];
 
   // The mono class turns the site's purple into greys for the dialogs shared with the classic page.
   useEffect(() => {
@@ -363,13 +366,11 @@ export default function AppV2() {
 
       <main className="relative z-10 flex-1 w-full">
         <section className="mx-auto max-w-3xl px-4 sm:px-6 min-h-[calc(100svh-4rem)] flex flex-col justify-center items-center text-center pb-16">
-          <h1 className="text-balance text-[34px] sm:text-[52px] leading-[1.1] font-semibold tracking-[-0.03em] text-zinc-950 dark:text-white">
-            {isAr ? 'من أول فكرة لبرومبت جاهز' : 'From first idea to final prompt'}
+          <h1 className="text-balance text-[34px] sm:text-[52px] leading-[1.15] font-extrabold tracking-[-0.03em] text-zinc-950 dark:text-white">
+            <TypingTitle prefix={t.heroPrefix} words={t.heroWords} suffix={t.heroSuffix} still={reducedMotion} />
           </h1>
           <p className="mt-4 max-w-xl text-balance text-[16px] sm:text-[18px] leading-relaxed text-zinc-600 dark:text-zinc-400">
-            {isAr
-              ? 'اكتب طلبك بأي لغة، وPromptZ يحوّله لبرومبت منظم يفهمه أي ذكاء اصطناعي.'
-              : 'Write your request in any language. PromptZ turns it into a structured prompt any AI can run.'}
+            {t.heroLead}
           </p>
 
           <div className="mt-9 w-full">
