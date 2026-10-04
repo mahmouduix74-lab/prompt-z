@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Clock, Languages, Moon, Sun } from 'lucide-react';
 import { DepthType, DomainType, GenerationErrorDetails, OutputLanguage, SavedPromptItem } from '../types';
 import { DEPTHS, OPENROUTER_MODEL, OUTPUT_LANGUAGES } from '../constants';
 import { safeStorage } from '../utils/storage';
@@ -9,7 +8,9 @@ import { refineLocalPromptText } from '../services/localRefiner';
 import { AccountState, DailyLimitError, fetchAccount, sendFeedback } from '../services/account';
 import { deleteHistory, fetchHistory, saveHistory } from '../services/history';
 import type { ClarifyingQuestion } from '../prompting';
-import { AccountMenu, LimitDialog, SignInDialog } from '../components/AccountMenu';
+import { LimitDialog, SignInDialog } from '../components/AccountMenu';
+import { Header } from '../components/Header';
+import { PromptZIcon } from '../components/Logo';
 import { ClarifyDialog, FeedbackBar, ServiceNotice } from '../components/PromptAssist';
 import { ErrorBanner } from '../components/ErrorBanner';
 import { LibraryDrawer } from '../components/LibraryDrawer';
@@ -28,7 +29,7 @@ const STORAGE_KEYS = {
   THEME: 'v2_theme',
 };
 
-/** The field's colors per theme: greys only, so the page stays black and white. */
+/** The field's colors per theme: the brand purple, the only colour on this page besides the logo. */
 /**
  * Soft light over the field, in greys: a linear fade from the top and a halo behind the request
  * box. Light on the dark theme; on the light theme a faint grey shade.
@@ -45,8 +46,8 @@ const GLOW: Record<Theme, string> = {
 };
 
 const FIELD_THEME: Record<Theme, { background: string; colors: string[] }> = {
-  light: { background: '#fafafa', colors: ['#52525b', '#71717a', '#a1a1aa'] },
-  dark: { background: '#09090b', colors: ['#d4d4d8', '#a1a1aa', '#52525b'] },
+  light: { background: '#fafafa', colors: ['#7132f5', '#9f78fb', '#bea6ff'] },
+  dark: { background: '#09090b', colors: ['#bea6ff', '#8452f8', '#5f22d9'] },
 };
 
 /**
@@ -347,41 +348,24 @@ export default function AppV2() {
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-[#fafafa] dark:to-[#09090b]" />
       </div>
 
-      <header className="relative z-10 w-full">
-        <div className="mx-auto max-w-6xl h-16 px-4 sm:px-6 flex items-center justify-between gap-3">
-          <a href="/v2" className="text-[22px] font-[800] tracking-[-0.025em] text-zinc-900 dark:text-white" style={{ fontFamily: "'Montserrat', system-ui, sans-serif" }} dir="ltr">
-            PromptZ
-          </a>
-          <nav className="flex items-center gap-1" aria-label={isAr ? 'أدوات' : 'Tools'}>
-            <button type="button" onClick={() => setIsLibraryOpen(true)} className={headerButton} aria-label={isAr ? 'السجل' : 'History'}>
-              <Clock className="w-4 h-4" />
-              <span className="hidden sm:inline">{isAr ? 'السجل' : 'History'}</span>
-              {savedItems.length > 0 && <span className="text-zinc-500 dark:text-zinc-400 tabular-nums">{savedItems.length}</span>}
-            </button>
-            <button
-              type="button"
-              onClick={() => setLang(isAr ? 'en' : 'ar')}
-              className={headerButton}
-              aria-label={isAr ? 'Switch to English' : 'التبديل للعربية'}
-            >
-              <Languages className="w-4 h-4" />
-              <span>{isAr ? 'EN' : 'ع'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className={headerButton}
-              aria-label={theme === 'dark' ? (isAr ? 'الوضع الفاتح' : 'Light mode') : isAr ? 'الوضع الداكن' : 'Dark mode'}
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-            <AccountMenu account={account} lang={lang} onSignIn={() => setIsSignInOpen(true)} onOpenLibrary={() => setIsLibraryOpen(true)} />
-          </nav>
-        </div>
-      </header>
+      {/* The classic page's navbar; its accents turn grey here through pz-mono. */}
+      
+        <Header
+          savedCount={savedItems.length}
+          theme={theme}
+          onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          lang={lang}
+          onToggleLang={() => setLang(isAr ? 'en' : 'ar')}
+          onOpenLibrary={() => setIsLibraryOpen(true)}
+          onOpenSettings={() => {}}
+          onScrollToBuilder={() => window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })}
+          account={account}
+          onSignIn={() => setIsSignInOpen(true)}
+        />
 
       <main className="relative z-10 flex-1 w-full">
         <section className="mx-auto max-w-3xl px-4 sm:px-6 min-h-[calc(100svh-4rem)] flex flex-col justify-center items-center text-center pb-16">
+          <PromptZIcon sizeClass="w-14 h-14 sm:w-16 sm:h-16" className="mb-6" />
           <h1 className="text-balance text-[34px] sm:text-[52px] leading-[1.15] font-extrabold tracking-[-0.03em] text-zinc-950 dark:text-white">
             <TypingTitle prefix={t.heroPrefix} words={t.heroWords} suffix={t.heroSuffix} still={reducedMotion} />
           </h1>
@@ -465,6 +449,10 @@ export default function AppV2() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between gap-4 text-[13px] text-zinc-500 dark:text-zinc-400">
           <span dir="ltr">© {new Date().getFullYear()} PromptZ</span>
           <nav className="flex items-center gap-4">
+            <button type="button" onClick={() => setIsLibraryOpen(true)} className="hover:text-zinc-900 dark:hover:text-white cursor-pointer">
+              {isAr ? 'السجل' : 'History'}
+              {savedItems.length > 0 && <span className="ms-1 tabular-nums">{savedItems.length}</span>}
+            </button>
             <a href="/terms" className="hover:text-zinc-900 dark:hover:text-white">{isAr ? 'الشروط' : 'Terms'}</a>
             <a href="/privacy" className="hover:text-zinc-900 dark:hover:text-white">{isAr ? 'الخصوصية' : 'Privacy'}</a>
             <a href="/" className="hover:text-zinc-900 dark:hover:text-white">{isAr ? 'النسخة الكلاسيكية' : 'Classic version'}</a>
