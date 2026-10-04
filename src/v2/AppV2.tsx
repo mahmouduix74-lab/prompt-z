@@ -29,12 +29,16 @@ const STORAGE_KEYS = {
 
 /** The field's colors per theme: greys only, so the page stays black and white. */
 const FIELD_THEME: Record<Theme, { background: string; colors: string[] }> = {
-  light: { background: '#fafafa', colors: ['#18181b', '#52525b', '#a1a1aa'] },
-  dark: { background: '#09090b', colors: ['#fafafa', '#a1a1aa', '#3f3f46'] },
+  light: { background: '#fafafa', colors: ['#52525b', '#71717a', '#a1a1aa'] },
+  dark: { background: '#09090b', colors: ['#d4d4d8', '#a1a1aa', '#52525b'] },
 };
 
-/** Dot size for the field (the component's default is 120): smaller dots read as texture, not shapes. */
-const DOT_SIZE = 55;
+/**
+ * The field is kept light, like a texture behind the text: small dashes (the component's default
+ * dot size is 120) and the camera pulled back a little (default 160) so the ring reads as an arc.
+ */
+const DOT_SIZE = 35;
+const CAMERA_DISTANCE = 190;
 
 const headerButton =
   'inline-flex items-center justify-center gap-1.5 h-9 min-w-9 px-2.5 rounded-full text-[13px] font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-900/5 dark:hover:bg-white/10 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400';
@@ -317,6 +321,7 @@ export default function AppV2() {
           colors={field.colors}
           density={density}
           dotSize={DOT_SIZE}
+          cameraDistance={CAMERA_DISTANCE}
           paused={reducedMotion}
           className="absolute inset-0"
         />
