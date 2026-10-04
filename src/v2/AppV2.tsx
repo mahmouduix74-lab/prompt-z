@@ -30,29 +30,18 @@ const STORAGE_KEYS = {
 
 /** The field's colors per theme: greys only, so the page stays black and white. */
 /**
- * Soft light over the field, in greys: 2 a linear fade from the top, 3 a narrow beam onto the
- * title, 4 a halo behind the request box. On the light theme the "light" is a faint grey shade.
- * The default shows all three; ?glow=2, ?glow=3 or ?glow=4 shows one, ?glow=0 none (for comparing).
+ * Soft light over the field, in greys: a linear fade from the top and a halo behind the request
+ * box. Light on the dark theme; on the light theme a faint grey shade.
  */
-type GlowId = '2' | '3' | '4';
-const GLOWS: Record<GlowId, Record<Theme, string>> = {
-  '2': {
-    dark: 'linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 35%, transparent 70%)',
-    light: 'linear-gradient(180deg, rgba(24,24,27,0.08) 0%, rgba(24,24,27,0.02) 35%, transparent 70%)',
-  },
-  '3': {
-    dark: 'radial-gradient(ellipse 22% 75% at 50% -8%, rgba(255,255,255,0.20), transparent 70%), radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255,255,255,0.06), transparent 70%)',
-    light: 'radial-gradient(ellipse 22% 75% at 50% -8%, rgba(24,24,27,0.12), transparent 70%), radial-gradient(ellipse 60% 40% at 50% 0%, rgba(24,24,27,0.04), transparent 70%)',
-  },
-  '4': {
-    dark: 'radial-gradient(ellipse 45% 35% at 50% 62%, rgba(255,255,255,0.14), transparent 70%)',
-    light: 'radial-gradient(ellipse 45% 35% at 50% 62%, rgba(24,24,27,0.09), transparent 70%)',
-  },
-};
-const pickGlows = (): GlowId[] => {
-  const asked = new URLSearchParams(window.location.search).get('glow');
-  if (asked === '0') return [];
-  return asked && asked in GLOWS ? [asked as GlowId] : (Object.keys(GLOWS) as GlowId[]);
+const GLOW: Record<Theme, string> = {
+  dark: [
+    'linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 35%, transparent 70%)',
+    'radial-gradient(ellipse 45% 35% at 50% 62%, rgba(255,255,255,0.14), transparent 70%)',
+  ].join(', '),
+  light: [
+    'linear-gradient(180deg, rgba(24,24,27,0.05) 0%, rgba(24,24,27,0.015) 35%, transparent 70%)',
+    'radial-gradient(ellipse 45% 35% at 50% 62%, rgba(24,24,27,0.09), transparent 70%)',
+  ].join(', '),
 };
 
 const FIELD_THEME: Record<Theme, { background: string; colors: string[] }> = {
@@ -336,7 +325,6 @@ export default function AppV2() {
   };
 
   const field = FIELD_THEME[theme];
-  const [glows] = useState(pickGlows);
   const showResult = isLoading || Boolean(output);
 
   return (
@@ -355,9 +343,7 @@ export default function AppV2() {
           paused={reducedMotion}
           className="absolute inset-0"
         />
-        {glows.length > 0 && (
-          <div className="absolute inset-0" style={{ background: glows.map((g) => GLOWS[g][theme]).join(', ') }} />
-        )}
+        <div className="absolute inset-0" style={{ background: GLOW[theme] }} />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-[#fafafa] dark:to-[#09090b]" />
       </div>
 
