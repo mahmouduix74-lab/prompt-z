@@ -85,7 +85,7 @@ export const Composer: React.FC<ComposerProps> = (props) => {
         e.preventDefault();
         submit();
       }}
-      className="w-full rounded-[28px] border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/85 backdrop-blur-xl shadow-[0_8px_40px_-12px_rgba(0,0,0,0.18)] dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.7)] p-3 sm:p-4 text-start"
+      className="w-full rounded-[28px] border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/85 backdrop-blur-xl p-3 sm:p-4 text-start"
     >
       <label htmlFor="v2-request" className="sr-only">
         {isAr ? 'اكتب طلبك' : 'Describe what you need'}
