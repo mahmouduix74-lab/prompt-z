@@ -193,3 +193,35 @@ a:active,
     cursor: none !important;
   }
 }
+
+/*
+ * /v2 is black and white: there the brand scale (which purple, violet and indigo resolve to) is
+ * grey, so the dialogs it shares with the classic page match it. Light: dark accents on light;
+ * dark: buttons stay mid-grey so their white text keeps its contrast, and text accents turn light.
+ */
+html.pz-mono {
+  --color-brand-50: #f5f5f5;
+  --color-brand-100: #ebebeb;
+  --color-brand-200: #d9d9d9;
+  --color-brand-300: #bdbdbd;
+  --color-brand-400: #737373;
+  --color-brand-500: #404040;
+  --color-brand-600: #171717;
+  --color-brand-700: #000000;
+  --color-brand-800: #000000;
+  --color-brand-900: #000000;
+  --color-brand-950: #000000;
+}
+html.pz-mono.dark {
+  --color-brand-50: #262626;
+  --color-brand-100: #262626;
+  --color-brand-200: #404040;
+  --color-brand-300: #e5e5e5;
+  --color-brand-400: #d4d4d4;
+  --color-brand-500: #a3a3a3;
+  --color-brand-600: #404040;
+  --color-brand-700: #525252;
+  --color-brand-800: #262626;
+  --color-brand-900: #171717;
+  --color-brand-950: #0a0a0a;
+}

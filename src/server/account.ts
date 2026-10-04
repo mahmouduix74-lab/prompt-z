@@ -49,6 +49,9 @@ const EVAL_RUNS_PER_DAY = 3;
 
 const SESSION_COOKIE = 'pz_session';
 const STATE_COOKIE = 'pz_oauth_state';
+/** The page a sign-in started from, so it can end there: only pages listed in RETURN_PAGES. */
+const RETURN_COOKIE = 'pz_return';
+const RETURN_PAGES = ['/v2'];
 const SESSION_DAYS = 30;
 const EMAIL_LINK_MINUTES = 15;
 /** Sign-in emails a day, per address and per IP, so the form cannot be used to spam. */
@@ -134,6 +137,28 @@ function cookie(name: string, value: string, maxAgeSeconds: number): string {
   return `${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAgeSeconds}`;
 }
 
+/** The page of this site that sent the request (its Referer), when it is one of RETURN_PAGES; else "". */
+function startPage(request: Request, origin: string): string {
+  try {
+    const from = new URL(request.headers.get('Referer') || '');
+    const path = from.pathname.replace(/\/+$/, '');
+    return from.origin === origin && RETURN_PAGES.includes(path) ? path : '';
+  } catch {
+    return '';
+  }
+}
+
+/** Remembers (or forgets) the page a sign-in started from. */
+function returnCookie(page: string, maxAgeSeconds: number): string {
+  return page ? cookie(RETURN_COOKIE, page, maxAgeSeconds) : cookie(RETURN_COOKIE, '', 0);
+}
+
+/** Where a finished sign-in goes: the page it started from, or the home page. */
+function landing(request: Request, origin: string, query: string): string {
+  const page = readCookie(request, RETURN_COOKIE) || '';
+  return RETURN_PAGES.includes(page) ? `${origin}${page}${query}` : `${origin}/${query}`;
+}
+
 export function googleEnabled(env: AccountEnv): boolean {
   return Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 }
@@ -187,21 +212,18 @@ export async function handleLogin(request: Request, env: AccountEnv): Promise<Re
     state,
     prompt: 'select_account',
   });
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
-      'Set-Cookie': cookie(STATE_COOKIE, state, 600),
-    },
-  });
+  const headers = new Headers({ Location: `https://accounts.google.com/o/oauth2/v2/auth?${params}` });
+  headers.append('Set-Cookie', cookie(STATE_COOKIE, state, 600));
+  headers.append('Set-Cookie', returnCookie(startPage(request, siteOrigin(env, request)), 600));
+  return new Response(null, { status: 302, headers });
 }
 
 /** GET /api/auth/callback: Google sends the browser back here with a one-time code. */
 export async function handleCallback(request: Request, env: AccountEnv): Promise<Response> {
   const origin = siteOrigin(env, request);
   const back = (query: string, setCookies: string[] = []) => {
-    const headers = new Headers({ Location: `${origin}/${query}` });
-    for (const c of [...setCookies, cookie(STATE_COOKIE, '', 0)]) headers.append('Set-Cookie', c);
+    const headers = new Headers({ Location: landing(request, origin, query) });
+    for (const c of [...setCookies, cookie(STATE_COOKIE, '', 0), returnCookie('', 0)]) headers.append('Set-Cookie', c);
     return new Response(null, { status: 302, headers });
   };
 
@@ -325,14 +347,23 @@ export async function handleEmailLink(request: Request, env: AccountEnv): Promis
     console.warn('[Auth] Resend refused the email:', sent.status, await sent.text().catch(() => ''));
     return reply(502, { error: { code: 502, reason: 'email_failed', message: 'Could not send the email.' } });
   }
-  return reply(200, { ok: true });
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Set-Cookie': returnCookie(startPage(request, siteOrigin(env, request)), EMAIL_LINK_MINUTES * 60),
+    },
+  });
 }
 
 /** /api/auth/email/verify: GET (the emailed link) shows a sign-in button; its same-site POST uses the token once. */
 export async function handleEmailVerify(request: Request, env: AccountEnv): Promise<Response> {
   const origin = siteOrigin(env, request);
-  const back = (query: string, setCookie?: string) =>
-    new Response(null, { status: 303, headers: { Location: `${origin}/${query}`, ...(setCookie ? { 'Set-Cookie': setCookie } : {}) } });
+  const back = (query: string, setCookie?: string) => {
+    const headers = new Headers({ Location: landing(request, origin, query) });
+    for (const c of [setCookie, returnCookie('', 0)]) if (c) headers.append('Set-Cookie', c);
+    return new Response(null, { status: 303, headers });
+  };
   if (!emailEnabled(env)) return back('?signin=error');
 
   // Opening the link only shows a button; the POST signs in. Mail scanners that open links would
@@ -382,7 +413,7 @@ button{width:100%;height:44px;border:0;border-radius:12px;background:#7132F5;col
 export function handleLogout(request: Request, env: AccountEnv): Response {
   return new Response(null, {
     status: 302,
-    headers: { Location: `${siteOrigin(env, request)}/`, 'Set-Cookie': cookie(SESSION_COOKIE, '', 0) },
+    headers: { Location: `${siteOrigin(env, request)}${startPage(request, siteOrigin(env, request)) || '/'}`, 'Set-Cookie': cookie(SESSION_COOKIE, '', 0) },
   });
 }
 
