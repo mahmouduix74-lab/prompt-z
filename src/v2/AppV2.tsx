@@ -163,7 +163,7 @@ export default function AppV2() {
   }, [accountLoaded, accountEmail]);
 
   const saveToLibrary = (item: Omit<SavedPromptItem, 'id'>) => {
-    const newItem: SavedPromptItem = { ...item, id: `prompt_${item.timestamp}_${Math.random().toString(36).slice(2, 7)}` };
+    const newItem: SavedPromptItem = { ...item, id: `prompt_${item.timestamp}_${crypto.randomUUID().slice(0, 8)}` };
     const updated = [newItem, ...savedItems.filter((i) => i.output !== item.output)].slice(0, 100);
     setSavedItems(updated);
     if (signedIn) {
