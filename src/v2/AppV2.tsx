@@ -367,7 +367,7 @@ export default function AppV2() {
 
       <main className="relative z-10 flex-1 w-full">
         <section className="mx-auto max-w-3xl px-4 sm:px-6 min-h-[calc(100svh-4rem)] flex flex-col justify-center items-center text-center pb-16">
-          <PixelWordmark className="w-full max-w-[680px] h-auto" />
+          <PixelWordmark className="w-full max-w-[560px] h-auto" />
           <h1 className="mt-5 text-balance text-[22px] sm:text-[30px] leading-[1.2] font-bold tracking-[-0.03em] text-zinc-950 dark:text-white">
             <TypingTitle prefix={t.heroPrefix} words={t.heroWords} suffix={t.heroSuffix} still={reducedMotion} />
           </h1>

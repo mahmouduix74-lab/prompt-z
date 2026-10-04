@@ -1,57 +1,53 @@
 import React from 'react';
 
 /**
- * "PROMPTZ" in square pixels with two outlined echoes behind it, after the pixel wordmarks of
- * prompt sites. Drawn as SVG so it needs no font and stays sharp at any size. Each glyph is a grid
- * of rows; "#" is a filled cell.
+ * "promptZ" as a dot-matrix sign: round dots, lit for the letters and faint for the rest of each
+ * letter's grid, echoing the dotted background. Lower-case letters sit on the x-height with the
+ * "p" descenders below it; the capital Z (and the "t") rise to the cap height. Drawn as SVG, so it
+ * needs no font. In each glyph "#" is a lit dot; every glyph has ROWS rows.
  */
 const GLYPHS: Record<string, string[]> = {
-  P: ['######.', '#######', '##...##', '##...##', '#######', '######.', '##.....', '##.....', '##.....'],
-  R: ['######.', '#######', '##...##', '##...##', '######.', '######.', '##..##.', '##...##', '##...##'],
-  O: ['#######', '#######', '##...##', '##...##', '##...##', '##...##', '##...##', '#######', '#######'],
-  M: ['##.....##', '###...###', '####.####', '##.###.##', '##..#..##', '##.....##', '##.....##', '##.....##', '##.....##'],
-  T: ['########', '########', '...##...', '...##...', '...##...', '...##...', '...##...', '...##...', '...##...'],
-  Z: ['#######', '#######', '....###', '...###.', '..###..', '.###...', '###....', '#######', '#######'],
+  p: ['.....', '.....', '#.##.', '##..#', '#...#', '##..#', '#.##.', '#....', '#....'],
+  r: ['.....', '.....', '#.##.', '##..#', '#....', '#....', '#....', '.....', '.....'],
+  o: ['.....', '.....', '.###.', '#...#', '#...#', '#...#', '.###.', '.....', '.....'],
+  m: ['.......', '.......', '###.##.', '#..#..#', '#..#..#', '#..#..#', '#..#..#', '.......', '.......'],
+  t: ['.#..', '.#..', '####', '.#..', '.#..', '.#..', '..##', '....', '....'],
+  Z: ['######', '.....#', '....#.', '...#..', '..#...', '.#....', '######', '......', '......'],
 };
 
-const WORD = 'PROMPTZ';
+const WORD = 'promptZ';
 const ROWS = 9;
 const GAP = 1;
-/** Echo offsets in cells, farthest first. */
-const ECHOES = [1.1, 0.55];
+const RADIUS = 0.42;
+/** Unlit dots are smaller and faint, so they read as the sign's grid, not as letters. */
+const UNLIT_RADIUS = 0.3;
 
-/** One path covering every filled cell of the word. */
-function buildPath(): { d: string; width: number } {
+const { lit, unlit, width } = (() => {
+  const on: [number, number][] = [];
+  const off: [number, number][] = [];
   let x = 0;
-  const parts: string[] = [];
   for (const letter of WORD) {
     const rows = GLYPHS[letter];
     rows.forEach((row, y) => {
-      for (let c = 0; c < row.length; c++) if (row[c] === '#') parts.push(`M${x + c} ${y}h1v1h-1z`);
+      for (let c = 0; c < row.length; c++) (row[c] === '#' ? on : off).push([x + c + 0.5, y + 0.5]);
     });
     x += rows[0].length + GAP;
   }
-  return { d: parts.join(''), width: x - GAP };
-}
+  return { lit: on, unlit: off, width: x - GAP };
+})();
 
-const { d: PATH, width: WIDTH } = buildPath();
-const PAD = Math.max(...ECHOES) + 0.3;
+/** One path of circles, so each layer is a single element. */
+const dots = (points: [number, number][], r: number) =>
+  points
+    .map(([cx, cy]) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0`)
+    .join('');
+
+const LIT = dots(lit, RADIUS);
+const UNLIT = dots(unlit, UNLIT_RADIUS);
 
 export const PixelWordmark: React.FC<{ className?: string }> = ({ className }) => (
-  <svg
-    viewBox={`-0.2 -0.2 ${WIDTH + PAD} ${ROWS + PAD}`}
-    role="img"
-    aria-label="PromptZ"
-    className={className}
-    shapeRendering="crispEdges"
-  >
-    {ECHOES.map((offset) => (
-      <g key={offset} transform={`translate(${offset} ${offset})`}>
-        {/* The grey stroke around the cells, then the page colour over the cells, leaves an outline. */}
-        <path d={PATH} className="fill-zinc-400 stroke-zinc-400 dark:fill-zinc-600 dark:stroke-zinc-600" strokeWidth={0.32} strokeLinejoin="miter" />
-        <path d={PATH} className="fill-[#fafafa] dark:fill-[#09090b]" />
-      </g>
-    ))}
-    <path d={PATH} className="fill-zinc-950 dark:fill-white" />
+  <svg viewBox={`0 0 ${width} ${ROWS}`} role="img" aria-label="promptZ" className={className}>
+    <path d={UNLIT} className="fill-zinc-900/[0.045] dark:fill-white/[0.06]" />
+    <path d={LIT} className="fill-zinc-950 dark:fill-white" />
   </svg>
 );
