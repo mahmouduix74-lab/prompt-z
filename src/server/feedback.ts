@@ -14,7 +14,7 @@ const json = (status: number, body: unknown) =>
 
 let tableReady = false;
 
-async function ensureTable(db: D1Database): Promise<void> {
+export async function ensureTable(db: D1Database): Promise<void> {
   if (tableReady) return;
   await ensureSchema(db);
   await db
