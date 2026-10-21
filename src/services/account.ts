@@ -14,6 +14,8 @@ export interface AccountState {
   google: boolean;
   email: boolean;
   user: { name: string; email: string; picture?: string } | null;
+  /** True for emails in ADMIN_EMAILS: the account menu then links to /admin. */
+  isAdmin: boolean;
   usage: AccountUsage | null;
   /** Daily prompts without and with an account. */
   limits: { anonymous: number; signedIn: number };
@@ -29,6 +31,7 @@ export async function fetchAccount(): Promise<AccountState | null> {
       google: Boolean(data?.google),
       email: Boolean(data?.email),
       user: data?.user ?? null,
+      isAdmin: data?.isAdmin === true,
       usage: data?.usage ?? null,
       limits: {
         anonymous: Number(data?.limits?.anonymous) || 3,
