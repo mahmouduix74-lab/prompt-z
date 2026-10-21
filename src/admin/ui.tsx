@@ -1,10 +1,11 @@
 /** The dashboard's building blocks, made only of design-system components (src/admin/ds). */
 import { useState, type FC, type ReactNode } from 'react';
-import { ArrowDown, ArrowUp, Trash01 } from '@untitledui/icons';
+import { ArrowDown, ArrowUp, Trash01, TrendDown01, TrendUp01 } from '@untitledui/icons';
 import { Area, AreaChart, ResponsiveContainer } from 'recharts';
 import { EmptyState } from './ds/components/application/empty-state/empty-state';
 import { Dialog, Modal, ModalOverlay } from './ds/components/application/modals/modal';
 import { TableCard } from './ds/components/application/table/table';
+import { BadgeWithIcon } from './ds/components/base/badges/badges';
 import { Button } from './ds/components/base/buttons/button';
 import { Dropdown } from './ds/components/base/dropdown/dropdown';
 import { Input } from './ds/components/base/input/input';
@@ -285,19 +286,102 @@ export const ConfirmDialog = ({
   );
 };
 
-/** The change as the DS "_Change" badge (type 02): arrow and percent in a small pill. */
-export const ChangeBadge = ({ change, trend = 'up', good }: { change?: string; trend?: 'up' | 'down'; good?: boolean }) => {
+/** The change as a DS pill badge with a trend arrow: green when it is good news, red when not. */
+export const TrendBadge = ({ change, trend = 'up', good }: { change?: string; trend?: 'up' | 'down'; good?: boolean }) => {
   if (!change) return null;
   const ok = good ?? trend === 'up';
   return (
-    <span
-      className={cx(
-        'inline-flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-0.5 text-sm font-medium ring-1 ring-inset',
-        ok ? 'bg-success-primary text-success-primary ring-utility-green-200' : 'bg-error-primary text-error-primary ring-utility-red-200'
-      )}
-    >
-      {trend === 'up' ? <ArrowUp className="size-3.5" /> : <ArrowDown className="size-3.5" />}
-      <span dir="ltr">{change}</span>
-    </span>
+    <BadgeWithIcon size="md" type="pill-color" color={ok ? 'success' : 'error'} iconLeading={trend === 'up' ? TrendUp01 : TrendDown01}>
+      <span dir="ltr">{`${trend === 'up' ? '+' : '−'}${change}`}</span>
+    </BadgeWithIcon>
   );
 };
+
+/** A headline number: icon and title, the value with its change, a supporting line and a full-width brand chart. */
+export const KpiCard = ({
+  icon: Icon,
+  title,
+  value,
+  change,
+  trend,
+  good,
+  note,
+  data,
+}: {
+  icon: FC<{ className?: string }>;
+  title: string;
+  value: ReactNode;
+  change?: string;
+  trend?: 'up' | 'down';
+  good?: boolean;
+  note?: string;
+  data?: number[];
+}) => (
+  <div className="flex flex-col gap-4 rounded-xl bg-primary p-5 shadow-xs ring-1 ring-secondary ring-inset">
+    <div className="flex items-center gap-2">
+      <Icon className="size-5 text-fg-quaternary" />
+      <p className="text-md font-medium text-secondary">{title}</p>
+    </div>
+    <div className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="text-display-md font-semibold text-primary" dir="auto">
+          {value}
+        </p>
+        <TrendBadge change={change} trend={trend} good={good} />
+      </div>
+      {note && <p className="text-sm text-tertiary">{note}</p>}
+    </div>
+    <div className={cx('h-14', !data?.length && 'invisible')}>
+      {data && data.length > 1 && <MiniChart data={data} tone="brand" className="h-14 w-full" />}
+    </div>
+  </div>
+);
+
+/** A step of a funnel: its name, the count and its share of the first step, over a bar sized to the first step. */
+export const FunnelRow = ({ label, value, of, step }: { label: string; value: number; of: number; step: 0 | 1 | 2 | 3 }) => {
+  const shades = ['bg-utility-brand-600', 'bg-utility-brand-500', 'bg-utility-brand-400', 'bg-utility-brand-300'];
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-baseline gap-2">
+        <span className="flex-1 text-md text-secondary">{label}</span>
+        {step > 0 && of > 0 && (
+          <span className="text-sm text-tertiary" dir="ltr">
+            {Math.round((value / of) * 100)}%
+          </span>
+        )}
+        <span className="text-md font-semibold text-primary" dir="ltr">
+          {value.toLocaleString('en-US')}
+        </span>
+      </div>
+      <div className="h-6 overflow-hidden rounded-md bg-utility-neutral-100">
+        <div className={cx('h-full rounded-md', shades[step])} style={{ width: `${Math.max(1.5, of ? (value / of) * 100 : 0)}%` }} />
+      </div>
+    </div>
+  );
+};
+
+/** One line of the live activity list: a featured icon for what happened, who, the details and when. */
+export const ActivityRow = ({
+  icon,
+  color,
+  title,
+  detail,
+  time,
+}: {
+  icon: FC<{ className?: string }>;
+  color: 'brand' | 'success' | 'warning' | 'error' | 'gray';
+  title: ReactNode;
+  detail: string;
+  time: string;
+}) => (
+  <div className="flex items-start gap-3 px-4 py-4 md:px-6">
+    <FeaturedIcon icon={icon} color={color} theme="light" size="sm" />
+    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+      <p className="truncate text-sm font-semibold text-primary" dir="auto" style={{ textAlign: 'start' }}>
+        {title}
+      </p>
+      <p className="truncate text-sm text-tertiary">{detail}</p>
+    </div>
+    <span className="shrink-0 text-xs text-quaternary">{time}</span>
+  </div>
+);

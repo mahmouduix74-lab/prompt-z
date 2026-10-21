@@ -64,12 +64,15 @@ export function compareSeries(stats: Stats, rows: Row[], key: string): { label: 
 /** The period's daily values for a mini chart. */
 export const spark = (stats: Stats, rows: Row[], key: string) => compareSeries(stats, rows, key).map((d) => d.now);
 
-/** Hours in the viewer's time zone, from the server's UTC hours. */
-export function localHours(rows: { hour: number; n: number }[]): { label: string; value: number }[] {
+/** Prompts per weekday (0 = Sunday) and hour in the viewer's time zone, from the server's UTC counts. */
+export function localWeekHours(rows: { dow: number; hour: number; n: number }[]): number[][] {
   const shift = Math.round(-new Date().getTimezoneOffset() / 60);
-  const out = Array.from({ length: 24 }, (_, h) => ({ label: String(h), value: 0 }));
-  for (const r of rows) out[(((r.hour + shift) % 24) + 24) % 24].value += r.n;
-  return out;
+  const grid = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0));
+  for (const r of rows) {
+    const at = (((r.dow * 24 + r.hour + shift) % 168) + 168) % 168;
+    grid[Math.floor(at / 24)][at % 24] += r.n;
+  }
+  return grid;
 }
 
 /** One line of the activity feed: who did what. */

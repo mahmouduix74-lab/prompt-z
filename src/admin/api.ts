@@ -35,7 +35,8 @@ export interface Stats {
   daily: Row[];
   dailyVisits: Row[];
   signups: Row[];
-  hours: { hour: number; n: number }[];
+  /** Prompts made by UTC weekday (0 = Sunday) and hour. */
+  hours: { dow: number; hour: number; n: number }[];
   last24: { ago: number; errors: number; calls: number }[];
   models: { model: string; n: number; success: number; median: number | null; p95: number | null }[];
   costByDepth: { key: string; avg: number; n: number }[];

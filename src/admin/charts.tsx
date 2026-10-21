@@ -1,4 +1,5 @@
 /** The dashboard's charts: the DS chart styles (src/admin/ds/components/application/charts) on recharts. */
+import { Fragment } from 'react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ChartLegendContent, ChartTooltipContent } from './ds/components/application/charts/charts-base';
 import { cx } from './ds/utils/cx';
@@ -117,37 +118,47 @@ export const Donut = ({ data }: { data: { name: string; value: number; className
   );
 };
 
-/** DS bar chart, stacked: one colour step per series. */
-export const StackedBars = ({
-  data,
-  series,
-  height = 'h-64',
-}: {
-  data: Record<string, string | number>[];
-  series: { key: string; name: string; className: string }[];
-  height?: string;
-}) => (
-  <div className={cx('flex flex-col', height)} dir="ltr">
-    <ResponsiveContainer initialDimension={{ width: 1, height: 1 }} className="h-full">
-      <BarChart data={data} className="text-tertiary [&_.recharts-text]:text-xs" margin={{ top: 8, bottom: 0, left: 0, right: 8 }}>
-        <CartesianGrid vertical={false} stroke="currentColor" className="text-utility-neutral-100" />
-        <XAxis fill="currentColor" axisLine={false} tickLine={false} interval="preserveStartEnd" dataKey="label" minTickGap={12} />
-        <YAxis fill="currentColor" axisLine={false} tickLine={false} width={40} allowDecimals={false} />
-        <Tooltip content={<ChartTooltipContent />} cursor={{ className: 'fill-utility-neutral-50' }} />
-        {series.map((s, i) => (
-          <Bar
-            key={s.key}
-            isAnimationActive={false}
-            dataKey={s.key}
-            name={s.name}
-            stackId="a"
-            fill="currentColor"
-            className={s.className}
-            maxBarSize={20}
-            radius={i === series.length - 1 ? [6, 6, 0, 0] : [0, 0, 0, 0]}
-          />
+/** Weekday rows, from Saturday, as the region's week starts. dow: 0 = Sunday. */
+const WEEK = [
+  { dow: 6, label: 'السبت' },
+  { dow: 0, label: 'الأحد' },
+  { dow: 1, label: 'الاتنين' },
+  { dow: 2, label: 'التلات' },
+  { dow: 3, label: 'الأربع' },
+  { dow: 4, label: 'الخميس' },
+  { dow: 5, label: 'الجمعة' },
+];
+const HEAT_STEPS = ['bg-utility-neutral-100', 'bg-utility-brand-100', 'bg-utility-brand-200', 'bg-utility-brand-300', 'bg-utility-brand-500', 'bg-utility-brand-600'];
+
+/** Prompts by weekday and hour: a grid of brand steps, darker for busier hours, with a legend. */
+export const Heatmap = ({ grid, unit = 'برومبت' }: { grid: number[][]; unit?: string }) => {
+  const max = Math.max(1, ...grid.flat());
+  const step = (n: number) => (n ? Math.min(5, 1 + Math.floor((n / max) * 5 - 0.0001)) : 0);
+  return (
+    <div className="flex flex-col gap-3" dir="ltr">
+      <div className="grid grid-cols-[3.5rem_repeat(24,minmax(0,1fr))] items-center gap-0.5">
+        <span />
+        {Array.from({ length: 24 }, (_, h) => (
+          <span key={h} className="text-center text-xs text-quaternary">
+            {h % 3 === 0 ? h : ''}
+          </span>
         ))}
-      </BarChart>
-    </ResponsiveContainer>
-  </div>
-);
+        {WEEK.map(({ dow, label }) => (
+          <Fragment key={dow}>
+            <span className="pe-1.5 text-end text-xs text-tertiary">{label}</span>
+            {grid[dow].map((n, h) => (
+              <span key={h} title={`${label} · ${h}:00 · ${n} ${unit}`} className={cx('block h-5 rounded-[3px]', HEAT_STEPS[step(n)])} />
+            ))}
+          </Fragment>
+        ))}
+      </div>
+      <div className="flex items-center gap-1.5 self-end text-xs text-tertiary">
+        <span>أقل</span>
+        {HEAT_STEPS.map((c) => (
+          <span key={c} className={cx('block size-3 rounded-[3px]', c)} />
+        ))}
+        <span>أكتر</span>
+      </div>
+    </div>
+  );
+};
