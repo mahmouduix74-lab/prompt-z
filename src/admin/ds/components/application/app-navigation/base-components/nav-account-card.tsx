@@ -23,6 +23,14 @@ export type NavAccountType = {
     status: "online" | "offline";
 };
 
+/** A row in the account menu: a link (`href`) or an action (`onPress`). */
+export type NavAccountAction = {
+    label: string;
+    icon?: FC<{ className?: string }>;
+    href?: string;
+    onPress?: () => void;
+};
+
 const placeholderAccounts: NavAccountType[] = [
     {
         id: "caitlyn",
@@ -43,8 +51,11 @@ const placeholderAccounts: NavAccountType[] = [
 export const NavAccountMenu = ({
     className,
     selectedAccountId = "olivia",
+    actions,
     ...dialogProps
 }: AriaDialogProps & {
+    /** The menu's rows; when given they replace the built-in demo menu. */
+    actions?: NavAccountAction[];
     /** Additional classes for the popover dialog that wraps the menu. */
     className?: string;
     /** The accounts offered in the "Switch account" section. Accepted for parity with `NavAccountCard`, which passes its own list down; the menu itself always renders the built-in demo accounts. */
@@ -81,6 +92,37 @@ export const NavAccountMenu = ({
             }
         };
     }, [onKeyDown]);
+
+    if (actions) {
+        return (
+            <AriaDialog {...dialogProps} ref={dialogRef} className={cx("w-66 rounded-xl bg-primary py-1.5 shadow-lg ring-1 ring-secondary outline-hidden", className)}>
+                {({ close }) => (
+                    <div className="flex flex-col gap-0.5">
+                        {actions.map(({ label, icon, href, onPress }) =>
+                            href ? (
+                                <a key={label} href={href} className="group/item block w-full px-1.5 focus:outline-hidden">
+                                    <span className="flex items-center gap-2 rounded-md p-2 text-sm font-semibold text-secondary group-hover/item:bg-primary_hover">
+                                        {icon && <ActionIcon icon={icon} />}
+                                        {label}
+                                    </span>
+                                </a>
+                            ) : (
+                                <NavAccountCardMenuItem
+                                    key={label}
+                                    label={label}
+                                    icon={icon}
+                                    onClick={() => {
+                                        close();
+                                        onPress?.();
+                                    }}
+                                />
+                            ),
+                        )}
+                    </div>
+                )}
+            </AriaDialog>
+        );
+    }
 
     return (
         <AriaDialog
@@ -127,6 +169,8 @@ export const NavAccountMenu = ({
     );
 };
 
+const ActionIcon = ({ icon: Icon }: { icon: FC<{ className?: string }> }) => <Icon className="size-5 text-fg-quaternary" />;
+
 const NavAccountCardMenuItem = ({
     icon: Icon,
     label,
@@ -166,7 +210,10 @@ export const NavAccountCard = ({
     selectedAccountId = "caitlyn",
     items = placeholderAccounts,
     avatarRounded,
+    actions,
 }: {
+    /** The account menu's rows; when given they replace the built-in demo menu. */
+    actions?: NavAccountAction[];
     /**
      * Where the account menu opens relative to the card.
      * @default "right bottom" from the `lg` breakpoint up, "top right" below it
@@ -218,7 +265,7 @@ export const NavAccountCard = ({
                         )
                     }
                 >
-                    <NavAccountMenu selectedAccountId={selectedAccountId} accounts={items} />
+                    <NavAccountMenu selectedAccountId={selectedAccountId} accounts={items} actions={actions} />
                 </AriaPopover>
             </AriaDialogTrigger>
         </div>

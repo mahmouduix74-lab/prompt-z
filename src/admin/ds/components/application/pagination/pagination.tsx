@@ -58,19 +58,19 @@ const MobilePagination = ({ page = 1, total = 10, className, onPageChange }: Mob
         <nav aria-label="Pagination" className={cx("flex items-center justify-between md:hidden", className)}>
             <Button
                 aria-label="Go to previous page"
-                iconLeading={ArrowLeft}
+                iconLeading={ArrowRight}
                 color="secondary"
                 size="sm"
                 onClick={() => onPageChange?.(Math.max(0, page - 1))}
             />
 
             <span className="text-sm text-fg-secondary">
-                Page <span className="font-medium">{page}</span> of <span className="font-medium">{total}</span>
+                صفحة <span className="font-medium">{page}</span> من <span className="font-medium">{total}</span>
             </span>
 
             <Button
                 aria-label="Go to next page"
-                iconLeading={ArrowRight}
+                iconLeading={ArrowLeft}
                 color="secondary"
                 size="sm"
                 onClick={() => onPageChange?.(Math.min(total, page + 1))}
@@ -92,14 +92,14 @@ export const PaginationPageDefault = ({ rounded, page = 1, total = 10, className
             <div className="hidden flex-1 justify-start md:flex">
                 <Pagination.PrevTrigger asChild>
                     <Button iconLeading={ArrowLeft} color="link-gray" size="sm">
-                        {isDesktop ? "Previous" : undefined}
+                        {isDesktop ? "السابق" : undefined}
                     </Button>
                 </Pagination.PrevTrigger>
             </div>
 
             <Pagination.PrevTrigger asChild className="md:hidden">
                 <Button iconLeading={ArrowLeft} color="secondary" size="sm">
-                    {isDesktop ? "Previous" : undefined}
+                    {isDesktop ? "السابق" : undefined}
                 </Button>
             </Pagination.PrevTrigger>
 
@@ -128,13 +128,13 @@ export const PaginationPageDefault = ({ rounded, page = 1, total = 10, className
             <div className="hidden flex-1 justify-end md:flex">
                 <Pagination.NextTrigger asChild>
                     <Button iconTrailing={ArrowRight} color="link-gray" size="sm">
-                        {isDesktop ? "Next" : undefined}
+                        {isDesktop ? "التالي" : undefined}
                     </Button>
                 </Pagination.NextTrigger>
             </div>
             <Pagination.NextTrigger asChild className="md:hidden">
                 <Button iconTrailing={ArrowRight} color="secondary" size="sm">
-                    {isDesktop ? "Next" : undefined}
+                    {isDesktop ? "التالي" : undefined}
                 </Button>
             </Pagination.NextTrigger>
         </Pagination.Root>
@@ -154,7 +154,7 @@ export const PaginationPageMinimalCenter = ({ rounded, page = 1, total = 10, cla
             <div className="flex flex-1 justify-start">
                 <Pagination.PrevTrigger asChild>
                     <Button iconLeading={ArrowLeft} color="secondary" size="sm">
-                        {isDesktop ? "Previous" : undefined}
+                        {isDesktop ? "السابق" : undefined}
                     </Button>
                 </Pagination.PrevTrigger>
             </div>
@@ -184,7 +184,7 @@ export const PaginationPageMinimalCenter = ({ rounded, page = 1, total = 10, cla
             <div className="flex flex-1 justify-end">
                 <Pagination.NextTrigger asChild>
                     <Button iconTrailing={ArrowRight} color="secondary" size="sm">
-                        {isDesktop ? "Next" : undefined}
+                        {isDesktop ? "التالي" : undefined}
                     </Button>
                 </Pagination.NextTrigger>
             </div>
@@ -205,7 +205,7 @@ export const PaginationCardDefault = ({ rounded, page = 1, total = 10, ...props 
             <div className="flex flex-1 justify-start">
                 <Pagination.PrevTrigger asChild>
                     <Button iconLeading={ArrowLeft} color="secondary" size="sm">
-                        {isDesktop ? "Previous" : undefined}
+                        {isDesktop ? "السابق" : undefined}
                     </Button>
                 </Pagination.PrevTrigger>
             </div>
@@ -235,7 +235,7 @@ export const PaginationCardDefault = ({ rounded, page = 1, total = 10, ...props 
             <div className="flex flex-1 justify-end">
                 <Pagination.NextTrigger asChild>
                     <Button iconTrailing={ArrowRight} color="secondary" size="sm">
-                        {isDesktop ? "Next" : undefined}
+                        {isDesktop ? "التالي" : undefined}
                     </Button>
                 </Pagination.NextTrigger>
             </div>
@@ -276,7 +276,7 @@ export const PaginationCardMinimal = ({
             <nav aria-label="Pagination" className={cx("hidden items-center gap-3 md:flex", align === "center" && "justify-between")}>
                 <div className={cx(align === "center" && "flex flex-1 justify-start")}>
                     <Button isDisabled={page === 1} color="secondary" size="sm" onClick={() => onPageChange?.(Math.max(0, page - 1))}>
-                        Previous
+                        السابق
                     </Button>
                 </div>
 
@@ -288,7 +288,7 @@ export const PaginationCardMinimal = ({
                     )}
                 >
                     <span className="text-sm font-medium text-fg-secondary">
-                        Page {page} of {total}
+                        صفحة {page} من {total}
                     </span>
                     <Select
                         aria-label="Page Size"
@@ -296,10 +296,10 @@ export const PaginationCardMinimal = ({
                         onChange={(value) => onPageSizeChange?.(value as number)}
                         size="sm"
                         items={[
-                            { label: "10 per page", id: 10 },
-                            { label: "25 per page", id: 25 },
-                            { label: "50 per page", id: 50 },
-                            { label: "100 per page", id: 100 },
+                            { label: "10 في الصفحة", id: 10 },
+                            { label: "25 في الصفحة", id: 25 },
+                            { label: "50 في الصفحة", id: 50 },
+                            { label: "100 في الصفحة", id: 100 },
                         ]}
                     >
                         {(item) => (
@@ -311,7 +311,7 @@ export const PaginationCardMinimal = ({
                 </div>
                 <div className={cx(align === "center" && "flex flex-1 justify-end")}>
                     <Button isDisabled={page === total} color="secondary" size="sm" onClick={() => onPageChange?.(Math.min(total, page + 1))}>
-                        Next
+                        التالي
                     </Button>
                 </div>
             </nav>
@@ -341,7 +341,7 @@ export const PaginationButtonGroup = ({ align = "left", page = 1, total = 10, ..
                     {({ pages }) => (
                         <ButtonGroup size="sm">
                             <Pagination.PrevTrigger asChild>
-                                <ButtonGroupItem iconLeading={ArrowLeft}>{isDesktop ? "Previous" : undefined}</ButtonGroupItem>
+                                <ButtonGroupItem iconLeading={ArrowLeft}>{isDesktop ? "السابق" : undefined}</ButtonGroupItem>
                             </Pagination.PrevTrigger>
 
                             {pages.map((page, index) =>
@@ -361,7 +361,7 @@ export const PaginationButtonGroup = ({ align = "left", page = 1, total = 10, ..
                             )}
 
                             <Pagination.NextTrigger asChild>
-                                <ButtonGroupItem iconTrailing={ArrowRight}>{isDesktop ? "Next" : undefined}</ButtonGroupItem>
+                                <ButtonGroupItem iconTrailing={ArrowRight}>{isDesktop ? "التالي" : undefined}</ButtonGroupItem>
                             </Pagination.NextTrigger>
                         </ButtonGroup>
                     )}
@@ -421,7 +421,7 @@ export const PaginationCardAdvanced = ({
                 <hr className={cx("mx-1 h-4 w-px border-s border-primary max-md:hidden", align === "center" && "hidden")} />
 
                 <div className={cx("hidden items-center gap-2 md:flex", align === "center" && "order-last")}>
-                    <span className="text-sm font-medium whitespace-nowrap text-secondary">Rows per page</span>
+                    <span className="text-sm font-medium whitespace-nowrap text-secondary">صفوف في الصفحة</span>
                     <Select
                         aria-label="Page Size"
                         value={pageSize}

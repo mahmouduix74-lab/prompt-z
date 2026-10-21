@@ -10,6 +10,7 @@
  * Each alert is sent at most once an hour. The report goes out at 9:00 Cairo time: every day,
  * on Sundays (weekly) or on the 1st (monthly), as set in the dashboard.
  */
+import { DOMAINS } from '../constants.js';
 import { allAdminEmails, type D1Database } from './account.js';
 import { all, CALLED, ensureEvents, FAILED, first, MADE, modelStatus, openRouterBalance, periodTotals, type AdminEnv } from './admin.js';
 import { ensureSettingsTables, readSettings, type SiteSettings } from './settings.js';
@@ -103,7 +104,7 @@ export async function sendReport(env: AdminEnv, frequency: 'daily' | 'weekly' | 
   const success = now.calls ? `${(((now.calls - now.errors) / now.calls) * 100).toFixed(1)}%` : '—';
   const lines = [
     sources[0] && `أكبر مصدر للزوار: ${SOURCE_NAMES[sources[0].key] || sources[0].key} (${Math.round((sources[0].n / Math.max(1, now.visitors)) * 100)}%)`,
-    domains[0]?.key && `أكتر مجال: ${domains[0].key}`,
+    domains[0]?.key && `أكتر مجال: ${DOMAINS.find((d) => d.id === domains[0].key)?.labelAr || domains[0].key}`,
     `نسبة النجاح ${success} · الصرف ${money(now.cost)}${balance ? ` · الرصيد ${money(balance.remaining)}` : ''}`,
   ].filter(Boolean) as string[];
   const title = `تقرير PromptZ ${name} · ${period}`;

@@ -104,7 +104,7 @@ const SelectValue = ({ isOpen, isFocused, isDisabled, size, placeholder, icon, r
 };
 
 const Select = ({
-    placeholder = "Select",
+    placeholder = "اختار",
     icon,
     size = "md",
     children,

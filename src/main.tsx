@@ -5,7 +5,7 @@ import './index.css';
 
 // The admin dashboard is its own chunk, so visitors never download it.
 const AdminApp = lazy(() => import('./admin/AdminApp.tsx'));
-const isAdmin = location.pathname.replace(/\/+$/, '') === '/admin';
+const isAdmin = /^\/admin(\/|$)/.test(location.pathname);
 
 /**
  * Counts one visit per browser session for the dashboard's Traffic page (src/server/visits.ts):
