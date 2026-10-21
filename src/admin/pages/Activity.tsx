@@ -4,8 +4,7 @@ import { BadgeWithDot } from '../ds/components/base/badges/badges';
 import { ButtonGroup, ButtonGroupItem } from '../ds/components/base/button-group/button-group';
 import { ago, fmt } from '../format';
 import { Card, Empty, FeedItem, Grid, MetricItem, PageHeader } from '../ui';
-import { describe } from './Overview';
-import type { PageProps } from './common';
+import { describe, type PageProps } from './common';
 
 type Filter = 'all' | 'prompts' | 'signup' | 'feedback' | 'problems';
 
