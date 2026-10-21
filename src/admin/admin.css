@@ -1,0 +1,72 @@
+/*
+ * Styles for the admin dashboard (/admin) only: the PromptZ design system (Untitled UI tokens in
+ * ds/styles/theme.css, unchanged), loaded with the admin chunk. Utilities are generated from the
+ * admin sources only, so nothing here reaches the public site.
+ */
+@import "tailwindcss" source(none);
+@source "./";
+@import "./ds/styles/theme.css";
+
+@plugin "tailwindcss-react-aria-components";
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:where(.dark-mode, .dark-mode *));
+@custom-variant label (& [data-label]);
+@custom-variant focus-input-within (&:has(input:focus));
+
+@utility scrollbar-hide {
+    &::-webkit-scrollbar {
+        display: none;
+        -webkit-appearance: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+@utility transition-inherit-all {
+    transition-property: inherit;
+    transition-duration: inherit;
+    transition-timing-function: inherit;
+}
+
+/* The site's purple instead of the design system's default brand ramp. */
+@theme {
+    --color-brand-25: #faf7ff;
+    --color-brand-50: #f4f0ff;
+    --color-brand-100: #ebe3ff;
+    --color-brand-200: #d9ccff;
+    --color-brand-300: #bea6ff;
+    --color-brand-400: #9f78fb;
+    --color-brand-500: #8452f8;
+    --color-brand-600: #7132f5;
+    --color-brand-700: #5f22d9;
+    --color-brand-800: #4e1db2;
+    --color-brand-900: #411b8f;
+    --color-brand-950: #270f5c;
+}
+
+/*
+ * The site's fonts (loaded by index.html), set for the dashboard without touching the design
+ * system's tokens: IBM Plex Sans Arabic for all text, as the site uses in Arabic, and JetBrains Mono
+ * for code-like values.
+ */
+.admin-ds {
+    --font-body: "IBM Plex Sans Arabic", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-display: "IBM Plex Sans Arabic", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.admin-ds input::-webkit-outer-spin-button,
+.admin-ds input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.admin-ds .recharts-surface,
+.admin-ds .recharts-surface g,
+.admin-ds .recharts-surface path {
+    outline: none;
+}
