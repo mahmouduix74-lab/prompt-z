@@ -205,6 +205,7 @@ async function route(request: Request, env: Env, ctx: Ctx): Promise<Response> {
           google: googleEnabled(env),
           email: emailEnabled(env),
           user: user && { name: user.name, email: user.email, picture: user.picture },
+          isAdmin: isAdminUser(env, user),
           usage,
           limits: LIMITS,
         },

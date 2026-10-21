@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowRight, ChevronDown, History, Hourglass, LogOut, Mail, X, CheckCircle2, Sparkles } from 'lucide-react';
+import { ArrowRight, ChevronDown, History, Hourglass, LayoutDashboard, LogOut, Mail, X, CheckCircle2, Sparkles } from 'lucide-react';
 import { SHOW_CREDITS } from '../constants';
 import { Modal } from './Modal';
 import { AppLang } from '../utils/i18n';
@@ -197,6 +197,12 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({ account, lang, onSignI
               <History className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               {isAr ? 'السجل' : 'History'}
             </button>
+            {account.isAdmin && (
+              <a role="menuitem" href="/admin" className={menuItemClassName}>
+                <LayoutDashboard className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                {isAr ? 'لوحة التحكم' : 'Admin dashboard'}
+              </a>
+            )}
             <a role="menuitem" href="/api/auth/logout" className={menuItemClassName}>
               <LogOut className="w-4 h-4 text-zinc-500" />
               {isAr ? 'تسجيل الخروج' : 'Sign out'}
