@@ -31,6 +31,7 @@ import './admin.css';
 
 const THEME_KEY = 'pz_admin_theme';
 const DAYS_KEY = 'pz_admin_days';
+const NAV_KEY = 'pz_admin_nav';
 /** The data is fetched again this often while the page is open. */
 const REFRESH_MS = 60_000;
 
@@ -66,6 +67,7 @@ export default function AdminApp() {
     const saved = safeStorage.getItem(THEME_KEY);
     return saved ? saved === 'dark' : window.matchMedia?.('(prefers-color-scheme: dark)').matches === true;
   });
+  const [collapsed, setCollapsed] = useState<boolean>(() => safeStorage.getItem(NAV_KEY) === 'collapsed');
   const [load, setLoad] = useState<Load>({ kind: 'loading' });
   const [account, setAccount] = useState<AccountState | null>(null);
 
@@ -123,6 +125,13 @@ export default function AdminApp() {
     fetchAccount().then(setAccount);
   }, []);
 
+  const toggleCollapsed = useCallback(() => {
+    setCollapsed((c) => {
+      safeStorage.setItem(NAV_KEY, c ? 'open' : 'collapsed');
+      return !c;
+    });
+  }, []);
+
   const setDays = useCallback((value: number) => {
     setDaysState(value);
     safeStorage.setItem(DAYS_KEY, String(value));
@@ -153,6 +162,8 @@ export default function AdminApp() {
         user={user}
         dark={dark}
         onToggleDark={() => setDark((d) => !d)}
+        collapsed={collapsed}
+        onToggleCollapsed={toggleCollapsed}
         onSearch={(q) => navigate(`/admin/users${q ? `?q=${encodeURIComponent(q)}` : ''}`)}
       >
         <Page stats={load.stats} days={days} setDays={setDays} navigate={navigate} reload={reload} query={query} />

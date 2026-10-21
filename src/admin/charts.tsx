@@ -116,3 +116,38 @@ export const Donut = ({ data }: { data: { name: string; value: number; className
     </div>
   );
 };
+
+/** DS bar chart, stacked: one colour step per series. */
+export const StackedBars = ({
+  data,
+  series,
+  height = 'h-64',
+}: {
+  data: Record<string, string | number>[];
+  series: { key: string; name: string; className: string }[];
+  height?: string;
+}) => (
+  <div className={cx('flex flex-col', height)} dir="ltr">
+    <ResponsiveContainer initialDimension={{ width: 1, height: 1 }} className="h-full">
+      <BarChart data={data} className="text-tertiary [&_.recharts-text]:text-xs" margin={{ top: 8, bottom: 0, left: 0, right: 8 }}>
+        <CartesianGrid vertical={false} stroke="currentColor" className="text-utility-neutral-100" />
+        <XAxis fill="currentColor" axisLine={false} tickLine={false} interval="preserveStartEnd" dataKey="label" minTickGap={12} />
+        <YAxis fill="currentColor" axisLine={false} tickLine={false} width={40} allowDecimals={false} />
+        <Tooltip content={<ChartTooltipContent />} cursor={{ className: 'fill-utility-neutral-50' }} />
+        {series.map((s, i) => (
+          <Bar
+            key={s.key}
+            isAnimationActive={false}
+            dataKey={s.key}
+            name={s.name}
+            stackId="a"
+            fill="currentColor"
+            className={s.className}
+            maxBarSize={20}
+            radius={i === series.length - 1 ? [6, 6, 0, 0] : [0, 0, 0, 0]}
+          />
+        ))}
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+);

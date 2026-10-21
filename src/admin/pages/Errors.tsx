@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, AlertTriangle, XCircle } from '@untitledui/icons';
+import { AlertCircle, AlertTriangle, Bell01, XCircle } from '@untitledui/icons';
+import { Button } from '../ds/components/base/buttons/button';
 import { PaginationCardMinimal } from '../ds/components/application/pagination/pagination';
 import { Table, TableCard } from '../ds/components/application/table/table';
 import { BadgeWithIcon } from '../ds/components/base/badges/badges';
@@ -27,7 +28,7 @@ function detailText(r: Row): string {
   return r.detail || '—';
 }
 
-export function Errors({ stats, days, setDays }: PageProps) {
+export function Errors({ stats, days, setDays, navigate }: PageProps) {
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [models, setModels] = useState<{ model: string; available: boolean }[] | null>(null);
@@ -45,6 +46,10 @@ export function Errors({ stats, days, setDays }: PageProps) {
     const row = stats.last24.find((h) => h.ago === ago);
     return { label: ago === 0 ? 'دلوقتي' : ago % 6 === 0 ? `قبل ${ago} س` : '', value: Number(row?.errors) || 0 };
   });
+  const hourlyRate = Array.from({ length: 24 }, (_, i) => {
+    const row = stats.last24.find((h) => h.ago === 23 - i);
+    return row?.calls ? (Number(row.errors) / Number(row.calls)) * 100 : 0;
+  });
   const worst = hourly.reduce((best, h, i) => (h.value > hourly[best].value ? i : best), 0);
 
   const rows = useMemo(() => stats.errors.filter((r) => filter === 'all' || (r.error || 'other') === filter), [stats.errors, filter]);
@@ -54,12 +59,19 @@ export function Errors({ stats, days, setDays }: PageProps) {
 
   return (
     <>
-      <PageHeader title="سجل الأخطاء" description="كل طلب فشل، وسببه" actions={<RangePicker days={days} setDays={setDays} />} />
+      <PageHeader title="سجل الأخطاء" description="كل طلب فشل، وسببه" actions={
+          <Button color="secondary" size="md" iconLeading={Bell01} onClick={() => navigate('/admin/alerts')}>
+            تنبيهات الأخطاء
+          </Button>
+        }
+      />
+      <RangePicker days={days} setDays={setDays} />
       <Grid cols="grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
-        <MetricItem title="فشل آخر 24 ساعة" value={fmt(failed24)} note={`من ${fmt(calls24)} طلب`} />
-        <MetricItem title="نسبة الفشل" value={calls24 ? percent(failed24, calls24, 1) : '—'} note="حد التنبيه: 10%" />
-        <MetricItem title="أكتر سبب" value={top ? TYPES[top.key]?.label || top.key : '—'} note={top ? `${fmt(top.n)} من ${fmt(failed24)}` : 'مافيش أخطاء'} />
+        <MetricItem title="فشل آخر 24 ساعة" value={fmt(failed24)} note={`من ${fmt(calls24)} طلب`} data={hourly.map((h) => h.value)} chartTone={failed24 ? 'error' : 'success'} />
+        <MetricItem title="نسبة الفشل" value={calls24 ? percent(failed24, calls24, 1) : '—'} note={'حد التنبيه: \u206610%\u2069'} data={hourlyRate} chartTone={calls24 && failed24 / calls24 > 0.1 ? 'error' : 'success'} />
+        <MetricItem textValue title="أكتر سبب" value={top ? TYPES[top.key]?.label || top.key : '—'} note={top ? `${fmt(top.n)} من ${fmt(failed24)}` : 'مافيش أخطاء'} />
         <MetricItem
+          textValue
           title="حالة الموديلات"
           value={!models ? '…' : down.length ? 'فيه مشكلة' : models.length ? 'شغالة' : '—'}
           note={!models ? undefined : down.length ? `${down.length} مش متاح: ${down.map((m) => m.model.split('/')[1]).join('، ')}` : 'كل الموديلات متاحة'}

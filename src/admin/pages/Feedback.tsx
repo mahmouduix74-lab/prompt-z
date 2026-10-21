@@ -9,7 +9,7 @@ import { ButtonUtility } from '../ds/components/base/buttons/button-utility';
 import type { Row } from '../api';
 import { ago, change, dateLabel, depthLabel, domainLabel, downloadCsv, fmt, languageLabel, percent } from '../format';
 import { Empty, Grid, MetricItem, PageHeader } from '../ui';
-import { ExportButton, periodName, type PageProps } from './common';
+import { ExportButton, periodName, satisfactionSeries, type PageProps } from './common';
 
 type Filter = 'all' | 'up' | 'down' | 'comment';
 const PAGE_SIZE = 10;
@@ -54,7 +54,7 @@ export function Feedback({ stats, days }: PageProps) {
     <>
       <PageHeader title="التقييمات" description="رأي الناس في البرومبتات، وملاحظاتهم" actions={<ExportButton onPress={exportFeedback} />} />
       <Grid cols="grid-cols-1 md:grid-cols-3">
-        <MetricItem title="رضا المستخدمين" value={up + down ? percent(up, up + down) : '—'} {...change(share(up, down), share(Number(t.upPrev) || 0, Number(t.downPrev) || 0))} note={periodName(days)} />
+        <MetricItem title="رضا المستخدمين" value={up + down ? percent(up, up + down) : '—'} {...change(share(up, down), share(Number(t.upPrev) || 0, Number(t.downPrev) || 0))} note={periodName(days)} data={satisfactionSeries(stats)} chartTone={up + down === 0 || up / (up + down) >= 0.8 ? 'success' : 'error'} />
         <MetricItem title="👍 عجبهم" value={fmt(up)} note={`${fmt(t.up)} من الأول`} />
         <MetricItem title="👎 ماعجبهمش" value={fmt(down)} trend="up" good={false} note={`${fmt(t.down)} من الأول`} />
       </Grid>

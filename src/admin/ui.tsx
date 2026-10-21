@@ -43,11 +43,17 @@ export const MetricItem = ({
   data,
   icon: Icon,
   actions,
+  chartTone,
+  textValue,
 }: {
   title: string;
   value: ReactNode;
   change?: string;
   trend?: 'up' | 'down';
+  /** The mini chart's colour: green, or red when the change is bad news (the default). */
+  chartTone?: 'success' | 'error';
+  /** A word rather than a number (a source, a reason): set one step smaller so it fits. */
+  textValue?: boolean;
   /** Whether the change is good news; by default going up is. */
   good?: boolean;
   note?: string;
@@ -57,14 +63,15 @@ export const MetricItem = ({
 }) => {
   const good = goodProp ?? trend === 'up';
   return (
-    <div className="relative flex flex-col gap-5 rounded-xl bg-primary px-4 py-5 shadow-xs ring-1 ring-secondary ring-inset md:px-5">
+    <div className="@container relative flex flex-col gap-5 rounded-xl bg-primary px-4 py-5 shadow-xs ring-1 ring-secondary ring-inset md:px-5">
       <div className={cx('flex items-center gap-2', actions && 'pe-6')}>
         {Icon && <Icon className="size-5 text-fg-quaternary" />}
         <p className="text-md font-semibold text-primary">{title}</p>
       </div>
-      <div className="flex items-end gap-4">
+      {/* In a narrow card the chart goes under the number, full width. */}
+      <div className="flex flex-col gap-4 @[20rem]:flex-row @[20rem]:items-end">
         <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <p className="truncate text-display-sm font-semibold text-primary" dir="auto" style={{ textAlign: 'start' }}>
+          <p className={cx('truncate font-semibold text-primary', textValue ? 'text-display-xs' : 'text-display-sm')} dir="auto" style={{ textAlign: 'start' }}>
             {value}
           </p>
           {(change || note) && (
@@ -79,7 +86,7 @@ export const MetricItem = ({
             </div>
           )}
         </div>
-        {data && data.length > 1 && <MiniChart data={data} tone={change ? (good ? 'success' : 'error') : 'brand'} />}
+        {data && data.length > 1 && <MiniChart data={data} tone={chartTone ?? (change && !good ? 'error' : 'success')} className="w-full @[20rem]:w-24" />}
       </div>
       {actions && (
         <div className="absolute end-4 top-4">
@@ -90,11 +97,11 @@ export const MetricItem = ({
   );
 };
 
-export const MiniChart = ({ data, tone }: { data: number[]; tone: 'success' | 'error' | 'brand' }) => {
+export const MiniChart = ({ data, tone, className }: { data: number[]; tone: 'success' | 'error' | 'brand'; className?: string }) => {
   const color = tone === 'success' ? 'text-fg-success-secondary' : tone === 'error' ? 'text-fg-error-secondary' : 'text-utility-brand-600';
   const id = `mini-${tone}`;
   return (
-    <div className={cx('h-12 w-24 shrink-0', color)} dir="ltr">
+    <div className={cx('h-12 w-24 shrink-0', color, className)} dir="ltr">
       <ResponsiveContainer initialDimension={{ width: 96, height: 48 }}>
         <AreaChart data={data.map((v, i) => ({ i, v }))} margin={{ top: 2, bottom: 2, left: 0, right: 0 }}>
           <defs>
@@ -113,7 +120,7 @@ export const MiniChart = ({ data, tone }: { data: number[]; tone: 'success' | 'e
 /** Figma "Page header": text-xl semibold title, text-md tertiary supporting text, actions. */
 export const PageHeader = ({ title, description, actions }: { title: string; description?: ReactNode; actions?: ReactNode }) => (
   <div className="flex flex-wrap items-start gap-4">
-    <div className="flex min-w-0 flex-1 flex-col gap-0.5 md:min-w-80">
+    <div className="flex w-full min-w-0 flex-col gap-0.5 md:w-auto md:min-w-80 md:flex-1">
       <h1 className="text-xl font-semibold text-primary">{title}</h1>
       {description && <p className="text-md text-tertiary">{description}</p>}
     </div>
@@ -275,5 +282,22 @@ export const ConfirmDialog = ({
         </Dialog>
       </Modal>
     </ModalOverlay>
+  );
+};
+
+/** The change as the DS "_Change" badge (type 02): arrow and percent in a small pill. */
+export const ChangeBadge = ({ change, trend = 'up', good }: { change?: string; trend?: 'up' | 'down'; good?: boolean }) => {
+  if (!change) return null;
+  const ok = good ?? trend === 'up';
+  return (
+    <span
+      className={cx(
+        'inline-flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-0.5 text-sm font-medium ring-1 ring-inset',
+        ok ? 'bg-success-primary text-success-primary ring-utility-green-200' : 'bg-error-primary text-error-primary ring-utility-red-200'
+      )}
+    >
+      {trend === 'up' ? <ArrowUp className="size-3.5" /> : <ArrowDown className="size-3.5" />}
+      <span dir="ltr">{change}</span>
+    </span>
   );
 };

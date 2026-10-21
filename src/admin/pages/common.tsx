@@ -3,7 +3,7 @@ import { DownloadCloud02 } from '@untitledui/icons';
 import { ButtonGroup, ButtonGroupItem } from '../ds/components/base/button-group/button-group';
 import { Button } from '../ds/components/base/buttons/button';
 import type { Row, Stats } from '../api';
-import { dayLabel, daysBetween } from '../format';
+import { countryLabel, dayLabel, daysBetween, domainLabel, initials } from '../format';
 
 export interface PageProps {
   stats: Stats;
@@ -71,3 +71,63 @@ export function localHours(rows: { hour: number; n: number }[]): { label: string
   for (const r of rows) out[(((r.hour + shift) % 24) + 24) % 24].value += r.n;
   return out;
 }
+
+/** One line of the activity feed: who did what. */
+export function describe(r: Row): { name: string; text: string; highlight?: string; initial: string } {
+  const who = r.account || (r.country ? `زائر من ${countryLabel(r.country).split(' ').slice(1).join(' ')}` : 'زائر');
+  const initial = r.account ? initials(r.account) : 'ز';
+  if (r.kind === 'signup') return { name: who, text: 'سجّل حساب جديد بـ', highlight: r.domain === 'email' ? 'الإيميل' : 'Google', initial };
+  if (r.kind === 'feedback') return { name: who, text: 'قيّم برومبت', highlight: r.rating === 'up' ? '👍' : '👎', initial };
+  const area = r.domain ? domainLabel(r.domain) : undefined;
+  if (r.kind === 'refine') return { name: who, text: r.outcome === 'ok' ? 'حسّن صياغة طلب في' : 'حاول يحسّن صياغة طلب في', highlight: area, initial };
+  const text =
+    r.outcome === 'ok'
+      ? 'عمل برومبت في'
+      : r.outcome === 'clarify'
+        ? 'اتسأل أسئلة توضيحية في'
+        : r.outcome === 'limit'
+          ? 'وصل للحد اليومي في'
+          : 'طلبه فشل في';
+  return { name: who, text, highlight: area, initial };
+}
+
+/** The share of calls that worked, each day of the period (0–100). */
+export function successSeries(stats: Stats): number[] {
+  const byDay = new Map(stats.daily.map((r) => [r.day, r]));
+  return daysBetween(stats.range.start, stats.range.end).map((day) => {
+    const ok = Number(byDay.get(day)?.prompts) || 0;
+    const failed = Number(byDay.get(day)?.errors) || 0;
+    return ok + failed ? (ok / (ok + failed)) * 100 : 100;
+  });
+}
+
+/** The share of 👍 ratings up to each day of the period (0–100), so quiet days keep the last value. */
+export function satisfactionSeries(stats: Stats): number[] {
+  const ratings = new Map<string, { up: number; n: number }>();
+  for (const f of stats.feedback.recent) {
+    const day = String(f.created_at).slice(0, 10);
+    const d = ratings.get(day) || { up: 0, n: 0 };
+    d.n++;
+    if (f.rating === 'up') d.up++;
+    ratings.set(day, d);
+  }
+  let up = 0;
+  let n = 0;
+  return daysBetween(stats.range.start, stats.range.end).map((day) => {
+    const d = ratings.get(day);
+    if (d) {
+      up += d.up;
+      n += d.n;
+    }
+    return n ? (up / n) * 100 : 0;
+  });
+}
+
+/** A running total, for counts that only grow (accounts). */
+export const cumulative = (values: number[]) => {
+  let total = 0;
+  return values.map((v) => (total += v));
+};
+
+/** The success rate of a period's calls (0–1). */
+export const successRate = (t: { calls: number; errors: number }) => (t.calls ? (t.calls - t.errors) / t.calls : 0);

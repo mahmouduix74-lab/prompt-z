@@ -1,9 +1,11 @@
+import { Plus } from '@untitledui/icons';
+import { Button } from '../ds/components/base/buttons/button';
 import { TrendChart } from '../charts';
 import { countryLabel, change, dateLabel, dayLabel, daysBetween, DEVICE_LABELS, downloadCsv, fmt, fmt1, percent, sourceLabel } from '../format';
 import { BarList, Card, Empty, Grid, MetricItem, PageHeader } from '../ui';
 import { ExportButton, periodName, RangePicker, spark, type PageProps } from './common';
 
-export function Traffic({ stats, days, setDays }: PageProps) {
+export function Traffic({ stats, days, setDays, navigate }: PageProps) {
   const { period, prev } = stats;
   const sources = stats.breakdowns.sources;
   const top = sources[0];
@@ -13,6 +15,7 @@ export function Traffic({ stats, days, setDays }: PageProps) {
     visitors: Number(byDay.get(day)?.visitors) || 0,
     made: Number(byDay.get(day)?.made) || 0,
   }));
+  const madeDaily = daily.map((d) => (d.visitors ? (d.made / d.visitors) * 100 : 0));
   const madeShare = (t: { visitors: number; people: number }) => (t.visitors ? Math.min(1, t.people / t.visitors) : 0);
 
   const exportVisits = () =>
@@ -34,15 +37,18 @@ export function Traffic({ stats, days, setDays }: PageProps) {
         actions={
           <>
             <ExportButton onPress={exportVisits} />
-            <RangePicker days={days} setDays={setDays} />
+            <Button color="primary" size="md" iconLeading={Plus} onClick={() => navigate('/admin/links')}>
+              لينك حملة جديد
+            </Button>
           </>
         }
       />
+      <RangePicker days={days} setDays={setDays} />
       <Grid cols="grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
         <MetricItem title="زوار" value={fmt(period.visitors)} {...change(period.visitors, prev.visitors)} data={spark(stats, stats.dailyVisits, 'visitors')} />
         <MetricItem title="زيارات" value={fmt(period.visits)} {...change(period.visits, prev.visits)} note={period.visitors ? `${fmt1(period.visits / period.visitors)} لكل زائر` : undefined} />
-        <MetricItem title="بيستخدموا الموقع" value={percent(madeShare(period), 1)} {...change(madeShare(period), madeShare(prev))} note="من الزوار" />
-        <MetricItem title="أكبر مصدر" value={top ? sourceLabel(top.key) : '—'} note={top ? `${percent(top.n, period.visitors)} من الزوار` : undefined} />
+        <MetricItem title="بيستخدموا الموقع" value={percent(madeShare(period), 1)} {...change(madeShare(period), madeShare(prev))} note="من الزوار" data={stats.dailyVisits.length ? madeDaily : undefined} />
+        <MetricItem textValue title="أكبر مصدر" value={top ? sourceLabel(top.key) : '—'} note={top ? `${percent(top.n, period.visitors)} من الزوار` : undefined} />
       </Grid>
       <Grid cols="grid-cols-1 xl:grid-cols-3">
         <Card className="xl:col-span-2" title="الزوار في اليوم" description="واللي استخدموا الموقع منهم">

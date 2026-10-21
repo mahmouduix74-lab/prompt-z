@@ -14,7 +14,7 @@ import { api, type Row } from '../api';
 import { Bars } from '../charts';
 import { ago, dateLabel, dayLabel, daysBetween, domainLabel, downloadCsv, fmt, fmt1, initials, percent } from '../format';
 import { BarList, ConfirmDialog, Empty, Grid, MetricItem, PageHeader } from '../ui';
-import { ExportButton, periodName, type PageProps } from './common';
+import { cumulative, ExportButton, periodName, spark, type PageProps } from './common';
 
 type Filter = 'all' | 'today' | 'google' | 'email' | 'inactive';
 type Status = 'today' | 'week' | 'inactive' | 'never';
@@ -105,8 +105,8 @@ export function Users({ stats, days, query, reload }: PageProps) {
     <>
       <PageHeader title="المستخدمين" description={`${fmt(stats.users.total)} حساب · ${fmt(stats.period.signups)} جديد في ${periodName(days)}`} actions={<ExportButton onPress={exportUsers} />} />
       <Grid cols="grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
-        <MetricItem title="إجمالي الحسابات" value={fmt(stats.users.total)} note={`${fmt(active.length)} استخدموا الموقع`} />
-        <MetricItem title="نشطين النهارده" value={fmt(stats.users.activeToday)} note={`${percent(stats.users.activeToday, stats.users.total)} من الحسابات`} />
+        <MetricItem title="إجمالي الحسابات" value={fmt(stats.users.total)} note={`${fmt(active.length)} استخدموا الموقع`} data={cumulative(spark(stats, stats.signups, 'n'))} />
+        <MetricItem title="نشطين النهارده" value={fmt(stats.users.activeToday)} note={`${percent(stats.users.activeToday, stats.users.total)} من الحسابات`} data={spark(stats, stats.daily, 'accounts')} />
         <MetricItem title="متوسط البرومبتات للحساب" value={fmt1(avg)} note={periodName(days)} />
         <MetricItem title="رجعوا يوم تاني" value={percent(retention.returned, retention.active)} note={`${fmt(retention.returned)} من ${fmt(retention.active)} حساب`} />
       </Grid>

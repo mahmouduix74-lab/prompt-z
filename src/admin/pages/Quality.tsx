@@ -4,7 +4,7 @@ import { ProgressBarBase } from '../ds/components/base/progress-indicators/progr
 import { Donut } from '../charts';
 import { change, depthLabel, DEVICE_LABELS, domainLabel, fmt, languageLabel, percent, seconds } from '../format';
 import { BarList, BarRow, Card, Empty, Grid, MetricItem, PageHeader } from '../ui';
-import { periodName, RangePicker, type PageProps } from './common';
+import { periodName, RangePicker, satisfactionSeries, successSeries, type PageProps } from './common';
 
 const DONUT = ['text-utility-brand-600', 'text-utility-brand-400', 'text-utility-neutral-200', 'text-utility-neutral-400'];
 
@@ -18,15 +18,17 @@ export function Quality({ stats, days, setDays }: PageProps) {
   const downPrev = Number(feedback.totals.downPrev) || 0;
   const devices = stats.breakdowns.devices.filter((d) => d.key !== 'bot');
   const primary = stats.models.length ? [...stats.models].sort((a, b) => b.n - a.n)[0].model : null;
+  const success = rate(period);
   const speed = change(period.avgMs || 0, prev.avgMs || 0, { lowerIsBetter: true });
 
   return (
     <>
-      <PageHeader title="الجودة والاستخدام" description="أداء الموديلات، ورضا المستخدمين، والإعدادات اللي بيختاروها" actions={<RangePicker days={days} setDays={setDays} />} />
+      <PageHeader title="الجودة والاستخدام" description="أداء الموديلات، ورضا المستخدمين، والإعدادات اللي بيختاروها" />
+      <RangePicker days={days} setDays={setDays} />
       <Grid cols="grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
-        <MetricItem title="نسبة النجاح" value={period.calls ? percent(period.calls - period.errors, period.calls, 1) : '—'} {...change(rate(period), rate(prev))} note={`${fmt(period.errors)} فشل`} />
+        <MetricItem title="نسبة النجاح" value={period.calls ? percent(period.calls - period.errors, period.calls, 1) : '—'} {...change(rate(period), rate(prev))} note={`${fmt(period.errors)} فشل`} data={successSeries(stats)} chartTone={success >= 0.95 ? 'success' : 'error'} />
         <MetricItem title="متوسط وقت التوليد" value={seconds(period.avgMs)} {...speed} note={speed.change ? (speed.good ? 'أسرع' : 'أبطأ') : undefined} />
-        <MetricItem title="رضا المستخدمين" value={up + down ? percent(up, up + down) : '—'} {...change(satisfaction(up, down), satisfaction(upPrev, downPrev))} note={`${fmt(up)} 👍 · ${fmt(down)} 👎`} />
+        <MetricItem title="رضا المستخدمين" value={up + down ? percent(up, up + down) : '—'} {...change(satisfaction(up, down), satisfaction(upPrev, downPrev))} note={`${fmt(up)} 👍 · ${fmt(down)} 👎`} data={satisfactionSeries(stats)} chartTone={up + down === 0 || up / (up + down) >= 0.8 ? 'success' : 'error'} />
         <MetricItem title="سأل أسئلة توضيحية" value={percent(period.clarify, period.answered, 1)} note="من طلبات التوليد" />
       </Grid>
       <Grid cols="grid-cols-1 xl:grid-cols-3">
