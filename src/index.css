@@ -175,23 +175,3 @@ a:active,
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(113, 113, 122, 0.65);
 }
-
-/* ==========================================================================
-   Custom Cursor Rules
-   Hide default cursor on non-touch (fine pointer) devices across all elements
-   ========================================================================== */
-@media (pointer: fine) {
-  html.has-custom-cursor,
-  html.has-custom-cursor body,
-  html.has-custom-cursor a,
-  html.has-custom-cursor button,
-  html.has-custom-cursor input,
-  html.has-custom-cursor textarea,
-  html.has-custom-cursor select,
-  html.has-custom-cursor label,
-  html.has-custom-cursor [role="button"],
-  html.has-custom-cursor [tabindex],
-  html.has-custom-cursor * {
-    cursor: none !important;
-  }
-}

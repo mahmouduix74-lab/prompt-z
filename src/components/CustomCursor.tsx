@@ -1,116 +1,73 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * CustomCursor provides a refined, responsive cursor:
- * 1) Small precision dot (10px, brand purple #7132F5 / #7638F5) tightly following cursor with no lag.
- * 2) Smooth expansion into hollow ring (32px, purple border, transparent center) on hovering interactive targets.
- * 3) Respects touch devices (pointer: coarse) - renders nothing and restores default cursor.
+ * A tiny brand-purple dot that follows the normal mouse cursor with a slight, smooth lag.
+ * The system cursor stays as it is. Nothing is shown on touch devices (pointer: coarse), and with
+ * reduced motion the dot sits on the cursor without the lag.
  */
-export const CustomCursor: React.FC = () => {
-  const [hasPointer, setHasPointer] = useState<boolean>(false);
-  const [isHovered, setIsHovered] = useState<boolean>(false);
-  const [isVisible, setIsVisible] = useState<boolean>(false);
+const DOT_SIZE = 8;
+/** How much of the remaining distance the dot covers each frame (1 = no lag). */
+const FOLLOW = 0.22;
 
-  // DOM element for direct transform updates (60+ FPS without React re-renders)
-  const cursorRef = useRef<HTMLDivElement | null>(null);
+export const CustomCursor: React.FC = () => {
+  const [hasPointer, setHasPointer] = useState(false);
+  const dotRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // Detect if device has a fine pointer (real mouse / trackpad, not touch)
-    const mediaQueryPointer = window.matchMedia('(pointer: fine)');
-
-    const updatePointerStatus = () => {
-      setHasPointer(mediaQueryPointer.matches);
-    };
-
-    updatePointerStatus();
-    mediaQueryPointer.addEventListener('change', updatePointerStatus);
-
-    return () => {
-      mediaQueryPointer.removeEventListener('change', updatePointerStatus);
-    };
+    const fine = window.matchMedia('(pointer: fine)');
+    const update = () => setHasPointer(fine.matches);
+    update();
+    fine.addEventListener('change', update);
+    return () => fine.removeEventListener('change', update);
   }, []);
-
-  // Set up mouse tracking
-  const isHoveredRef = useRef<boolean>(false);
-  const isVisibleRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (!hasPointer) return;
+    const dot = dotRef.current;
+    if (!dot) return;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const target = { x: -100, y: -100 };
+    const at = { x: -100, y: -100 };
+    let frame = 0;
 
-    // Add class to documentElement to hide default cursor across all elements
-    document.documentElement.classList.add('has-custom-cursor');
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isVisibleRef.current) {
-        isVisibleRef.current = true;
-        setIsVisible(true);
+    const draw = () => {
+      at.x += (target.x - at.x) * (still ? 1 : FOLLOW);
+      at.y += (target.y - at.y) * (still ? 1 : FOLLOW);
+      dot.style.transform = `translate3d(${at.x - DOT_SIZE / 2}px, ${at.y - DOT_SIZE / 2}px, 0)`;
+      // Keep animating only while the dot is still catching up.
+      frame = Math.abs(target.x - at.x) + Math.abs(target.y - at.y) > 0.1 ? requestAnimationFrame(draw) : 0;
+    };
+    const onMove = (e: MouseEvent) => {
+      target.x = e.clientX;
+      target.y = e.clientY;
+      if (at.x < 0) {
+        at.x = target.x;
+        at.y = target.y;
       }
-
-      // Immediately position the primary cursor dot with no lag
-      if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
-      }
-
-      // Check if target or any ancestor is an interactive element
-      const target = e.target as HTMLElement | null;
-      if (target) {
-        const isInteractive = Boolean(
-          target.closest('button, a, input, textarea, select, [role="button"], [tabindex="0"], label, summary, .cursor-pointer')
-        );
-        if (isHoveredRef.current !== isInteractive) {
-          isHoveredRef.current = isInteractive;
-          setIsHovered(isInteractive);
-        }
-      }
+      dot.style.opacity = '1';
+      if (!frame) frame = requestAnimationFrame(draw);
+    };
+    const onLeave = () => {
+      dot.style.opacity = '0';
     };
 
-    const handleMouseLeave = () => {
-      if (isVisibleRef.current) {
-        isVisibleRef.current = false;
-        setIsVisible(false);
-      }
-    };
-
-    const handleMouseEnter = () => {
-      if (!isVisibleRef.current) {
-        isVisibleRef.current = true;
-        setIsVisible(true);
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    document.addEventListener('mouseleave', handleMouseLeave);
-    document.addEventListener('mouseenter', handleMouseEnter);
-
+    window.addEventListener('mousemove', onMove, { passive: true });
+    document.documentElement.addEventListener('mouseleave', onLeave);
     return () => {
-      document.documentElement.classList.remove('has-custom-cursor');
-      window.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseleave', handleMouseLeave);
-      document.removeEventListener('mouseenter', handleMouseEnter);
+      cancelAnimationFrame(frame);
+      window.removeEventListener('mousemove', onMove);
+      document.documentElement.removeEventListener('mouseleave', onLeave);
     };
   }, [hasPointer]);
 
-  if (!hasPointer) {
-    return null;
-  }
+  if (!hasPointer) return null;
 
   return (
     <div
-      ref={cursorRef}
+      ref={dotRef}
       aria-hidden="true"
-      className="fixed top-0 left-0 pointer-events-none z-[99999] will-change-transform"
-      style={{
-        opacity: isVisible ? 1 : 0,
-        transition: 'opacity 0.2s ease',
-      }}
-    >
-      <div
-        className={`-translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-150 ease-out ${
-          isHovered
-            ? 'w-8 h-8 border-2 border-[#7132F5] dark:border-[#9061F9] bg-transparent shadow-[0_0_12px_rgba(113,50,245,0.35)]'
-            : 'w-2.5 h-2.5 bg-[#7132F5] dark:bg-[#9061F9] shadow-[0_0_8px_rgba(113,50,245,0.45)]'
-        }`}
-      />
-    </div>
+      className="pointer-events-none fixed top-0 left-0 z-[99999] rounded-full bg-[#7132F5] opacity-0 transition-opacity duration-200 will-change-transform dark:bg-[#9061F9]"
+      style={{ width: DOT_SIZE, height: DOT_SIZE }}
+    />
   );
 };

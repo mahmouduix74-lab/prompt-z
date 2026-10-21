@@ -95,6 +95,33 @@ export function Overview({ stats, days, setDays, navigate }: PageProps) {
         }
       />
       <Grid cols="grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+        <div className="relative h-full overflow-hidden rounded-2xl bg-brand-solid p-5 text-white shadow-lg">
+          <div className="absolute -end-16 -top-16 size-56 rounded-full bg-white/10" />
+          <div className="absolute -bottom-20 -start-10 size-48 rounded-full bg-white/5" />
+          <div className="relative flex h-full flex-col justify-between gap-6">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-white/80">{hasBalance ? 'رصيد OpenRouter' : `الصرف ${periodName(days)}`}</p>
+              <img src="/promptz-icon.svg" alt="" className="size-8 rounded-lg ring-1 ring-white/30" />
+            </div>
+            <div>
+              <p className="text-display-md font-semibold" dir="ltr" style={{ textAlign: 'start' }}>
+                {hasBalance ? money(balance!.remaining) : money(period.cost)}
+              </p>
+              <p className="text-sm text-white/80">{lasts != null ? `يكفي حوالي ${fmt(lasts)} يوم` : `${money(period.prompts ? period.cost / period.prompts : 0)} للبرومبت في المتوسط`}</p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-white/80">النهارده</span>
+                <span className="font-semibold" dir="ltr">
+                  {money(today.cost)}
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/25">
+                <div className="h-full rounded-full bg-white" style={{ width: `${Math.min(100, perDay ? (today.cost / perDay) * 50 : 0)}%` }} />
+              </div>
+            </div>
+          </div>
+        </div>
         <KpiCard
           icon={Zap}
           title="برومبتات اتعملت"
@@ -118,14 +145,6 @@ export function Overview({ stats, days, setDays, navigate }: PageProps) {
           {...change(period.signups, prev.signups)}
           note={`الإجمالي: ${fmt(stats.users.total)} حساب`}
           data={cumulative(spark(stats, signups, 'n'))}
-        />
-        <KpiCard
-          icon={CheckCircle}
-          title="نسبة النجاح"
-          value={period.calls ? percent(period.calls - period.errors, period.calls, 1) : '—'}
-          {...change(successRate(period), successRate(prev))}
-          note={`متوسط التوليد ${seconds(period.avgMs)}`}
-          data={successSeries(stats)}
         />
       </Grid>
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -151,33 +170,14 @@ export function Overview({ stats, days, setDays, navigate }: PageProps) {
           />
         </Card>
         <div className="flex flex-col gap-6">
-          <div className="relative overflow-hidden rounded-2xl bg-brand-solid p-5 text-white shadow-lg">
-            <div className="absolute -end-16 -top-16 size-56 rounded-full bg-white/10" />
-            <div className="absolute -bottom-20 -start-10 size-48 rounded-full bg-white/5" />
-            <div className="relative flex flex-col gap-6">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-white/80">{hasBalance ? 'رصيد OpenRouter' : `الصرف ${periodName(days)}`}</p>
-                <img src="/promptz-icon.svg" alt="" className="size-8 rounded-lg ring-1 ring-white/30" />
-              </div>
-              <div>
-                <p className="text-display-md font-semibold" dir="ltr" style={{ textAlign: 'start' }}>
-                  {hasBalance ? money(balance!.remaining) : money(period.cost)}
-                </p>
-                <p className="text-sm text-white/80">{lasts != null ? `يكفي حوالي ${fmt(lasts)} يوم` : `${money(period.prompts ? period.cost / period.prompts : 0)} للبرومبت في المتوسط`}</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-white/80">النهارده</span>
-                  <span className="font-semibold" dir="ltr">
-                    {money(today.cost)}
-                  </span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-white/25">
-                  <div className="h-full rounded-full bg-white" style={{ width: `${Math.min(100, perDay ? (today.cost / perDay) * 50 : 0)}%` }} />
-                </div>
-              </div>
-            </div>
-          </div>
+          <KpiCard
+            icon={CheckCircle}
+            title="نسبة النجاح"
+            value={period.calls ? percent(period.calls - period.errors, period.calls, 1) : '—'}
+            {...change(successRate(period), successRate(prev))}
+            note={`متوسط التوليد ${seconds(period.avgMs)}`}
+            data={successSeries(stats)}
+          />
           <Card
             title="النشاط المباشر"
             trailing={
