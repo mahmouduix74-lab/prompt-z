@@ -5,7 +5,7 @@
  *   GET  /api/feedback  a review page, only for signed-in emails listed in ADMIN_EMAILS
  *                       (?rating=down shows only 👎).
  */
-import { accountKey, adminEmails, ensureSchema, ipKey, type AccountEnv, type D1Database, type SessionUser } from './account.js';
+import { accountKey, allAdminEmails, ensureSchema, ipKey, type AccountEnv, type D1Database, type SessionUser } from './account.js';
 
 const PER_IP_PER_DAY = 40;
 
@@ -70,7 +70,7 @@ export async function handleFeedback(request: Request, env: AccountEnv, user: Se
   }
 
   if (request.method === 'GET') {
-    const admins = adminEmails(env);
+    const admins = await allAdminEmails(env);
     if (!user || !admins.includes(user.email.toLowerCase())) {
       const why = !user
         ? 'You are not signed in on this site.'

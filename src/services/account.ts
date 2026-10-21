@@ -19,6 +19,8 @@ export interface AccountState {
   usage: AccountUsage | null;
   /** Daily prompts without and with an account. */
   limits: { anonymous: number; signedIn: number };
+  /** The depth new visitors start with (set in the admin dashboard). */
+  defaultDepth: string | null;
 }
 
 export async function fetchAccount(): Promise<AccountState | null> {
@@ -34,9 +36,10 @@ export async function fetchAccount(): Promise<AccountState | null> {
       isAdmin: data?.isAdmin === true,
       usage: data?.usage ?? null,
       limits: {
-        anonymous: Number(data?.limits?.anonymous) || 3,
+        anonymous: Number.isFinite(data?.limits?.anonymous) ? Number(data.limits.anonymous) : 3,
         signedIn: Number(data?.limits?.signedIn) || 10,
       },
+      defaultDepth: typeof data?.defaults?.depth === 'string' ? data.defaults.depth : null,
     };
   } catch {
     return null;

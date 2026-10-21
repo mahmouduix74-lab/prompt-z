@@ -1,8 +1,9 @@
 /**
  * Google sign-in and daily prompt limits, for the Cloudflare Worker (worker/index.ts).
  *
- * - Visitors who are not signed in get LIMITS.anonymous prompts a day, counted per IP (stored hashed).
- * - Signed-in users get LIMITS.signedIn prompts a day, counted per Google account.
+ * - Visitors who are not signed in get limits.anonymous prompts a day, counted per IP (stored hashed).
+ * - Signed-in users get limits.signedIn prompts a day, counted per Google account.
+ * - The limits are the dashboard's settings (src/server/settings.ts), DEFAULT_SETTINGS until changed.
  * - "Enhance" and "Generate" both count, since both call the model.
  * - Days are UTC. Counts live in the D1 database bound as DB (wrangler.jsonc).
  *
@@ -12,10 +13,11 @@
  *
  * The session cookie is signed with a key derived from GOOGLE_CLIENT_SECRET (or RESEND_API_KEY), so
  * no extra secret is needed. With neither configured sign-in is off and everyone gets
- * LIMITS.signedIn; without the DB binding there are no limits at all (local runs). With the
+ * limits.signedIn; without the DB binding there are no limits at all (local runs). With the
  * binding, a database error blocks model calls instead of skipping the limits, so the limits
  * cannot be bypassed by overloading the database.
  */
+import { readSettings } from './settings.js';
 
 /** The subset of Cloudflare's D1 API used here. */
 export interface D1Database {
@@ -42,8 +44,6 @@ export interface AccountEnv {
   ADMIN_EMAILS?: string;
 }
 
-// signedIn is a quiet abuse cap while credits are hidden (SHOW_CREDITS in constants.ts).
-export const LIMITS = { anonymous: 3, signedIn: 50 };
 /** /api/eval runs 10 model calls, so it is limited as a whole, for everyone together. */
 const EVAL_RUNS_PER_DAY = 3;
 
@@ -421,6 +421,16 @@ export function adminEmails(env: AccountEnv): string[] {
   return ((env.ADMIN_EMAILS || '').match(/[^\s,;:"'<>=]+@[^\s,;:"'<>=]+/g) || []).map((e) => e.toLowerCase());
 }
 
+/** ADMIN_EMAILS plus the admins added in the dashboard. */
+export async function allAdminEmails(env: AccountEnv): Promise<string[]> {
+  return [...new Set([...adminEmails(env), ...(await readSettings(env.DB)).extraAdmins])];
+}
+
+/** The daily limits now in force (the dashboard's settings). */
+export async function getLimits(env: AccountEnv): Promise<{ anonymous: number; signedIn: number }> {
+  return (await readSettings(env.DB)).limits;
+}
+
 /** Who the request counts against, and their daily limit. */
 async function ipSubject(request: Request, env: AccountEnv): Promise<string> {
   const ip = clientIp(request);
@@ -430,8 +440,9 @@ async function ipSubject(request: Request, env: AccountEnv): Promise<string> {
 
 async function quotaSubject(request: Request, env: AccountEnv, user: SessionUser | null) {
   // An account is its email, so Google and email sign-in for the same address share one count.
-  if (user) return { subject: `user:${accountKey(user)}`, limit: LIMITS.signedIn };
-  return { subject: await ipSubject(request, env), limit: authEnabled(env) ? LIMITS.anonymous : LIMITS.signedIn };
+  const limits = await getLimits(env);
+  if (user) return { subject: `user:${accountKey(user)}`, limit: limits.signedIn };
+  return { subject: await ipSubject(request, env), limit: authEnabled(env) ? limits.anonymous : limits.signedIn };
 }
 
 /**
@@ -449,13 +460,13 @@ async function bumpIp(request: Request, env: AccountEnv, delta: 1 | -1): Promise
 
 /**
  * Prompts used today before signing in count toward the account's limit, so signing in adds
- * LIMITS.signedIn - LIMITS.anonymous prompts (as the limit popup promises), not a fresh allowance.
+ * limits.signedIn - limits.anonymous prompts (as the limit popup promises), not a fresh allowance.
  */
 async function carryOverAnonymousUsage(request: Request, env: AccountEnv, user: SessionUser): Promise<void> {
   const row = await env.DB!.prepare('SELECT count FROM usage WHERE subject = ?1 AND day = ?2')
     .bind(await ipSubject(request, env), today())
     .first<{ count: number }>();
-  const used = Math.min(row?.count ?? 0, LIMITS.anonymous);
+  const used = Math.min(row?.count ?? 0, (await getLimits(env)).anonymous);
   if (!used) return;
   await env.DB!.prepare(
     `INSERT INTO usage (subject, day, count) VALUES (?1, ?2, ?3)

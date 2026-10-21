@@ -12,6 +12,8 @@
     "run_worker_first": ["/api/*"]
   },
   "observability": { "enabled": true },
+  // The admin dashboard's email alerts and reports (src/server/alerts.ts).
+  "triggers": { "crons": ["*/5 * * * *"] },
   // Keep variables added in the dashboard (Settings → Variables and Secrets) across deploys.
   "keep_vars": true,
   // Needed by `npx wrangler preview`, which Workers Builds runs for non-production branches (PRs).

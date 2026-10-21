@@ -156,7 +156,11 @@ export default function App() {
   const closeLimitNotice = useCallback(() => setLimitNotice(null), []);
 
   const refreshAccount = useCallback(async () => {
-    setAccount(await fetchAccount());
+    const next = await fetchAccount();
+    setAccount(next);
+    // The site's default depth applies until the visitor picks one.
+    const depthDefault = DEPTHS.find((d) => d.id === next?.defaultDepth)?.id;
+    if (depthDefault && !safeStorage.getItem(STORAGE_KEYS.DEPTH)) setDepth(depthDefault);
   }, []);
 
   useEffect(() => {

@@ -8,12 +8,17 @@
  *
  * Secrets: OPENROUTER_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and RESEND_API_KEY are
  * uploaded from the build variables by scripts/cf-deploy.mjs.
+ *
+ * The cron trigger (wrangler.jsonc) runs the dashboard's email alerts and reports (src/server/alerts.ts).
  */
-import { handleGenerate, handleHealth, handleModels, handleRefine, type HandlerResult } from '../src/server/api';
+import { handleGenerate, handleHealth, handleModels, handleRefine, type CallOptions, type HandlerResult } from '../src/server/api';
 import { renderEvalPage, runEval } from '../src/server/eval';
 import { handleHistory } from '../src/server/history';
 import { handleFeedback } from '../src/server/feedback';
 import { handleAdmin, isAdminUser, recordEvent, type EventKind, type EventOutcome } from '../src/server/admin';
+import { runScheduled } from '../src/server/alerts';
+import { readSettings } from '../src/server/settings';
+import { handleVisit } from '../src/server/visits';
 import {
   authEnabled,
   consumeQuota,
@@ -25,7 +30,7 @@ import {
   handleEmailVerify,
   handleLogin,
   handleLogout,
-  LIMITS,
+  getLimits,
   readSession,
   readUsage,
   type AccountEnv,
@@ -70,8 +75,9 @@ function outcomeOf({ status, body }: HandlerResult): EventOutcome {
 
 /**
  * Runs a model call (generate or refine) within the caller's daily limit. Requests with their own
- * key (x-api-key) or with no text are not counted: they cost the site nothing. Every call with text
- * is logged for the admin dashboard, after the response is sent.
+ * key (x-api-key) or with no text are not counted: they cost the site nothing. Neither is Enhance
+ * when the dashboard's settings say so. Every call with text is logged for the admin dashboard,
+ * after the response is sent.
  */
 async function withinLimit(
   request: Request,
@@ -80,9 +86,11 @@ async function withinLimit(
   kind: EventKind,
   body: any,
   userApiKey: string,
-  run: () => Promise<HandlerResult>
+  run: (options: CallOptions) => Promise<HandlerResult>
 ): Promise<Response> {
-  if (!String(body?.rawText || '').trim()) return json(await run());
+  const settings = await readSettings(env.DB);
+  const options: CallOptions = { models: settings.models, maxChars: settings.maxChars, clarify: settings.clarify };
+  if (!String(body?.rawText || '').trim()) return json(await run(options));
 
   const user = await readSession(request, env);
   const started = Date.now();
@@ -97,11 +105,12 @@ async function withinLimit(
         model: (result.body as any)?.modelUsed,
         ms: Date.now() - started,
         ownKey: Boolean(userApiKey),
+        meta: result.meta,
       })
     );
 
-  if (userApiKey) {
-    const result = await run();
+  if (userApiKey || (kind === 'refine' && !settings.refineCounts)) {
+    const result = await run(options);
     log(result);
     return json(result);
   }
@@ -131,7 +140,7 @@ async function withinLimit(
     });
   }
 
-  const result = await run();
+  const result = await run(options);
   log(result);
   const resultBody = result.body as Record<string, unknown> | null;
   // The model delivered nothing (it was down, it asked clarifying questions, or Enhance fell back
@@ -154,6 +163,10 @@ const SECURITY_HEADERS: Record<string, string> = {
 };
 
 export default {
+  async scheduled(_event: unknown, env: Env, ctx: Ctx): Promise<void> {
+    ctx.waitUntil(runScheduled(env));
+  },
+
   async fetch(request: Request, env: Env, ctx: Ctx): Promise<Response> {
     const { pathname } = new URL(request.url);
     // Every API write is JSON from the site's own pages. A cross-site form can only send text/plain
@@ -198,6 +211,7 @@ async function route(request: Request, env: Env, ctx: Ctx): Promise<Response> {
     case '/api/me': {
       const user = await readSession(request, env);
       const usage = await readUsage(request, env, user);
+      const settings = await readSettings(env.DB);
       return json({
         status: 200,
         body: {
@@ -205,9 +219,10 @@ async function route(request: Request, env: Env, ctx: Ctx): Promise<Response> {
           google: googleEnabled(env),
           email: emailEnabled(env),
           user: user && { name: user.name, email: user.email, picture: user.picture },
-          isAdmin: isAdminUser(env, user),
+          isAdmin: await isAdminUser(env, user),
           usage,
-          limits: LIMITS,
+          limits: await getLimits(env),
+          defaults: { depth: settings.defaultDepth },
         },
       });
     }
@@ -229,12 +244,12 @@ async function route(request: Request, env: Env, ctx: Ctx): Promise<Response> {
     case '/api/generate': {
       if (request.method !== 'POST') return methodNotAllowed('POST');
       const body = await readJson(request);
-      return withinLimit(request, env, ctx, 'generate', body, userApiKey, () => handleGenerate(body, userApiKey, serverKey));
+      return withinLimit(request, env, ctx, 'generate', body, userApiKey, (options) => handleGenerate(body, userApiKey, serverKey, options));
     }
     case '/api/refine': {
       if (request.method !== 'POST') return methodNotAllowed('POST');
       const body = await readJson(request);
-      return withinLimit(request, env, ctx, 'refine', body, userApiKey, () => handleRefine(body, userApiKey, serverKey));
+      return withinLimit(request, env, ctx, 'refine', body, userApiKey, (options) => handleRefine(body, userApiKey, serverKey, options));
     }
     case '/api/eval': {
       // Each run makes about 20 model calls on the site's key, so only admins may start one.
@@ -255,10 +270,10 @@ async function route(request: Request, env: Env, ctx: Ctx): Promise<Response> {
       if (searchParams.has('json')) return json({ status: 200, body: run });
       return new Response(renderEvalPage(run), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
-    case '/api/admin/stats':
-    case '/api/admin/delete-user':
-      return handleAdmin(request, env, await readSession(request, env), pathname);
+    case '/api/visit':
+      return handleVisit(request, env);
     default:
+      if (pathname.startsWith('/api/admin/')) return handleAdmin(request, env, await readSession(request, env), pathname);
       return json({ status: 404, body: { error: { code: 404, message: 'Not found.' } } });
   }
 }
