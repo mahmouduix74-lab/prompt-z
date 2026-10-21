@@ -193,3 +193,28 @@ a:active,
     cursor: none !important;
   }
 }
+
+/* Admin dashboard (src/admin): chart and status colours, stepped separately for dark mode */
+.admin-root {
+  --series: #7132f5;
+  --spark: #c9c6d6;
+  --grid: #ecebf1;
+  --crosshair: #c9c6d6;
+  --surface: #ffffff;
+  --track: #f1eff6;
+  --good: #0ca30c;
+  --good-text: #006300;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --neutral: #a1a1aa;
+}
+.dark .admin-root {
+  --series: #8452f8;
+  --spark: #55525f;
+  --grid: #26242e;
+  --crosshair: #4a4757;
+  --surface: #18181b;
+  --track: #27272a;
+  --good-text: #0ca30c;
+}

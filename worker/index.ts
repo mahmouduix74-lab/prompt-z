@@ -13,8 +13,8 @@ import { handleGenerate, handleHealth, handleModels, handleRefine, type HandlerR
 import { renderEvalPage, runEval } from '../src/server/eval';
 import { handleHistory } from '../src/server/history';
 import { handleFeedback } from '../src/server/feedback';
+import { handleAdmin, isAdminUser, recordEvent, type EventKind, type EventOutcome } from '../src/server/admin';
 import {
-  adminEmails,
   authEnabled,
   consumeQuota,
   emailEnabled,
@@ -36,6 +36,11 @@ interface Env extends AccountEnv {
   OPENROUTER_API_KEY?: string;
 }
 
+/** The part of Cloudflare's ExecutionContext used here. */
+interface Ctx {
+  waitUntil(promise: Promise<unknown>): void;
+}
+
 const json = ({ status, body }: HandlerResult) =>
   new Response(JSON.stringify(body), {
     status,
@@ -54,28 +59,63 @@ async function readJson(request: Request): Promise<any> {
   }
 }
 
+/** How a model call ended, for the dashboard's log (src/server/admin.ts). */
+function outcomeOf({ status, body }: HandlerResult): EventOutcome {
+  const b = body as Record<string, unknown> | null;
+  if (status === 429) return 'limit';
+  if (status === 400 || status === 413) return 'invalid';
+  if (status >= 400 || b?.modelFailed) return 'error';
+  return b?.clarify ? 'clarify' : 'ok';
+}
+
 /**
  * Runs a model call (generate or refine) within the caller's daily limit. Requests with their own
- * key (x-api-key) or with no text are not counted: they cost the site nothing.
+ * key (x-api-key) or with no text are not counted: they cost the site nothing. Every call with text
+ * is logged for the admin dashboard, after the response is sent.
  */
 async function withinLimit(
   request: Request,
   env: Env,
+  ctx: Ctx,
+  kind: EventKind,
   body: any,
   userApiKey: string,
   run: () => Promise<HandlerResult>
 ): Promise<Response> {
-  if (userApiKey || !String(body?.rawText || '').trim()) return json(await run());
+  if (!String(body?.rawText || '').trim()) return json(await run());
 
   const user = await readSession(request, env);
+  const started = Date.now();
+  const log = (result: HandlerResult) =>
+    ctx.waitUntil(
+      recordEvent(request, env, user, {
+        kind,
+        outcome: outcomeOf(result),
+        domain: body?.domain,
+        depth: kind === 'generate' ? body?.depth : undefined,
+        language: kind === 'generate' ? body?.outputLanguage : undefined,
+        model: (result.body as any)?.modelUsed,
+        ms: Date.now() - started,
+        ownKey: Boolean(userApiKey),
+      })
+    );
+
+  if (userApiKey) {
+    const result = await run();
+    log(result);
+    return json(result);
+  }
+
   const usage = await consumeQuota(request, env, user);
   if (usage?.unavailable) {
+    log({ status: 503, body: null });
     return json({
       status: 503,
       body: { error: { code: 503, reason: 'model_unavailable', message: 'The service is busy. Try again shortly.' } },
     });
   }
   if (usage && !usage.allowed) {
+    log({ status: 429, body: null });
     return json({
       status: 429,
       body: {
@@ -92,6 +132,7 @@ async function withinLimit(
   }
 
   const result = await run();
+  log(result);
   const resultBody = result.body as Record<string, unknown> | null;
   // The model delivered nothing (it was down, it asked clarifying questions, or Enhance fell back
   // to the local tidy-up): not counted.
@@ -113,7 +154,7 @@ const SECURITY_HEADERS: Record<string, string> = {
 };
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: Ctx): Promise<Response> {
     const { pathname } = new URL(request.url);
     // Every API write is JSON from the site's own pages. A cross-site form can only send text/plain
     // or form data without a CORS preflight, so requiring JSON stops other sites posting on a
@@ -124,14 +165,13 @@ export default {
     if (pathname.startsWith('/api/') && writes && !formRoute && !(request.headers.get('Content-Type') || '').toLowerCase().startsWith('application/json')) {
       return withSecurityHeaders(json({ status: 415, body: { error: { code: 415, message: 'Send JSON (Content-Type: application/json).' } } }));
     }
-    const response = await route(request, env);
+    const response = await route(request, env, ctx);
     return pathname.startsWith('/api/') ? withSecurityHeaders(response) : response;
   },
 };
 
 async function isAdmin(request: Request, env: Env): Promise<boolean> {
-  const user = await readSession(request, env);
-  return Boolean(user && adminEmails(env).includes(user.email.toLowerCase()));
+  return isAdminUser(env, await readSession(request, env));
 }
 
 function withSecurityHeaders(response: Response): Response {
@@ -140,7 +180,7 @@ function withSecurityHeaders(response: Response): Response {
   return secured;
 }
 
-async function route(request: Request, env: Env): Promise<Response> {
+async function route(request: Request, env: Env, ctx: Ctx): Promise<Response> {
   const { pathname, searchParams } = new URL(request.url);
   if (!pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
 
@@ -188,12 +228,12 @@ async function route(request: Request, env: Env): Promise<Response> {
     case '/api/generate': {
       if (request.method !== 'POST') return methodNotAllowed('POST');
       const body = await readJson(request);
-      return withinLimit(request, env, body, userApiKey, () => handleGenerate(body, userApiKey, serverKey));
+      return withinLimit(request, env, ctx, 'generate', body, userApiKey, () => handleGenerate(body, userApiKey, serverKey));
     }
     case '/api/refine': {
       if (request.method !== 'POST') return methodNotAllowed('POST');
       const body = await readJson(request);
-      return withinLimit(request, env, body, userApiKey, () => handleRefine(body, userApiKey, serverKey));
+      return withinLimit(request, env, ctx, 'refine', body, userApiKey, () => handleRefine(body, userApiKey, serverKey));
     }
     case '/api/eval': {
       // Each run makes about 20 model calls on the site's key, so only admins may start one.
@@ -214,6 +254,9 @@ async function route(request: Request, env: Env): Promise<Response> {
       if (searchParams.has('json')) return json({ status: 200, body: run });
       return new Response(renderEvalPage(run), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
+    case '/api/admin/stats':
+    case '/api/admin/delete-user':
+      return handleAdmin(request, env, await readSession(request, env), pathname);
     default:
       return json({ status: 404, body: { error: { code: 404, message: 'Not found.' } } });
   }

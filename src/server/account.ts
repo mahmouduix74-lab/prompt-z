@@ -38,7 +38,7 @@ export interface AccountEnv {
   RESEND_API_KEY?: string;
   /** Sender of sign-in emails; its domain must be verified in Resend. */
   EMAIL_FROM?: string;
-  /** Comma-separated emails allowed to read the feedback page (/api/feedback). */
+  /** Comma-separated emails allowed to open the admin dashboard (/admin) and the feedback page (/api/feedback). */
   ADMIN_EMAILS?: string;
 }
 
@@ -175,10 +175,14 @@ export async function readSession(request: Request, env: AccountEnv): Promise<Se
   }
 }
 
-/** GET /api/auth/login: sends the browser to Google's sign-in page. */
+/** Pages a sign-in may return to (?next=), besides the home page. Kept in the OAuth state. */
+const RETURN_PAGES = ['admin'];
+
+/** GET /api/auth/login[?next=/admin]: sends the browser to Google's sign-in page. */
 export async function handleLogin(request: Request, env: AccountEnv): Promise<Response> {
   if (!googleEnabled(env)) return new Response('Sign-in is not configured.', { status: 503 });
-  const state = base64url(crypto.getRandomValues(new Uint8Array(24)));
+  const next = (new URL(request.url).searchParams.get('next') || '').replace(/^\//, '');
+  const state = base64url(crypto.getRandomValues(new Uint8Array(24))) + (RETURN_PAGES.includes(next) ? `~${next}` : '');
   const params = new URLSearchParams({
     client_id: env.GOOGLE_CLIENT_ID!,
     redirect_uri: `${siteOrigin(env, request)}/api/auth/callback`,
@@ -210,6 +214,7 @@ export async function handleCallback(request: Request, env: AccountEnv): Promise
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
   if (!code || !state || state !== readCookie(request, STATE_COOKIE)) return back('?signin=error');
+  const page = RETURN_PAGES.find((p) => state.endsWith(`~${p}`)) || '';
 
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -242,7 +247,7 @@ export async function handleCallback(request: Request, env: AccountEnv): Promise
 
   const picture = typeof claims.picture === 'string' && claims.picture.startsWith('https://') ? claims.picture : undefined;
   const user: SessionUser = { sub: String(claims.sub), email: String(claims.email || ''), name: String(claims.name || ''), picture };
-  return back('?signin=ok', [await startSession(request, env, user)]);
+  return back(page || '?signin=ok', [await startSession(request, env, user)]);
 }
 
 /** Saves the user and returns the Set-Cookie value of a new signed session. */
