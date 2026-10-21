@@ -16,6 +16,36 @@ import { DomainType, DepthType, OutputLanguage } from '../types.js';
 export interface HandlerResult {
   status: number;
   body: unknown;
+  /** For the admin dashboard's log (src/server/admin.ts); never sent to the client. */
+  meta?: CallMeta;
+}
+
+/** Why a call failed, as the dashboard groups errors. */
+export type ErrorType = 'busy' | 'down' | 'brief' | 'long' | 'other';
+
+export interface CallMeta {
+  /** What OpenRouter charged for the call's model requests, in US dollars. */
+  cost: number;
+  error?: ErrorType;
+  /** OpenRouter's message or the reason the request was refused. */
+  detail?: string;
+}
+
+/** The dashboard's settings that change how a call is made (src/server/settings.ts). */
+export interface CallOptions {
+  /** The models to try, in order. */
+  models?: string[];
+  /** The longest request text accepted. */
+  maxChars?: number;
+  /** Whether the model may ask clarifying questions first. */
+  clarify?: boolean;
+}
+
+function errorType(message: string): ErrorType {
+  if (/OpenRouter 429/.test(message)) return 'busy';
+  if (/OpenRouter (40[0-4]|5\d\d)|unavailable|fetch failed|network/i.test(message)) return 'down';
+  if (/brief|empty response|JSON/i.test(message)) return 'brief';
+  return 'other';
 }
 
 const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
@@ -33,15 +63,15 @@ function resolveApiKey(userApiKey: string | undefined, serverKey: string | undef
   return (userApiKey || '').trim() || (serverKey || '').trim() || undefined;
 }
 
-/** A model that is retired or has no provider right now: try the next one in OPENROUTER_MODELS. */
+/** A model that is retired or has no provider right now: try the next model in the list. */
 function isModelUnavailable(status: number, message: string): boolean {
   return status === 404 || status >= 500 || (status === 400 && /model|endpoint/i.test(message));
 }
 
 /**
  * Sends one chat completion to OpenRouter and returns the generated text. Retries a model once
- * on 429/5xx, moves to the next model in OPENROUTER_MODELS when one is unavailable, and throws
- * anything else for the caller's local fallback.
+ * on 429/5xx, moves to the next model in `models` when one is unavailable, and throws anything
+ * else for the caller's local fallback. What OpenRouter charged is added to `meta.cost`.
  */
 async function generateWithOpenRouter(
   apiKey: string,
@@ -51,11 +81,13 @@ async function generateWithOpenRouter(
     temperature: number;
     /** Later turns of the same conversation (the model's earlier answer and a follow-up). */
     followUp?: { role: 'assistant' | 'user'; content: string }[];
-  }
+  },
+  models: string[],
+  meta: CallMeta
 ): Promise<{ text: string; modelUsed: string }> {
   let lastError: Error | null = null;
 
-  for (const model of OPENROUTER_MODELS) {
+  for (const model of models) {
     const body = JSON.stringify({
       model,
       messages: [
@@ -64,6 +96,7 @@ async function generateWithOpenRouter(
         ...(params.followUp || []),
       ],
       temperature: params.temperature,
+      usage: { include: true },
     });
 
     let status = 0;
@@ -79,6 +112,7 @@ async function generateWithOpenRouter(
       });
       const data: any = await res.json().catch(() => null);
 
+      if (typeof data?.usage?.cost === 'number') meta.cost += data.usage.cost;
       if (res.ok) {
         const content = data?.choices?.[0]?.message?.content;
         const text = (typeof content === 'string' ? content : '').trim();
@@ -165,10 +199,11 @@ export async function handleModels(
 const MAX_TEXT_CHARS = 12_000;
 const MAX_SIDE_CHARS = 3_000;
 const tooLong = (value: unknown, max: number) => typeof value === 'string' && value.length > max;
-const TOO_LONG: HandlerResult = {
+const tooLongResult = (length: number, max: number): HandlerResult => ({
   status: 413,
   body: { error: { code: 413, reason: 'too_long', message: 'The text is too long. Shorten it and try again.' } },
-};
+  meta: { cost: 0, error: 'long', detail: `${length} > ${max}` },
+});
 
 export interface GenerateInput {
   rawText: string;
@@ -187,16 +222,19 @@ export interface GenerateInput {
 export async function handleGenerate(
   input: GenerateInput,
   userApiKey: string | undefined,
-  serverKey = nodeServerKey()
+  serverKey = nodeServerKey(),
+  options: CallOptions = {}
 ): Promise<HandlerResult> {
   const { rawText, exclusions, domain, depth, outputLanguage, skipClarify } = input || ({} as GenerateInput);
+  const maxChars = options.maxChars ?? MAX_TEXT_CHARS;
+  const models = options.models?.length ? options.models : OPENROUTER_MODELS;
+  const meta: CallMeta = { cost: 0 };
 
   if (!rawText || !rawText.trim()) {
     return { status: 400, body: { error: { code: 400, message: 'Text input is required.' } } };
   }
-  if (tooLong(rawText, MAX_TEXT_CHARS) || tooLong(exclusions, MAX_SIDE_CHARS)) {
-    return TOO_LONG;
-  }
+  if (tooLong(rawText, maxChars)) return tooLongResult(rawText.length, maxChars);
+  if (tooLong(exclusions, MAX_SIDE_CHARS)) return tooLongResult(String(exclusions).length, MAX_SIDE_CHARS);
 
   const activeKey = resolveApiKey(userApiKey, serverKey);
   const localPrompt = () =>
@@ -224,18 +262,19 @@ export async function handleGenerate(
       requestText: rawText,
     });
 
-    const { text, modelUsed } = await generateWithOpenRouter(activeKey, {
-      systemInstruction: extractionInstruction,
-      userText: rawText.trim(),
-      temperature: 0.1,
-    });
+    const { text, modelUsed } = await generateWithOpenRouter(
+      activeKey,
+      { systemInstruction: extractionInstruction, userText: rawText.trim(), temperature: 0.1 },
+      models,
+      meta
+    );
 
     let brief = parseBrief(text);
     if (!brief) throw new Error(`${modelUsed} did not return a readable brief.`);
 
     // Too vague to plan well: ask the user first (they can answer or skip).
-    if (!skipClarify && brief.clarifyingQuestions.length) {
-      return { status: 200, body: { clarify: brief.clarifyingQuestions, modelUsed } };
+    if (options.clarify !== false && !skipClarify && brief.clarifyingQuestions.length) {
+      return { status: 200, body: { clarify: brief.clarifyingQuestions, modelUsed }, meta };
     }
 
     // Check the brief against the request; on a problem, the model fixes its own brief once.
@@ -245,15 +284,20 @@ export async function handleGenerate(
     let repaired = false;
     if (issues.length) {
       try {
-        const fix = await generateWithOpenRouter(activeKey, {
-          systemInstruction: extractionInstruction,
-          userText: rawText.trim(),
-          temperature: 0.1,
-          followUp: [
-            { role: 'assistant', content: text },
-            { role: 'user', content: repairRequest(issues) },
-          ],
-        });
+        const fix = await generateWithOpenRouter(
+          activeKey,
+          {
+            systemInstruction: extractionInstruction,
+            userText: rawText.trim(),
+            temperature: 0.1,
+            followUp: [
+              { role: 'assistant', content: text },
+              { role: 'user', content: repairRequest(issues) },
+            ],
+          },
+          models,
+          meta
+        );
         const fixed = parseBrief(fix.text);
         // Keep the fix only when it is readable and leaves fewer problems.
         if (fixed && checkBrief(fixed, rawText, exclusions, language, scope).length < issues.length) {
@@ -270,6 +314,7 @@ export async function handleGenerate(
     return {
       status: 200,
       body: { result, modelUsed, check: { issues: issues.map((i) => i.kind), repaired } },
+      meta,
     };
   } catch (err: any) {
     // With a key configured, a failure means the model is busy or down. Say so (the site offers a
@@ -279,6 +324,7 @@ export async function handleGenerate(
     return {
       status: 503,
       body: { error: { code: 503, reason: 'model_unavailable', message: 'The AI model is busy or unavailable. Try again shortly.', detail: reason } },
+      meta: { ...meta, error: errorType(reason), detail: reason.slice(0, 300) },
     };
   }
 }
@@ -293,14 +339,17 @@ export interface RefineInput {
 export async function handleRefine(
   input: RefineInput,
   userApiKey: string | undefined,
-  serverKey = nodeServerKey()
+  serverKey = nodeServerKey(),
+  options: CallOptions = {}
 ): Promise<HandlerResult> {
   const { rawText, domain } = input || ({} as RefineInput);
+  const maxChars = options.maxChars ?? MAX_TEXT_CHARS;
+  const meta: CallMeta = { cost: 0 };
 
   if (!rawText || !rawText.trim()) {
     return { status: 400, body: { error: { code: 400, message: 'Raw text is required to refine.' } } };
   }
-  if (tooLong(rawText, MAX_TEXT_CHARS)) return TOO_LONG;
+  if (tooLong(rawText, maxChars)) return tooLongResult(rawText.length, maxChars);
 
   const activeKey = resolveApiKey(userApiKey, serverKey);
 
@@ -312,25 +361,31 @@ export async function handleRefine(
   try {
     const refineSystemInstruction = buildRefineInstruction(domain as DomainType | undefined, rawText);
 
-    const { text: refinedText, modelUsed } = await generateWithOpenRouter(activeKey, {
-      systemInstruction: refineSystemInstruction,
-      userText: rawText.trim(),
-      temperature: 0.2,
-    });
+    const { text: refinedText, modelUsed } = await generateWithOpenRouter(
+      activeKey,
+      { systemInstruction: refineSystemInstruction, userText: rawText.trim(), temperature: 0.2 },
+      options.models?.length ? options.models : OPENROUTER_MODELS,
+      meta
+    );
 
     // A much longer rewrite has added content; keep the user's words, only tidied.
     if (refineAddsContent(rawText, refinedText)) {
       return {
         status: 200,
         body: { result: refineLocalPromptText({ rawText }), fallbackUsed: true, fallbackReason: 'Rewrite added content' },
+        meta,
       };
     }
 
-    return { status: 200, body: { result: refinedText, modelUsed } };
+    return { status: 200, body: { result: refinedText, modelUsed }, meta };
   } catch (err: any) {
     const fallbackReason = String(err?.message || err);
     console.warn('[Refine Resilience] OpenRouter unavailable/busy, using smart local refiner fallback:', fallbackReason);
     const fallbackResult = refineLocalPromptText({ rawText, domain });
-    return { status: 200, body: { result: fallbackResult, fallbackUsed: true, fallbackReason, modelFailed: true } };
+    return {
+      status: 200,
+      body: { result: fallbackResult, fallbackUsed: true, fallbackReason, modelFailed: true },
+      meta: { ...meta, error: errorType(fallbackReason), detail: fallbackReason.slice(0, 300) },
+    };
   }
 }
