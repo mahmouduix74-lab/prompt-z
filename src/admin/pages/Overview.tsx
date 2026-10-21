@@ -1,39 +1,52 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, Check, Send01 } from '@untitledui/icons';
-import { Table, TableCard } from '../ds/components/application/table/table';
+import { useEffect, useState, type FC } from 'react';
+import { AlertCircle, Check, CheckCircle, HelpCircle, Send01, ThumbsDown, ThumbsUp, UserPlus01, Users01, XCircle, Zap } from '@untitledui/icons';
 import { Tabs } from '../ds/components/application/tabs/tabs';
-import { Avatar } from '../ds/components/base/avatar/avatar';
 import { BadgeWithDot } from '../ds/components/base/badges/badges';
-import { ButtonGroup, ButtonGroupItem } from '../ds/components/base/button-group/button-group';
 import { Button } from '../ds/components/base/buttons/button';
 import { api, type Row } from '../api';
-import { StackedBars, TrendChart } from '../charts';
-import { ago, change, dayLabel, daysBetween, domainLabel, downloadCsv, fmt, money, percent } from '../format';
-import { Card, ChangeBadge, Empty, Grid, MetricItem, PageHeader } from '../ui';
-import {
-  compareSeries,
-  cumulative,
-  describe,
-  ExportButton,
-  periodName,
-  prevName,
-  RangePicker,
-  satisfactionSeries,
-  spark,
-  successRate,
-  successSeries,
-  type PageProps,
-} from './common';
+import { Heatmap, TrendChart } from '../charts';
+import { ago, change, countryLabel, dateLabel, depthLabel, domainLabel, downloadCsv, fmt, money, percent, seconds } from '../format';
+import { ActivityRow, BarList, Card, Empty, FunnelRow, Grid, KpiCard, PageHeader, TrendBadge } from '../ui';
+import { compareSeries, cumulative, ExportButton, localWeekHours, periodName, prevName, RangePicker, spark, successRate, successSeries, type PageProps } from './common';
 
-type Feed = 'all' | 'prompts' | 'signup' | 'feedback';
+type Series = 'prompts' | 'people' | 'accounts' | 'enhanced';
+const SERIES: { id: Series; label: string }[] = [
+  { id: 'prompts', label: 'برومبتات' },
+  { id: 'people', label: 'أشخاص' },
+  { id: 'accounts', label: 'حسابات' },
+  { id: 'enhanced', label: 'تحسين صياغة' },
+];
 
-/** Home: a balance card and today's numbers beside one big chart, the health cards and the latest activity. */
+type Tone = 'brand' | 'success' | 'warning' | 'error' | 'gray';
+
+/** One line of the live list: who did what, with an icon and colour for the kind of event. */
+function activityLine(r: Row): { icon: FC<{ className?: string }>; color: Tone; title: string; detail: string } {
+  const flag = r.country ? countryLabel(r.country).split(' ')[0] : '';
+  const who = r.account || `زائر من ${flag}`.trim();
+  const area = r.domain ? domainLabel(r.domain) : '';
+  const join = (...parts: (string | false | undefined)[]) => parts.filter(Boolean).join(' · ');
+  if (r.kind === 'signup') return { icon: UserPlus01, color: 'success', title: 'حساب جديد', detail: `${r.account} سجّل بـ${r.domain === 'email' ? 'الإيميل' : 'جوجل'}` };
+  if (r.kind === 'feedback')
+    return r.rating === 'up'
+      ? { icon: ThumbsUp, color: 'success', title: who, detail: join('قيّم برومبت 👍', area) }
+      : { icon: ThumbsDown, color: 'error', title: who, detail: join('قيّم برومبت 👎', area) };
+  if (r.outcome === 'clarify') return { icon: HelpCircle, color: 'warning', title: who, detail: join('الموديل سأل أسئلة توضيحية', area) };
+  if (r.outcome === 'limit') return { icon: AlertCircle, color: 'warning', title: who, detail: 'وصل للحد اليومي' };
+  if (r.outcome !== 'ok') return { icon: XCircle, color: 'error', title: who, detail: join(r.kind === 'refine' ? 'فشل تحسين الصياغة' : 'فشل التوليد', area) };
+  if (r.kind === 'refine') return { icon: Zap, color: 'brand', title: who, detail: join('حسّن صياغة', area) };
+  return { icon: Zap, color: 'brand', title: who, detail: join('عمل برومبت', area, r.depth && depthLabel(r.depth)) };
+}
+
+/** Home: the four headline numbers, prompts per day with the live activity, and the visitor journey, peak hours and top domains. */
 export function Overview({ stats, days, setDays, navigate }: PageProps) {
   const { period, prev, today } = stats;
+  const [series, setSeries] = useState<Series>('prompts');
   const [balance, setBalance] = useState<{ remaining: number; unavailable?: boolean } | null>(null);
-  const [when, setWhen] = useState<'today' | 'period'>('today');
-  const [feed, setFeed] = useState<Feed>('all');
   const [report, setReport] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
+  useEffect(() => {
+    api.balance().then(setBalance, () => setBalance({ remaining: 0, unavailable: true }));
+  }, []);
+
   const sendReport = async () => {
     setReport('sending');
     try {
@@ -49,60 +62,94 @@ export function Overview({ stats, days, setDays, navigate }: PageProps) {
       ['day', 'prompts', 'people', 'accounts', 'enhanced', 'errors', 'cost_usd'],
       stats.daily.filter((r) => r.day >= stats.range.start).map((r) => [r.day, r.prompts, r.people, r.accounts, r.enhanced, r.errors, r.cost])
     );
-  useEffect(() => {
-    api.balance().then(setBalance, () => setBalance({ remaining: 0, unavailable: true }));
-  }, []);
 
-  const up = Number(stats.feedback.totals.upPeriod) || 0;
-  const down = Number(stats.feedback.totals.downPeriod) || 0;
-  const success = period.calls ? (period.calls - period.errors) / period.calls : 0;
+  const signups = stats.signups.map((r) => ({ day: r.day, n: r.n }));
   const perDay = period.cost / days;
   const hasBalance = balance && !balance.unavailable;
   const lasts = hasBalance && perDay > 0 ? Math.floor(balance!.remaining / perDay) : null;
-  const t = when === 'today' ? today : period;
-  const byDay = new Map(stats.daily.map((r) => [r.day, r]));
+  const visitors = Math.max(period.visitors, period.people);
 
-  // The three health cards: their change and a daily line for each.
-  const successChange = change(successRate(period), successRate(prev));
-  const signupChange = change(period.signups, prev.signups);
-  const upPrev = Number(stats.feedback.totals.upPrev) || 0;
-  const downPrev = Number(stats.feedback.totals.downPrev) || 0;
-  const satisfactionChange = change(up + down ? up / (up + down) : 0, upPrev + downPrev ? upPrev / (upPrev + downPrev) : 0);
-
-  const last14 = daysBetween(stats.range.end > stats.range.start ? new Date(Date.parse(stats.range.end) - 13 * 864e5).toISOString().slice(0, 10) : stats.range.start, stats.range.end);
-  const madeDaily = last14.map((day) => ({ label: dayLabel(day), prompts: Number(byDay.get(day)?.prompts) || 0, enhanced: Number(byDay.get(day)?.enhanced) || 0 }));
-
-  const rows = useMemo(
-    () =>
-      stats.activity
-        .filter((r) => (feed === 'prompts' ? r.kind === 'generate' || r.kind === 'refine' : feed === 'all' ? true : r.kind === feed))
-        .slice(0, 8)
-        .map((r, i) => ({ ...r, id: String(i) }) as Row),
-    [stats.activity, feed]
-  );
+  // The big chart: the picked series for this period and the previous one, and its total.
+  const chart = series === 'accounts' ? compareSeries(stats, signups, 'n') : compareSeries(stats, stats.daily, series);
+  const totals: Record<Series, [number, number]> = {
+    prompts: [period.prompts, prev.prompts],
+    people: [period.people, prev.people],
+    accounts: [period.signups, prev.signups],
+    enhanced: [period.enhanced, prev.enhanced],
+  };
+  const [total, totalBefore] = totals[series];
 
   return (
     <>
       <PageHeader
         title="أهلًا بيك 👋"
-        description={`${periodName(days)}، مقارنة بـ${prevName(days)}.`}
+        description={days === 1 ? 'ده ملخص النهارده.' : `ده ملخص ${periodName(days)}، من ${dateLabel(stats.range.start).replace(/ \d{4}$/, '')} لحد النهارده.`}
         actions={
           <>
+            <RangePicker days={days} setDays={setDays} />
             <ExportButton onPress={exportDaily} />
-            <Button
-              color="primary"
-              size="md"
-              iconLeading={report === 'sent' ? Check : Send01}
-              isLoading={report === 'sending'}
-              onClick={sendReport}
-            >
+            <Button color="primary" size="md" iconLeading={report === 'sent' ? Check : Send01} isLoading={report === 'sending'} onClick={sendReport}>
               {report === 'sent' ? 'اتبعت على إيميلك' : report === 'failed' ? 'ماتبعتش، جرّب تاني' : 'ابعت التقرير'}
             </Button>
           </>
         }
       />
-      <RangePicker days={days} setDays={setDays} />
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[340px_1fr]">
+      <Grid cols="grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          icon={Zap}
+          title="برومبتات اتعملت"
+          value={fmt(period.prompts)}
+          {...change(period.prompts, prev.prompts)}
+          note={`${fmt(prev.prompts)} ${prevName(days)}`}
+          data={spark(stats, stats.daily, 'prompts')}
+        />
+        <KpiCard
+          icon={Users01}
+          title="أشخاص استخدموا الموقع"
+          value={fmt(period.people)}
+          {...change(period.people, prev.people)}
+          note={`نشط النهارده: ${fmt(today.people)}`}
+          data={spark(stats, stats.daily, 'people')}
+        />
+        <KpiCard
+          icon={UserPlus01}
+          title="حسابات جديدة"
+          value={fmt(period.signups)}
+          {...change(period.signups, prev.signups)}
+          note={`الإجمالي: ${fmt(stats.users.total)} حساب`}
+          data={cumulative(spark(stats, signups, 'n'))}
+        />
+        <KpiCard
+          icon={CheckCircle}
+          title="نسبة النجاح"
+          value={period.calls ? percent(period.calls - period.errors, period.calls, 1) : '—'}
+          {...change(successRate(period), successRate(prev))}
+          note={`متوسط التوليد ${seconds(period.avgMs)}`}
+          data={successSeries(stats)}
+        />
+      </Grid>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Card title="البرومبتات في اليوم" description={`مقارنة بـ${prevName(days)}`} className="flex flex-col" bodyClassName="flex flex-1 flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-display-md font-semibold text-primary">{fmt(total)}</p>
+              <TrendBadge {...change(total, totalBefore)} />
+            </div>
+            <Tabs selectedKey={series} onSelectionChange={(k) => setSeries(k as Series)}>
+              <Tabs.List type="button-gray" size="sm" items={SERIES}>
+                {(t) => <Tabs.Item {...t} />}
+              </Tabs.List>
+            </Tabs>
+          </div>
+          <TrendChart
+            data={chart}
+            height="min-h-80 flex-1"
+            series={[
+              { key: 'now', name: periodName(days), className: 'text-utility-brand-600', fill: true },
+              { key: 'prev', name: prevName(days), className: 'text-utility-neutral-300' },
+            ]}
+          />
+        </Card>
         <div className="flex flex-col gap-6">
           <div className="relative overflow-hidden rounded-2xl bg-brand-solid p-5 text-white shadow-lg">
             <div className="absolute -end-16 -top-16 size-56 rounded-full bg-white/10" />
@@ -131,152 +178,56 @@ export function Overview({ stats, days, setDays, navigate }: PageProps) {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-4">
-            <Tabs selectedKey={when} onSelectionChange={(k) => setWhen(k as 'today' | 'period')}>
-              <Tabs.List
-                type="underline"
-                items={[
-                  { id: 'today', label: 'النهارده' },
-                  { id: 'period', label: periodName(days) },
-                ]}
-              >
-                {(tab) => <Tabs.Item {...tab} />}
-              </Tabs.List>
-            </Tabs>
-            {[
-              ['برومبتات اتعملت', fmt(t.prompts)],
-              ['أشخاص', fmt(t.people)],
-              ['زوار', fmt(t.visitors)],
-              ['حسابات جديدة', fmt(t.signups)],
-            ].map(([label, value]) => (
-              <div key={label} className="flex items-baseline justify-between gap-4">
-                <span className="text-sm text-tertiary">{label}</span>
-                <span className="text-display-xs font-semibold text-primary">{value}</span>
-              </div>
-            ))}
-          </div>
-          <Card title="آخر 14 يوم" description="البرومبتات وتحسين الصياغة">
-            <StackedBars
-              data={madeDaily}
-              height="h-48"
-              series={[
-                { key: 'prompts', name: 'برومبتات', className: 'text-utility-brand-600' },
-                { key: 'enhanced', name: 'تحسين صياغة', className: 'text-utility-brand-300' },
-              ]}
-            />
-          </Card>
-        </div>
-        <div className="flex min-w-0 flex-col gap-6">
           <Card
-            title="البرومبتات"
+            title="النشاط المباشر"
             trailing={
-              <Button color="secondary" size="sm" onClick={() => navigate('/admin/quality')}>
-                التقرير الكامل
-              </Button>
+              <BadgeWithDot size="sm" type="modern" color="success">
+                مباشر
+              </BadgeWithDot>
             }
+            bodyClassName="p-0 md:p-0"
           >
-            <div className="mb-4 flex flex-wrap items-center gap-3">
-              <p className="text-display-md font-semibold text-primary">{fmt(period.prompts)}</p>
-              <ChangeBadge {...change(period.prompts, prev.prompts)} />
-            </div>
-            <TrendChart
-              data={compareSeries(stats, stats.daily, 'prompts')}
-              height="h-64"
-              series={[
-                { key: 'now', name: periodName(days), className: 'text-utility-brand-600', fill: true },
-                { key: 'prev', name: prevName(days), className: 'text-utility-brand-300' },
-              ]}
-            />
-          </Card>
-          <Grid cols="grid-cols-1 md:grid-cols-3">
-            <MetricItem
-              title="نسبة النجاح"
-              value={period.calls ? percent(period.calls - period.errors, period.calls, 1) : '—'}
-              {...successChange}
-              note={successChange.change ? undefined : `${fmt(period.errors)} طلب فشل`}
-              data={successSeries(stats)}
-              chartTone={success >= 0.95 ? 'success' : 'error'}
-              actions={[{ label: 'سجل الأخطاء', icon: ArrowUpRight, onAction: () => navigate('/admin/errors') }]}
-            />
-            <MetricItem
-              title="رضا المستخدمين"
-              value={up + down ? percent(up, up + down) : '—'}
-              {...satisfactionChange}
-              note={satisfactionChange.change ? undefined : `${fmt(up)} عجبهم · ${fmt(down)} لأ`}
-              data={satisfactionSeries(stats)}
-              chartTone={up + down === 0 || up / (up + down) >= 0.8 ? 'success' : 'error'}
-              actions={[{ label: 'التقييمات', icon: ArrowUpRight, onAction: () => navigate('/admin/feedback') }]}
-            />
-            <MetricItem
-              title="حسابات جديدة"
-              value={fmt(period.signups)}
-              {...signupChange}
-              note={signupChange.change ? undefined : `${fmt(stats.users.total)} حساب في الإجمالي`}
-              data={cumulative(spark(stats, stats.signups, 'n'))}
-              chartTone={signupChange.good === false ? 'error' : 'success'}
-              actions={[{ label: 'المستخدمين', icon: ArrowUpRight, onAction: () => navigate('/admin/users') }]}
-            />
-          </Grid>
-          <TableCard.Root>
-            <TableCard.Header
-              title="آخر النشاط"
-              badge={
-                <BadgeWithDot size="sm" type="modern" color="success">
-                  مباشر
-                </BadgeWithDot>
-              }
-              contentTrailing={
-                <ButtonGroup
-                  size="sm"
-                  selectedKeys={[feed]}
-                  disallowEmptySelection
-                  onSelectionChange={(keys) => {
-                    const [key] = [...keys];
-                    if (key) setFeed(key as Feed);
-                  }}
-                >
-                  <ButtonGroupItem id="all">الكل</ButtonGroupItem>
-                  <ButtonGroupItem id="prompts">برومبتات</ButtonGroupItem>
-                  <ButtonGroupItem id="signup">تسجيل</ButtonGroupItem>
-                  <ButtonGroupItem id="feedback">تقييمات</ButtonGroupItem>
-                </ButtonGroup>
-              }
-            />
-            {rows.length ? (
-              <Table aria-label="آخر النشاط">
-                <Table.Header>
-                  <Table.Head id="who" label="مين" isRowHeader className="w-full" />
-                  <Table.Head id="what" label="عمل إيه" />
-                  <Table.Head id="area" label="المجال" />
-                  <Table.Head id="when" label="إمتى" />
-                </Table.Header>
-                <Table.Body items={rows}>
-                  {(r) => {
-                    const d = describe(r);
-                    return (
-                      <Table.Row id={r.id}>
-                        <Table.Cell>
-                          <div className="flex items-center gap-3 whitespace-nowrap">
-                            <Avatar size="sm" initials={d.initial} />
-                            <span className="text-sm font-medium text-primary" dir="auto">
-                              {d.name}
-                            </span>
-                          </div>
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap">{d.text.replace(/ (في|بـ)$/, '')}</Table.Cell>
-                        <Table.Cell className="whitespace-nowrap">{r.kind === 'signup' ? (r.domain === 'email' ? 'الإيميل' : 'Google') : r.rating ? (r.rating === 'up' ? '👍' : '👎') : domainLabel(r.domain)}</Table.Cell>
-                        <Table.Cell className="whitespace-nowrap">{ago(r.ts)}</Table.Cell>
-                      </Table.Row>
-                    );
-                  }}
-                </Table.Body>
-              </Table>
+            {stats.activity.length ? (
+              <div className="flex flex-col divide-y divide-border-secondary">
+                {stats.activity.slice(0, 5).map((r, i) => {
+                  const line = activityLine(r);
+                  return <ActivityRow key={i} {...line} time={ago(r.ts)} />;
+                })}
+              </div>
             ) : (
-              <Empty title="مافيش نشاط هنا" />
+              <Empty title="لسه مافيش نشاط" />
             )}
-          </TableCard.Root>
+          </Card>
         </div>
       </div>
+      <Grid cols="grid-cols-1 xl:grid-cols-3">
+        <Card title="رحلة الزائر" description="من أول زيارة لحد ما يرجع تاني" bodyClassName="flex flex-col gap-5">
+          {visitors ? (
+            <>
+              <FunnelRow label="زاروا الموقع" value={visitors} of={visitors} step={0} />
+              <FunnelRow label="عملوا برومبت" value={period.people} of={visitors} step={1} />
+              <FunnelRow label="سجّلوا حساب" value={period.signups} of={visitors} step={2} />
+              <FunnelRow label="رجعوا تاني" value={period.returning || 0} of={visitors} step={3} />
+            </>
+          ) : (
+            <Empty title="لسه مافيش زيارات" />
+          )}
+        </Card>
+        <Card title="أوقات الذروة" description="عدد البرومبتات حسب اليوم والساعة، بتوقيتك">
+          {stats.hours.length ? <Heatmap grid={localWeekHours(stats.hours)} /> : <Empty title="لسه مافيش برومبتات" />}
+        </Card>
+        <Card
+          title="أكتر المجالات"
+          description={`من ${fmt(period.prompts)} برومبت`}
+          trailing={
+            <Button color="secondary" size="sm" onClick={() => navigate('/admin/quality')}>
+              الكل
+            </Button>
+          }
+        >
+          <BarList rows={stats.breakdowns.domains.slice(0, 5)} label={domainLabel} />
+        </Card>
+      </Grid>
     </>
   );
 }

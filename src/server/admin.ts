@@ -388,8 +388,13 @@ export async function stats(db: D1Database, days: number, viewer: string) {
       'SELECT substr(c, 1, 10) AS day, COUNT(*) AS n FROM (SELECT lower(email) e, MIN(created_at) c FROM users GROUP BY e) WHERE substr(c, 1, 10) >= ?1 GROUP BY day',
       prevStart
     ),
-    // UTC hours; the page moves them to the viewer's time zone.
-    all(db, `SELECT CAST(substr(ts, 12, 2) AS INTEGER) AS hour, COUNT(*) AS n FROM events WHERE ${MADE} AND day >= ?1 GROUP BY hour`, start),
+    // UTC weekday (0 = Sunday) and hour; the page moves them to the viewer's time zone.
+    all(
+      db,
+      `SELECT CAST(strftime('%w', ts) AS INTEGER) AS dow, CAST(substr(ts, 12, 2) AS INTEGER) AS hour, COUNT(*) AS n
+       FROM events WHERE ${MADE} AND day >= ?1 GROUP BY dow, hour`,
+      start
+    ),
     // Hours ago (0 = the last hour), for the errors chart.
     all(
       db,
