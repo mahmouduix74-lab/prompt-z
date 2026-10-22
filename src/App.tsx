@@ -28,7 +28,6 @@ import { LibraryDrawer } from './components/LibraryDrawer';
 import { ErrorBanner } from './components/ErrorBanner';
 import { SettingsModal } from './components/SettingsModal';
 import { Clock } from 'lucide-react';
-import { CustomCursor } from './components/CustomCursor';
 import { Mascot } from './components/Mascot';
 import { LimitDialog, SignInDialog } from './components/AccountMenu';
 import { AccountState, DailyLimitError, fetchAccount, sendFeedback } from './services/account';
@@ -719,7 +718,6 @@ export default function App() {
       />
 
       {/* Custom Cursor & Companion Character Layer */}
-      <CustomCursor />
     </div>
   );
 }
