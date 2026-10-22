@@ -16,7 +16,7 @@ type AlertKey = 'modelDown' | 'failRate' | 'lowBalance' | 'spike';
 const ALERTS: { key: AlertKey; icon: typeof XCircle; color: 'error' | 'warning' | 'brand' | 'success'; title: string; hint: string }[] = [
   { key: 'modelDown', icon: XCircle, color: 'error', title: 'الموديل وقع', hint: 'لو كل الموديلات مش متاحة، أو كل الطلبات فشلت في آخر 10 دقايق' },
   { key: 'failRate', icon: AlertTriangle, color: 'warning', title: 'نسبة الفشل عالية', hint: 'لو أكتر من 10% من الطلبات فشلت في آخر ساعة' },
-  { key: 'lowBalance', icon: Wallet02, color: 'brand', title: 'الرصيد قرب يخلص', hint: 'لما رصيد OpenRouter يقل عن 5 دولار' },
+  { key: 'lowBalance', icon: Wallet02, color: 'brand', title: 'الرصيد قرب يخلص', hint: 'لما رصيد OpenRouter يوصل لدولار واحد' },
   { key: 'spike', icon: TrendUp01, color: 'success', title: 'زيارات أكتر من العادي', hint: 'لو الزوار في ساعة بقوا ضعف المتوسط' },
 ];
 const WHEN: Record<SiteSettings['alerts']['report'], string> = {
