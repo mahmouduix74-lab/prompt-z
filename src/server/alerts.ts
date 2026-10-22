@@ -5,7 +5,7 @@
  * The Worker's cron trigger (wrangler.jsonc, every 5 minutes) calls runScheduled, which checks:
  *   - modelDown:  no model is served by OpenRouter, or every call in the last 10 minutes failed
  *   - failRate:   more than 10% of the last hour's calls failed (at least 10 calls)
- *   - lowBalance: the OpenRouter credit is under $5
+ *   - lowBalance: the OpenRouter credit is down to $1
  *   - spike:      the last hour had twice the usual visitors (at least 20)
  * Each alert is sent at most once an hour. The report goes out at 9:00 Cairo time: every day,
  * on Sundays (weekly) or on the 1st (monthly), as set in the dashboard.
@@ -18,7 +18,7 @@ import { ensureVisitTables } from './visits.js';
 
 type AlertKind = 'modelDown' | 'failRate' | 'lowBalance' | 'spike';
 
-const LOW_BALANCE = 5;
+const LOW_BALANCE = 1;
 const FAIL_RATE = 0.1;
 const SITE = 'https://prpmtz.online';
 
@@ -160,7 +160,7 @@ async function checkAlerts(env: AdminEnv, db: D1Database, settings: SiteSettings
   // The balance and the traffic change slowly: checked once an hour.
   if (minute < 5 && on.lowBalance) {
     const balance = await openRouterBalance(env.OPENROUTER_API_KEY);
-    if (balance && balance.remaining < LOW_BALANCE) {
+    if (balance && balance.remaining <= LOW_BALANCE) {
       found.push({ kind: 'lowBalance', title: 'الرصيد قرب يخلص', lines: [`رصيد OpenRouter الباقي ${money(balance.remaining)}.`] });
     }
   }
