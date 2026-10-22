@@ -1,13 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * A tiny brand-purple dot that follows the normal mouse cursor with a slight, smooth lag.
- * The system cursor stays as it is. Nothing is shown on touch devices (pointer: coarse), and with
- * reduced motion the dot sits on the cursor without the lag.
+ * A tiny brand-purple dot on the tip of the normal mouse cursor, moving with it on every mouse
+ * event (no easing, so it never trails behind). The system cursor stays as it is, and nothing is
+ * shown on touch devices (pointer: coarse).
  */
 const DOT_SIZE = 8;
-/** How much of the remaining distance the dot covers each frame (1 = no lag). */
-const FOLLOW = 0.22;
 
 export const CustomCursor: React.FC = () => {
   const [hasPointer, setHasPointer] = useState(false);
@@ -25,37 +23,22 @@ export const CustomCursor: React.FC = () => {
     if (!hasPointer) return;
     const dot = dotRef.current;
     if (!dot) return;
-    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const target = { x: -100, y: -100 };
-    const at = { x: -100, y: -100 };
-    let frame = 0;
 
-    const draw = () => {
-      at.x += (target.x - at.x) * (still ? 1 : FOLLOW);
-      at.y += (target.y - at.y) * (still ? 1 : FOLLOW);
-      dot.style.transform = `translate3d(${at.x - DOT_SIZE / 2}px, ${at.y - DOT_SIZE / 2}px, 0)`;
-      // Keep animating only while the dot is still catching up.
-      frame = Math.abs(target.x - at.x) + Math.abs(target.y - at.y) > 0.1 ? requestAnimationFrame(draw) : 0;
-    };
-    const onMove = (e: MouseEvent) => {
-      target.x = e.clientX;
-      target.y = e.clientY;
-      if (at.x < 0) {
-        at.x = target.x;
-        at.y = target.y;
-      }
+    // pointerrawupdate reports every hardware sample where supported; mousemove elsewhere.
+    const event = 'onpointerrawupdate' in window ? 'pointerrawupdate' : 'mousemove';
+    const onMove = (e: Event) => {
+      const { clientX, clientY } = e as MouseEvent;
+      dot.style.transform = `translate3d(${clientX - DOT_SIZE / 2}px, ${clientY - DOT_SIZE / 2}px, 0)`;
       dot.style.opacity = '1';
-      if (!frame) frame = requestAnimationFrame(draw);
     };
     const onLeave = () => {
       dot.style.opacity = '0';
     };
 
-    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener(event, onMove, { passive: true });
     document.documentElement.addEventListener('mouseleave', onLeave);
     return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener(event, onMove);
       document.documentElement.removeEventListener('mouseleave', onLeave);
     };
   }, [hasPointer]);
